@@ -943,6 +943,26 @@ class HudApp {
     }
 
     /** Every layer of the layout now (effects, sheets and own image layers), each once: { c, ci, ref, key }. */
+    /**
+     * "Hide BMW's black boxes" (cluster, Zeiger addition, a test): BMW's KOMBI draws some of the stock HMI's own
+     * slots over our panel as solid black boxes (on a G20 at about x 796-1037 y 267-369 and x 1224-1395 y 300-375).
+     * cluster-render's guide hold hides the CarPlay maneuver box's slot, but only while its "map" target is shown,
+     * which is why Waze on the map shows no boxes. So while a theme is up we keep a see-through 16x16 image on
+     * "map" (contend, so it takes the slot from the stock map, which our panel covers anyway): the map target is
+     * shown and the guide hold comes on. on false drops it.
+     */
+    _guideHold(on) {
+        // on a connection of its own (the theme may use all 8 layers of the first)
+        if (this.guideRef) { const g = this.guideC, r = this.guideRef; this._guard('guide hold', () => g.drop(r)); this.guideRef = 0; }
+        if (!on || this.target !== 'panel' || this.setting('hideBoxes') === false || !this.client.ready) return;
+        const c = this.guideC = this._clientAt(1);
+        const ref = c.image({ target: 'map', klass: 'ambient', z: 0, x: 0, y: 0, w: 16, h: 16, iw: 16, ih: 16, contend: 1 });
+        if (!ref) { this.log.warn('guide hold: the map layer was refused'); return; }
+        this.guideRef = ref;
+        c.pixels(ref, null, Buffer.alloc(16 * 16 * 4, 0));
+        this.log.info('guide hold: a see-through 16x16 layer on "map", so cluster-render hides BMW\'s maneuver box');
+    }
+
     _layerRefs() {
         const refs = [], seen = {};
         this.widgets.forEach((x) => {
@@ -1464,6 +1484,7 @@ class HudApp {
 
     _rebuildInner() {
         if (!this.client.ready) return; // the 'ready' handler calls us again
+        this._guideHold(false);
         this._layerRefs().forEach((r) => r.c.drop(r.ref));
         this.placed = [];
         this.widgets.clear();
@@ -1542,6 +1563,7 @@ class HudApp {
             if (k > LAYER_BUDGET) this.log.warn('layout "' + layout.name + '" needs ' + k + ' layers on connection ' + (ci + 1) + ', cluster-render draws at most ' + LAYER_BUDGET + ' per connection');
         });
         if (px > PIXEL_BYTES) this.log.warn('layout "' + layout.name + '" needs ' + mib(px) + ' of pixel memory; cluster-render has 16 MiB for every app together (each image counts twice)');
+        this._guideHold(true);
         this.statusAskT = setTimeout(() => { this.statusAskT = null; this._guard('status request', () => this.client.status()); }, STATUS_ASK_MS);
     }
 

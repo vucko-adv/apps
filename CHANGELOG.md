@@ -4,6 +4,7 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 12 2026
 
+- **Zeiger 0.3.0:** new setting **Hide BMW's black boxes (test)**, on by default. On a G20 the KOMBI drew two solid black boxes over every theme (about x 796-1037 y 267-369 and x 1224-1395 y 300-375), but none over Waze on the map. cluster-render hides the stock CarPlay maneuver box (its guide hold) only while its `map` target is shown, so while a theme is up Zeiger keeps a see-through 16x16 layer on `map`, on a second connection. Not yet tried on the car. **Leave BMW's bottom strip clear** is now on the Settings tab too.
 - **Zeiger 0.2.1:** Vintage and Vintage 1 have a black backdrop again. Since 0.1.1 the face is cut into pieces without its black, and BMW's own cluster showed between them; a full-screen `fill` effect layer under the pieces hides it and costs no pixel memory (8 layers, 9.3 MiB).
 - **Zeiger 0.2.0:** a second theme, **Vintage 1**: the Vintage artwork in the 80s amber/green LCD colours (amber readouts and scale, green lit segments and labels, dark amber windows, the rpm bar amber from 5200). `cluster-design/vintage/build.html?v=1` builds it.
 - **Zeiger 0.1.1:** Vintage fits the car's pixel memory. In the car the speed, gear, clock and outside temperature stayed empty: the face was one 1920x720 picture (10.5 MiB of the 16 MiB every app shares), and the sheet with those readouts was refused. The face is now cut into its 9 drawn pieces, and pictures and segment bars with `"own": false` pack into sheets like text: 7 layers and 9.3 MiB instead of 14.0.

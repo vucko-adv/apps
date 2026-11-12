@@ -2,7 +2,7 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Instrument cluster themes drawn by hand: Vintage, an 80s LCD dash in cream on dark green (rpm bar, oil, water and fuel bars, 3-digit speed, gear, clock, outside temperature)",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -437,6 +437,12 @@
       "label": "Leave BMW's bottom strip clear",
       "type": "bool",
       "default": false
+    },
+    {
+      "key": "hideBoxes",
+      "label": "Hide BMW's black boxes (test)",
+      "type": "bool",
+      "default": true
     },
     {
       "key": "warnOil",
