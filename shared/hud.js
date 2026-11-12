@@ -1321,6 +1321,8 @@ class HudApp {
     _token(tok) {
         const us = this.setting('units') === 'us';
         const fix = (v, n) => (isNum(v) ? v.toFixed(n) : '--');
+        // {{is:<token>:<value>}}: the value while the token shows it, else nothing (Vintage 2's P R N D S M, one letter each)
+        if (tok.indexOf('is:') === 0) { const p = tok.split(':'); return p.length === 3 && this._token(p[1]) === p[2] ? p[2] : ''; }
         if (tok.indexOf('slot') === 0 && tok.indexOf(':') > 0) {
             const kind = tok.slice(0, tok.indexOf(':')), sn = this.slotSensor(this.activeName, tok.slice(kind.length + 1), this.layoutSlots);
             if (kind === 'slot') return this.sensorValue(sn);
@@ -1516,6 +1518,9 @@ class HudApp {
         // full-width one (the black backdrop stays put, so BMW's own cluster never shows at an edge)
         const shiftX = this.target === 'panel' && this.ctx.settings.item('shiftX') ? Number(this.setting('shiftX')) || 0 : 0;
         if (shiftX) layout = Object.assign({}, layout, { widgets: layout.widgets.map((w) => (w.w >= this.size[0] ? w : Object.assign({}, w, { x: w.x + shiftX }))) });
+        // "selfTest": ms the layout starts with every segment lit and every text showing its "test" string, as an 80s
+        // dash did at power-on (Vintage 2); the values take over by themselves once it ends
+        this.testUntil = isNum(layout.selfTest) && layout.selfTest > 0 ? Date.now() + layout.selfTest : 0;
         this.mapLayout = layout.widgets.some((w) => w.holeWhen === 'mapUp');
         this._wazeWant();
         this.layoutSlots = layout.slots || [];
@@ -2067,6 +2072,7 @@ class HudApp {
             else x.value = isNum(x.value) ? x.value + (raw - x.value) * (1 - Math.exp(-dt / 120)) : raw;
             v = x.value;
         }
+        if (this.testUntil > now) v = Number.MAX_VALUE;      // the power-on self-test lights every segment
         let n = 0;
         if (isNum(v)) while (n < segs.length && n < steps.length && v >= steps[n]) n++;
         if (!force && n === x.lit) return;
@@ -2098,6 +2104,8 @@ class HudApp {
             if (!force && now - x.lastPaint < (w.rate || TEXT_MS)) return;
             let s = this._resolve(w.text);
             if (isNum(w.zeros) && /^\d+$/.test(s)) s = s.padStart(w.zeros, '0');
+            // the power-on self-test (a layout's "selfTest" ms): the text's "test" string ("888") instead of its value
+            if (this.testUntil > now && typeof w.test === 'string') s = w.test;
             let role = w.color || 'fg';
             if (w.colorBy === 'verdict' && this.score.last) role = VERDICT[this.score.last.verdict] || role;
             if (w.near && this._nearMark(w.near[0]) === w.near[1]) role = w.nearColor || 'fg';

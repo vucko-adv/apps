@@ -2,7 +2,7 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Instrument cluster themes drawn by hand: Vintage, an 80s LCD dash in cream on dark green (rpm bar, oil, water and fuel bars, 3-digit speed, gear, clock, outside temperature)",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -98,27 +98,19 @@
       "key": "hudLayout",
       "label": "Theme (when not by drive mode)",
       "type": "choice",
-      "default": "vintage",
+      "default": "vintage2",
       "options": [
         [
           "off",
           "Off (BMW's own cluster)"
         ],
         [
-          "vintage",
-          "Vintage"
-        ],
-        [
           "vintage1",
           "Vintage 1"
         ],
         [
-          "vintage3",
-          "Vintage 3"
-        ],
-        [
-          "vintage4",
-          "Vintage 4"
+          "vintage2",
+          "Vintage 2"
         ],
         [
           "grid",
@@ -140,27 +132,19 @@
       "key": "inComfort",
       "label": "In Comfort",
       "type": "choice",
-      "default": "vintage",
+      "default": "vintage2",
       "options": [
         [
           "off",
           "Off (BMW's own cluster)"
         ],
         [
-          "vintage",
-          "Vintage"
-        ],
-        [
           "vintage1",
           "Vintage 1"
         ],
         [
-          "vintage3",
-          "Vintage 3"
-        ],
-        [
-          "vintage4",
-          "Vintage 4"
+          "vintage2",
+          "Vintage 2"
         ]
       ]
     },
@@ -168,27 +152,19 @@
       "key": "inSport",
       "label": "In Sport",
       "type": "choice",
-      "default": "vintage",
+      "default": "vintage2",
       "options": [
         [
           "off",
           "Off (BMW's own cluster)"
         ],
         [
-          "vintage",
-          "Vintage"
-        ],
-        [
           "vintage1",
           "Vintage 1"
         ],
         [
-          "vintage3",
-          "Vintage 3"
-        ],
-        [
-          "vintage4",
-          "Vintage 4"
+          "vintage2",
+          "Vintage 2"
         ]
       ]
     },
@@ -196,27 +172,19 @@
       "key": "inEco",
       "label": "In Eco Pro",
       "type": "choice",
-      "default": "vintage",
+      "default": "vintage2",
       "options": [
         [
           "off",
           "Off (BMW's own cluster)"
         ],
         [
-          "vintage",
-          "Vintage"
-        ],
-        [
           "vintage1",
           "Vintage 1"
         ],
         [
-          "vintage3",
-          "Vintage 3"
-        ],
-        [
-          "vintage4",
-          "Vintage 4"
+          "vintage2",
+          "Vintage 2"
         ]
       ]
     },
@@ -476,7 +444,25 @@
       "type": "number",
       "unit": "px",
       "default": 6,
-      "steps": [-20, -16, -12, -10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 16, 20]
+      "steps": [
+        -20,
+        -16,
+        -12,
+        -10,
+        -8,
+        -6,
+        -4,
+        -2,
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        16,
+        20
+      ]
     },
     {
       "key": "hideBoxes",

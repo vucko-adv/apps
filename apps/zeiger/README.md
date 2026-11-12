@@ -4,15 +4,15 @@
 
 Redraws the whole instrument cluster with a hand-drawn theme. Open **Zeiger** from the apps menu on the center screen: its page shows the themes, the warnings and the settings.
 
-<p align="center"><img src="../../docs/images/zeiger-vintage.png" width="900" alt="Vintage"></p>
+<p align="center"><img src="../../docs/images/zeiger-vintage2.png" width="900" alt="Vintage 2"></p>
 
-## Vintage
+## Vintage 2
 
-An 80s LCD dash in cream on dark green, drawn as `CAJGER-vintage.svg`.
+An LCD from 1985, cream on dark green, drawn in code by `cluster-design/vintage2/build.html`: a continuous rpm wedge (cream, orange from 5200, red from about 6750), slanted digits over ghost 8s, P R N D S M, oil / water / fuel bars under pixel icons, a dot-matrix message line, scanlines, and a 2.5 s self-test at power-on.
 
-- **Rpm bar:** 48 segments, 0 to 8000 rpm; yellow from 5200, red past 7000.
-- **Oil, water, fuel:** 10 segments each; oil 40-150 °C, water 40-130 °C, fuel 0-100 %. The values sit under the bars.
-- **Speed** (3 digits, leading zeros, km/h), **gear**, **clock**, **outside temperature** (°C).
+## Vintage 1
+
+An 80s LCD dash in amber and green, from `CAJGER-vintage.svg`: a 48-segment rpm bar (amber from 5200, red past 7000), oil / water / fuel bars with their values, speed, gear, clock and outside temperature.
 
 ## Settings
 

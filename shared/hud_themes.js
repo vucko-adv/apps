@@ -86,16 +86,6 @@ const THEMES = {
         bg: [0, 0, 0, 255], panel: [0, 0, 0, 255], line: [70, 74, 82, 255], head: [226, 228, 232, 255],
         ink: [12, 12, 14, 255], accent: [240, 243, 248, 255], well: [0, 0, 0, 255],
     },
-    // Vintage (layout vintage.json): CAJGER-vintage.svg, an 80s LCD dash in cream on dark green (fork addition)
-    vintage: {
-        name: 'Vintage',
-        fg: [232, 240, 191, 255], dim: [120, 140, 100, 255], track: [19, 74, 51, 255], arc: [238, 52, 50, 255],
-        glow: 0, stripe: false,
-        bar: { low: [232, 240, 191], mid: [241, 234, 39], high: [238, 52, 50], midAt: 'shift' },
-        rev: { from: [232, 240, 191], to: [232, 240, 191] },
-        bg: [1, 1, 1, 255], panel: [19, 74, 51, 255], line: [232, 240, 191, 255], head: [232, 240, 191, 255],
-        ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [19, 74, 51, 255],
-    },
     // Vintage 1 (layout vintage1.json): the Vintage artwork in the 80s amber/green LCD colours: amber readouts and
     // scale, green lit segments and labels, dark amber windows (fork addition)
     vintage1: {
@@ -107,26 +97,16 @@ const THEMES = {
         bg: [1, 1, 1, 255], panel: [63, 45, 14, 255], line: [255, 176, 32, 255], head: [77, 255, 122, 255],
         ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [63, 45, 14, 255],
     },
-    // Vintage 3 (layout vintage3.json): Vintage after the design review: an orange warning zone, ghost 8s (fork addition)
-    vintage3: {
-        name: 'Vintage 3',
+    // Vintage 2 (layout vintage2.json): an LCD from 1985, cream on dark green, a gradient rpm wedge, slanted digits over
+    // ghost 8s, scanlines; "glow" lights the readouts (fork addition)
+    vintage2: {
+        name: 'Vintage 2',
         fg: [232, 240, 191, 255], dim: [120, 140, 100, 255], track: [19, 74, 51, 255], arc: [238, 52, 50, 255],
-        glow: 0, stripe: false,
+        glow: 0.6, stripe: false,
         bar: { low: [232, 240, 191], mid: [255, 163, 26], high: [238, 52, 50], midAt: 'shift' },
         rev: { from: [232, 240, 191], to: [232, 240, 191] },
         bg: [1, 1, 1, 255], panel: [19, 74, 51, 255], line: [232, 240, 191, 255], head: [232, 240, 191, 255],
         ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [19, 74, 51, 255],
-    },
-    // Vintage 4 (layout vintage4.json): Vintage 1 after the design review: dimmer green labels, lighter windows, an
-    // orange warning zone apart from the amber readouts, ghost 8s (fork addition)
-    vintage4: {
-        name: 'Vintage 4',
-        fg: [255, 176, 32, 255], dim: [140, 100, 30, 255], track: [74, 53, 17, 255], arc: [238, 52, 50, 255],
-        glow: 0, stripe: false,
-        bar: { low: [77, 255, 122], mid: [255, 138, 26], high: [238, 52, 50], midAt: 'shift' },
-        rev: { from: [77, 255, 122], to: [77, 255, 122] },
-        bg: [1, 1, 1, 255], panel: [74, 53, 17, 255], line: [255, 176, 32, 255], head: [46, 153, 73, 255],
-        ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [74, 53, 17, 255],
     },
     // Speed Meter (layout speedmeter.json): a picture of the speed_meter.svg artwork with its own needles; the
     // readouts in its off-white #f2f2f2 (fork addition)

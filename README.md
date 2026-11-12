@@ -2,24 +2,22 @@
 
 <p align="center">Hand-drawn instrument cluster themes for BMW iDrive 7 head units (MGU), installed through the community MGU Store.</p>
 
-<p align="center"><img src="docs/images/zeiger-vintage.png" width="900" alt="The Vintage theme on the instrument cluster"></p>
+<p align="center"><img src="docs/images/zeiger-vintage2.png" width="900" alt="The Vintage 2 theme on the instrument cluster"></p>
 
 ## Themes
 
-**Vintage**: an 80s LCD dash in cream on dark green.
+**Vintage 2**: an LCD from 1985, cream on dark green.
 
-- **Rpm:** a 48-segment bar from 0 to 8000. Cream up to 5200, yellow from 5200, red past 7000.
-- **Oil, water, fuel:** 10-segment bars with their values under them (oil 40-150 °C, water 40-130 °C, fuel 0-100 %).
-- **Speed:** three digits with leading zeros, in km/h. **Gear:** the gear number, or P, R, N.
-- **Clock** and **outside temperature**.
+- **Rpm:** one continuous wedge from 0 to 8000 that grows taller as it fills, cream into orange from 5200 and red from the scale's red line (about 6750).
+- **Speed, gear, clock, outside temperature:** slanted seven-segment digits over ghost 8s, the unlit segments of an LCD.
+- **Selector:** P R N D S M with the one in use lit, the gear number under it while driving.
+- **Oil, water, fuel:** 10-segment bars under pixel icons, their values below (oil 40-150 °C, water 40-130 °C, fuel 0-100 %).
+- **Message line** in dot matrix: oil temperature and range.
+- **Self-test:** at power-on everything lights for 2.5 s (888, every letter, BMW · SYSTEM CHECK), as an 80s dash did.
 
-**Vintage 1**: the same dash in the 80s amber/green LCD colours: amber readouts and scale, green lit segments and labels, dark amber windows, the rpm bar amber from 5200.
+**Vintage 1**: an 80s LCD dash in amber and green: amber readouts and scale, green lit segments and labels, dark amber windows, a 48-segment rpm bar amber from 5200.
 
 <p align="center"><img src="docs/images/zeiger-vintage1.png" width="900" alt="The Vintage 1 theme"></p>
-
-**Vintage 3** and **Vintage 4**: Vintage and Vintage 1 after a design review: an orange warning zone that stands apart, ghost 8s behind the speed and gear (the unlit segments of an LCD), and in Vintage 4 dimmer labels.
-
-<p align="center"><img src="docs/images/zeiger-vintage4.png" width="900" alt="The Vintage 4 theme"></p>
 
 More themes will follow. Each one starts as a drawing (Illustrator, SVG) that is turned into a theme.
 

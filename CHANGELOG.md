@@ -2,6 +2,10 @@
 
 Newest first. Dates are when the build was pushed.
 
+## Nov 13 2026
+
+- **Zeiger 0.5.0:** two themes now, **Vintage 1** and the new **Vintage 2**, an LCD from 1985: a continuous rpm wedge lit cream into orange into red (the red from the scale's red line), slanted seven-segment digits over ghost 8s, P R N D S M with the one in use lit, pixel icons over the oil / water / fuel bars, a dot-matrix message line (oil, range), scanlines, and a 2.5 s self-test at power-on. Vintage, Vintage 3 and Vintage 4 are gone; a car set to one of them shows Vintage 2. New in the engine: a layout's `selfTest` (ms with every segment lit and every text showing its `test` string) and the `{{is:<token>:<value>}}` text token.
+
 ## Nov 12 2026
 
 - **Zeiger 0.4.1:** new setting **Theme position (px to the right)**, 6 by default: on a G20 the themes sat about 6 px left of BMW's own cluster. It moves every widget but the full-screen black backdrop, so BMW's cluster never shows at an edge; -20 to 20 px, on the Settings tab.
