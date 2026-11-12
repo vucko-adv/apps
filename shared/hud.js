@@ -1512,6 +1512,10 @@ class HudApp {
             return;
         }
         this.problem = null;
+        // "Theme position" (cluster, Zeiger addition): px to the right (negative: left) for every widget but a
+        // full-width one (the black backdrop stays put, so BMW's own cluster never shows at an edge)
+        const shiftX = this.target === 'panel' && this.ctx.settings.item('shiftX') ? Number(this.setting('shiftX')) || 0 : 0;
+        if (shiftX) layout = Object.assign({}, layout, { widgets: layout.widgets.map((w) => (w.w >= this.size[0] ? w : Object.assign({}, w, { x: w.x + shiftX }))) });
         this.mapLayout = layout.widgets.some((w) => w.holeWhen === 'mapUp');
         this._wazeWant();
         this.layoutSlots = layout.slots || [];

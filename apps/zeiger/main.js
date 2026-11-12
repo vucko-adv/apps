@@ -27,7 +27,7 @@ mgu.run({
             title: ctx.spec.title, what: 'cluster',
             look: { name: 'Themes', style: 'hero', tags: { vintage: '80s LCD · km/h', vintage1: '80s amber LCD · km/h', vintage3: '80s LCD, ghost digits · km/h', vintage4: '80s amber LCD, ghost digits · km/h', grid: 'calibration', mapcal: 'map calibration' } },
             tabs: ['look', 'alerts', 'settings'],
-            settings: ['units', 'clock', 'timeZone', 'tankLitres', 'hideBoxes', 'stripClear', 'demo'],
+            settings: ['units', 'clock', 'timeZone', 'tankLitres', 'shiftX', 'hideBoxes', 'stripClear', 'demo'],
         }).start();
         process.on('exit', () => { try { hud.stop(); } catch (e) { /* exiting anyway */ } });
     },
