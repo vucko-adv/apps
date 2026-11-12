@@ -17,6 +17,10 @@
 
 <p align="center"><img src="docs/images/zeiger-vintage1.png" width="900" alt="The Vintage 1 theme"></p>
 
+**Vintage 3** and **Vintage 4**: Vintage and Vintage 1 after a design review: an orange warning zone that stands apart, ghost 8s behind the speed and gear (the unlit segments of an LCD), and in Vintage 4 dimmer labels.
+
+<p align="center"><img src="docs/images/zeiger-vintage4.png" width="900" alt="The Vintage 4 theme"></p>
+
 More themes will follow. Each one starts as a drawing (Illustrator, SVG) that is turned into a theme.
 
 **Calibration grid** and **Map calibration** (in the Theme list, with "Change with SPORT / COMFORT / ECO PRO" off) show what part of the cluster the driver sees on your car.

@@ -107,6 +107,27 @@ const THEMES = {
         bg: [1, 1, 1, 255], panel: [63, 45, 14, 255], line: [255, 176, 32, 255], head: [77, 255, 122, 255],
         ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [63, 45, 14, 255],
     },
+    // Vintage 3 (layout vintage3.json): Vintage after the design review: an orange warning zone, ghost 8s (fork addition)
+    vintage3: {
+        name: 'Vintage 3',
+        fg: [232, 240, 191, 255], dim: [120, 140, 100, 255], track: [19, 74, 51, 255], arc: [238, 52, 50, 255],
+        glow: 0, stripe: false,
+        bar: { low: [232, 240, 191], mid: [255, 163, 26], high: [238, 52, 50], midAt: 'shift' },
+        rev: { from: [232, 240, 191], to: [232, 240, 191] },
+        bg: [1, 1, 1, 255], panel: [19, 74, 51, 255], line: [232, 240, 191, 255], head: [232, 240, 191, 255],
+        ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [19, 74, 51, 255],
+    },
+    // Vintage 4 (layout vintage4.json): Vintage 1 after the design review: dimmer green labels, lighter windows, an
+    // orange warning zone apart from the amber readouts, ghost 8s (fork addition)
+    vintage4: {
+        name: 'Vintage 4',
+        fg: [255, 176, 32, 255], dim: [140, 100, 30, 255], track: [74, 53, 17, 255], arc: [238, 52, 50, 255],
+        glow: 0, stripe: false,
+        bar: { low: [77, 255, 122], mid: [255, 138, 26], high: [238, 52, 50], midAt: 'shift' },
+        rev: { from: [77, 255, 122], to: [77, 255, 122] },
+        bg: [1, 1, 1, 255], panel: [74, 53, 17, 255], line: [255, 176, 32, 255], head: [46, 153, 73, 255],
+        ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [74, 53, 17, 255],
+    },
     // Speed Meter (layout speedmeter.json): a picture of the speed_meter.svg artwork with its own needles; the
     // readouts in its off-white #f2f2f2 (fork addition)
     speedmeter: {

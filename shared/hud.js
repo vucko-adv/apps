@@ -2093,7 +2093,7 @@ class HudApp {
         } else if (w.type === 'text') {
             if (!force && now - x.lastPaint < (w.rate || TEXT_MS)) return;
             let s = this._resolve(w.text);
-            if (isNum(w.zeros) && /^d+$/.test(s)) s = s.padStart(w.zeros, '0');
+            if (isNum(w.zeros) && /^\d+$/.test(s)) s = s.padStart(w.zeros, '0');
             let role = w.color || 'fg';
             if (w.colorBy === 'verdict' && this.score.last) role = VERDICT[this.score.last.verdict] || role;
             if (w.near && this._nearMark(w.near[0]) === w.near[1]) role = w.nearColor || 'fg';

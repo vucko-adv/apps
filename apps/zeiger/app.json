@@ -2,7 +2,7 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Instrument cluster themes drawn by hand: Vintage, an 80s LCD dash in cream on dark green (rpm bar, oil, water and fuel bars, 3-digit speed, gear, clock, outside temperature)",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -113,6 +113,14 @@
           "Vintage 1"
         ],
         [
+          "vintage3",
+          "Vintage 3"
+        ],
+        [
+          "vintage4",
+          "Vintage 4"
+        ],
+        [
           "grid",
           "Calibration grid"
         ],
@@ -145,6 +153,14 @@
         [
           "vintage1",
           "Vintage 1"
+        ],
+        [
+          "vintage3",
+          "Vintage 3"
+        ],
+        [
+          "vintage4",
+          "Vintage 4"
         ]
       ]
     },
@@ -165,6 +181,14 @@
         [
           "vintage1",
           "Vintage 1"
+        ],
+        [
+          "vintage3",
+          "Vintage 3"
+        ],
+        [
+          "vintage4",
+          "Vintage 4"
         ]
       ]
     },
@@ -185,6 +209,14 @@
         [
           "vintage1",
           "Vintage 1"
+        ],
+        [
+          "vintage3",
+          "Vintage 3"
+        ],
+        [
+          "vintage4",
+          "Vintage 4"
         ]
       ]
     },
