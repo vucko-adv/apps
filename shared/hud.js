@@ -142,6 +142,9 @@
  *             name). Unlit segments are see-through, so the face under it shows them dark. Only the segments that
  *             changed are sent (bimmer-lab-apps fork addition, Vintage theme)
  * Text widgets: "zeros": n pads a whole-number value with leading zeros to n digits ("000" km/h; fork addition).
+ * Picture "stretch": true (Zeiger addition): the picture's own image (any size) drawn over the widget's whole rect by
+ *   the GPU, e.g. a 64x8 gradient as a 640x720 shade, for the memory of its 64x8; an own layer, never packed.
+ * Any widget: "toggle" may be a list, on while every one is (Zeiger addition).
  * Any image widget: "own": true gives it its own image layer instead of a place in a packed sheet (above).
  *   Pictures and segments get their own layer anyway, unless "own": false (fork addition): then they pack like
  *   text, so a face cut into its drawn pieces costs a few small sheets instead of a 1920x720 layer (11 MiB).
@@ -591,7 +594,7 @@ class HudApp {
     /** A setting's value, or its default when the saved value isn't one the schema allows. */
     setting(key) {
         // "mapUp": not saved, the Waze map is showing inside the theme now (the setting on, waze.js says so)
-        if (key === 'mapUp') return !!(this.waze && this.waze.up && this.ctx.settings.get('mapInTheme') === true);
+        if (key === 'mapUp') return !!(this.waze && this.waze.up && (this.mapAlways || this.ctx.settings.get('mapInTheme') === true));
         const s = this.ctx.settings.item(key);
         const v = this.ctx.settings.get(key);
         if (!s) return v;
@@ -759,7 +762,8 @@ class HudApp {
 
     /** Waze's map on the panel only while the setting is on and the theme shown has a map window. */
     _wazeWant() {
-        if (this.waze) this.waze.want(this.started && this.setting('mapInTheme') === true && this.mapLayout);
+        // a layout with "wantsMap" (the Map theme: the map is the theme) asks for it whatever the setting says
+        if (this.waze) this.waze.want(this.started && this.mapLayout && (this.mapAlways || this.setting('mapInTheme') === true));
     }
 
     /** Boost, intake, fuel % and hybrid battery from the car's units (config.dme), over the read-only link. */
@@ -1048,7 +1052,7 @@ class HudApp {
 
     _status() {
         // the Waze map's state rides along while that setting is on (and redraws the page's Map tab when it changes)
-        const s = this.statusText() + (this.waze && this.setting('mapInTheme') === true ? '; Waze: ' + this.waze.info().text : '');
+        const s = this.statusText() + (this.waze && (this.mapAlways || this.setting('mapInTheme') === true) ? '; Waze: ' + this.waze.info().text : '');
         if (s === this.lastStatus) return;
         this.lastStatus = s;
         this.statusListeners.forEach((fn) => { try { fn(s); } catch (e) { this.log.warn('status listener: ' + e); } });
@@ -1499,6 +1503,7 @@ class HudApp {
         const name = this._layoutName();
         this.activeName = name;
         this.mapLayout = false;
+        this.mapAlways = false;
         this.mapShown = this.setting('mapUp');
         if (name === 'off') {
             this._wazeWant();
@@ -1522,6 +1527,7 @@ class HudApp {
         // dash did at power-on (Vintage 2); the values take over by themselves once it ends
         this.testUntil = isNum(layout.selfTest) && layout.selfTest > 0 ? Date.now() + layout.selfTest : 0;
         this.mapLayout = layout.widgets.some((w) => w.holeWhen === 'mapUp');
+        this.mapAlways = layout.wantsMap === true;
         this._wazeWant();
         this.layoutSlots = layout.slots || [];
         this.layoutTheme = layout.theme && THEMES[layout.theme] ? layout.theme : null;
@@ -1554,7 +1560,7 @@ class HudApp {
         plan.forEach((e) => {
             if (e.kind === 'sheet') { sheets++; bytes += e.w * e.h * 4; px += e.w * e.h * 8; this._guard('sheet ' + e.members[0].id, () => this._createSheet(e)); }
             else {
-                if (IMAGE_TYPES[e.w.type]) { own++; px += e.w.w * e.w.h * 8; } else effects++;
+                if (IMAGE_TYPES[e.w.type]) { own++; const sp = e.w.stretch && pictures.get(e.w.picture); px += (sp ? sp.w * sp.h : e.w.w * e.w.h) * 8; } else effects++;
                 this._guard('widget ' + e.w.id, () => this._create(e.w, null));
             }
         });
@@ -1665,6 +1671,7 @@ class HudApp {
 
     /** "key" is on while that bool setting is on; "!key" while it is off. */
     _toggleOn(t) {
+        if (Array.isArray(t)) return t.every((k) => this._toggleOn(k));      // a list: every one on (Zeiger addition)
         const not = t.charAt(0) === '!';
         const k = not ? t.slice(1) : t, eq = k.indexOf('=');
         const on = eq > 0 ? String(this.setting(k.slice(0, eq))) === k.slice(eq + 1) : this.setting(k) !== false;
@@ -1678,7 +1685,9 @@ class HudApp {
         else {
             c = this._clientAt(this._connOf(w));
             const base = { target: this.target, klass: w.class || 'content', z: w.z || 0, x: w.x, y: w.y, w: w.w, h: w.h };
-            if (IMAGE_TYPES[w.type]) ref = c.image(Object.assign({ iw: w.w, ih: w.h }, base));
+            // a stretched picture: its own image size, drawn over the widget's rect
+            const sp = w.type === 'picture' && w.stretch ? pictures.get(w.picture) : null;
+            if (IMAGE_TYPES[w.type]) ref = c.image(Object.assign({ iw: sp ? sp.w : w.w, ih: sp ? sp.h : w.h }, base));
             else ref = c.effect(Object.assign({ fs: w.type === 'swatch' ? calibration.SWATCH : shaders[w.type] }, base));
             if (!ref) { this.log.warn('widget "' + w.id + '": layer refused'); return; }
             this.placed.push({ c, ref, x: w.x, y: w.y, w: w.w, h: w.h });
@@ -1702,7 +1711,7 @@ class HudApp {
         } else if (w.type === 'picture' || w.type === 'needle' || w.type === 'segments') {
             const p = pictures.get(w.picture);
             if (!p) { this.log.warn('widget "' + w.id + '": no picture "' + w.picture + '" in hud/pictures'); return; }
-            if (p.w !== w.w || p.h !== w.h) { this.log.warn('widget "' + w.id + '": picture "' + w.picture + '" is ' + p.w + 'x' + p.h + ', the widget ' + w.w + 'x' + w.h); return; }
+            if (!(w.stretch && w.type === 'picture' && !sheet) && (p.w !== w.w || p.h !== w.h)) { this.log.warn('widget "' + w.id + '": picture "' + w.picture + '" is ' + p.w + 'x' + p.h + ', the widget ' + w.w + 'x' + w.h); return; }
             if (w.type === 'segments') {
                 // starts with nothing lit; _update lights what the value says
                 x.pic = p; x.lit = 0; x.value = null; x.t = 0;

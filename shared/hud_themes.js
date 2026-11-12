@@ -108,6 +108,16 @@ const THEMES = {
         bg: [1, 1, 1, 255], panel: [19, 74, 51, 255], line: [232, 240, 191, 255], head: [232, 240, 191, 255],
         ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [19, 74, 51, 255],
     },
+    // Map (layout map.json): the phone's map over the whole cluster, white readouts over dark shades (Zeiger addition)
+    map: {
+        name: 'Map',
+        fg: [255, 255, 255, 255], dim: [175, 185, 200, 255], track: [60, 70, 85, 255], arc: [255, 59, 59, 255],
+        glow: 0, stripe: false,
+        bar: { low: [255, 255, 255], mid: [255, 154, 60], high: [255, 59, 59], midAt: 'shift' },
+        rev: { from: [127, 212, 255], to: [255, 255, 255] },
+        bg: [1, 1, 1, 255], panel: [12, 16, 24, 255], line: [255, 255, 255, 255], head: [175, 185, 200, 255],
+        ink: [1, 1, 1, 255], accent: [255, 59, 59, 255], well: [12, 16, 24, 255],
+    },
     // Speed Meter (layout speedmeter.json): a picture of the speed_meter.svg artwork with its own needles; the
     // readouts in its off-white #f2f2f2 (fork addition)
     speedmeter: {

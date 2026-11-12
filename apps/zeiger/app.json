@@ -2,7 +2,7 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Instrument cluster themes drawn by hand: Vintage, an 80s LCD dash in cream on dark green (rpm bar, oil, water and fuel bars, 3-digit speed, gear, clock, outside temperature)",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -113,6 +113,10 @@
           "Vintage 2"
         ],
         [
+          "map",
+          "Map"
+        ],
+        [
           "grid",
           "Calibration grid"
         ],
@@ -145,6 +149,10 @@
         [
           "vintage2",
           "Vintage 2"
+        ],
+        [
+          "map",
+          "Map"
         ]
       ]
     },
@@ -165,6 +173,10 @@
         [
           "vintage2",
           "Vintage 2"
+        ],
+        [
+          "map",
+          "Map"
         ]
       ]
     },
@@ -185,14 +197,34 @@
         [
           "vintage2",
           "Vintage 2"
+        ],
+        [
+          "map",
+          "Map"
         ]
       ]
     },
     {
       "key": "mapInTheme",
-      "label": "Show Waze map inside the theme",
+      "label": "Show the phone's map (waze-on-cluster) in the Map theme",
       "type": "bool",
-      "default": false
+      "default": true
+    },
+    {
+      "key": "mapSize",
+      "label": "Map size (as waze-on-cluster draws it)",
+      "type": "choice",
+      "default": "full",
+      "options": [
+        [
+          "full",
+          "Full screen (map_rect 0,0,1920,720)"
+        ],
+        [
+          "centre",
+          "Centre, 1088x480"
+        ]
+      ]
     },
     {
       "key": "units",

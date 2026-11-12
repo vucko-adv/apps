@@ -15,6 +15,10 @@
 - **Message line** in dot matrix: oil temperature and range.
 - **Self-test:** at power-on everything lights for 2.5 s (888, every letter, BMW · SYSTEM CHECK), as an 80s dash did.
 
+**Map**: the phone's map over the whole cluster (Waze, Apple Maps or Google Maps over CarPlay, Google Maps over Android Auto, through waze-on-cluster), with only the speed, the selector and drive mode, range with a fuel bar and the coolant temperature over it, in Barlow. For the map to fill the screen, waze-on-cluster needs `map_rect = 0,0,1920,720` in its `waze-on-cluster.conf`; with "Map size" set to Centre the map stays in its 1088x480 window.
+
+<p align="center"><img src="docs/images/zeiger-map.png" width="900" alt="The Map theme"></p>
+
 **Vintage 1**: an 80s LCD dash in amber and green: amber readouts and scale, green lit segments and labels, dark amber windows, a 48-segment rpm bar amber from 5200.
 
 <p align="center"><img src="docs/images/zeiger-vintage1.png" width="900" alt="The Vintage 1 theme"></p>

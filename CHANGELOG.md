@@ -4,6 +4,7 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 13 2026
 
+- **Zeiger 0.6.0:** a third theme, **Map**: the phone's map (waze-on-cluster) over the whole cluster with only the speed, the selector and drive mode, range and coolant over it, on dark shades so they read on a day map too. **Show the phone's map** is now on by default, and the new **Map size** setting says how waze-on-cluster draws it: Full screen (its `map_rect = 0,0,1920,720`) or Centre (1088x480, black round it). Engine: a picture with `stretch` (a small image drawn over a large rect, for gradients) and `toggle` lists.
 - **Zeiger 0.5.0:** two themes now, **Vintage 1** and the new **Vintage 2**, an LCD from 1985: a continuous rpm wedge lit cream into orange into red (the red from the scale's red line), slanted seven-segment digits over ghost 8s, P R N D S M with the one in use lit, pixel icons over the oil / water / fuel bars, a dot-matrix message line (oil, range), scanlines, and a 2.5 s self-test at power-on. Vintage, Vintage 3 and Vintage 4 are gone; a car set to one of them shows Vintage 2. New in the engine: a layout's `selfTest` (ms with every segment lit and every text showing its `test` string) and the `{{is:<token>:<value>}}` text token.
 
 ## Nov 12 2026
