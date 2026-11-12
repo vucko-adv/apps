@@ -13,6 +13,10 @@
 - **Speed:** three digits with leading zeros, in km/h. **Gear:** the gear number, or P, R, N.
 - **Clock** and **outside temperature**.
 
+**Vintage 1**: the same dash in the 80s amber/green LCD colours: amber readouts and scale, green lit segments and labels, dark amber windows, the rpm bar amber from 5200.
+
+<p align="center"><img src="docs/images/zeiger-vintage1.png" width="900" alt="The Vintage 1 theme"></p>
+
 More themes will follow. Each one starts as a drawing (Illustrator, SVG) that is turned into a theme.
 
 **Calibration grid** and **Map calibration** (in the Theme list, with "Change with SPORT / COMFORT / ECO PRO" off) show what part of the cluster the driver sees on your car.

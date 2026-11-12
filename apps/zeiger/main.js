@@ -25,7 +25,7 @@ mgu.run({
         hud.start();
         new Page(ctx, hud, {
             title: ctx.spec.title, what: 'cluster',
-            look: { name: 'Themes', style: 'hero', tags: { vintage: '80s LCD · km/h', grid: 'calibration', mapcal: 'map calibration' } },
+            look: { name: 'Themes', style: 'hero', tags: { vintage: '80s LCD · km/h', vintage1: '80s amber LCD · km/h', grid: 'calibration', mapcal: 'map calibration' } },
             tabs: ['look', 'alerts', 'settings'],
             settings: ['units', 'clock', 'timeZone', 'tankLitres', 'demo'],
         }).start();

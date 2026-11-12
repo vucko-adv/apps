@@ -96,6 +96,17 @@ const THEMES = {
         bg: [1, 1, 1, 255], panel: [19, 74, 51, 255], line: [232, 240, 191, 255], head: [232, 240, 191, 255],
         ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [19, 74, 51, 255],
     },
+    // Vintage 1 (layout vintage1.json): the Vintage artwork in the 80s amber/green LCD colours: amber readouts and
+    // scale, green lit segments and labels, dark amber windows (fork addition)
+    vintage1: {
+        name: 'Vintage 1',
+        fg: [255, 176, 32, 255], dim: [140, 100, 30, 255], track: [63, 45, 14, 255], arc: [238, 52, 50, 255],
+        glow: 0, stripe: false,
+        bar: { low: [77, 255, 122], mid: [255, 176, 32], high: [238, 52, 50], midAt: 'shift' },
+        rev: { from: [77, 255, 122], to: [77, 255, 122] },
+        bg: [1, 1, 1, 255], panel: [63, 45, 14, 255], line: [255, 176, 32, 255], head: [77, 255, 122, 255],
+        ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [63, 45, 14, 255],
+    },
     // Speed Meter (layout speedmeter.json): a picture of the speed_meter.svg artwork with its own needles; the
     // readouts in its off-white #f2f2f2 (fork addition)
     speedmeter: {
