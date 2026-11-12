@@ -53,7 +53,7 @@ const TOTAL_ASSETS = 32, ASSETS_PER_CLIENT = 16;   // CompositorLimits assets / 
 const mib = (b) => (b / 1048576).toFixed(1) + ' MiB';
 const SOCK = path.join(os.tmpdir(), 'hud-bench-' + process.pid + '.sock');
 const ROOT = path.join(__dirname, '..');
-const APP_ID = process.argv[2] || process.env.BENCH_APP || 'idrive_hud_widgets';
+const APP_ID = process.argv[2] || process.env.BENCH_APP || 'zeiger';
 const APP_DIR = path.join(ROOT, 'apps', APP_ID);
 if (!fs.existsSync(path.join(APP_DIR, 'app.json'))) { console.error('no app ' + APP_ID + ' under apps/'); process.exit(2); }
 const DATA_DIR = path.join(__dirname, '.data', APP_ID);   // the app's data/ on the bench (settings.json, layouts/)

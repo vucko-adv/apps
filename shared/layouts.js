@@ -40,6 +40,9 @@ const TYPES = {
     gmeter: [],
     tiles: ['tiles'],
     revarc: ['center', 'r', 'start', 'sweep'],
+    picture: ['picture'],
+    needle: ['picture', 'measure', 'table'],
+    segments: ['picture', 'measure', 'segs', 'steps'],
 };
 const CLASSES = ['ambient', 'content', 'overlay', 'alert'];
 

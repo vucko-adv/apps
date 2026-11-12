@@ -86,6 +86,27 @@ const THEMES = {
         bg: [0, 0, 0, 255], panel: [0, 0, 0, 255], line: [70, 74, 82, 255], head: [226, 228, 232, 255],
         ink: [12, 12, 14, 255], accent: [240, 243, 248, 255], well: [0, 0, 0, 255],
     },
+    // Vintage (layout vintage.json): CAJGER-vintage.svg, an 80s LCD dash in cream on dark green (fork addition)
+    vintage: {
+        name: 'Vintage',
+        fg: [232, 240, 191, 255], dim: [120, 140, 100, 255], track: [19, 74, 51, 255], arc: [238, 52, 50, 255],
+        glow: 0, stripe: false,
+        bar: { low: [232, 240, 191], mid: [241, 234, 39], high: [238, 52, 50], midAt: 'shift' },
+        rev: { from: [232, 240, 191], to: [232, 240, 191] },
+        bg: [1, 1, 1, 255], panel: [19, 74, 51, 255], line: [232, 240, 191, 255], head: [232, 240, 191, 255],
+        ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [19, 74, 51, 255],
+    },
+    // Speed Meter (layout speedmeter.json): a picture of the speed_meter.svg artwork with its own needles; the
+    // readouts in its off-white #f2f2f2 (fork addition)
+    speedmeter: {
+        name: 'Speed Meter',
+        fg: [242, 242, 242, 255], dim: [150, 150, 150, 255], track: [52, 52, 52, 255], arc: [230, 30, 30, 255],
+        glow: 0, stripe: false,
+        bar: { low: [242, 242, 242], mid: [255, 170, 40], high: [230, 30, 30], midAt: 'shift' },
+        rev: { from: [242, 242, 242], to: [242, 242, 242] },
+        bg: [0, 0, 0, 255], panel: [0, 0, 0, 255], line: [200, 200, 200, 255], head: [226, 228, 232, 255],
+        ink: [12, 12, 14, 255], accent: [230, 30, 30, 255], well: [0, 0, 0, 255],
+    },
     // Roadster (layout roadster.json): two classic round dials, ivory numbers, a chrome ring, an orange needle.
     roadster: {
         name: 'Roadster',

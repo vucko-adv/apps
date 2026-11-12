@@ -127,6 +127,21 @@
  *             "warn" while its oil / coolant / boost reading is over the warning limit (put "warnFlash": false on
  *             its texts). Roles "fill" (panel), "line", "trackColor" (track); "radius" (8), "border" (1.5), "strip"
  *             (3), "barH" (6) px. The labels and values are text widgets on top.
+ *   picture   image layer of its own: a picture from hud/pictures (pictures.js) as it is, "picture" its name; the
+ *             widget's w / h must be the picture's. A theme drawn in a design tool is a picture (the face) under the
+ *             live widgets (bimmer-lab-apps fork addition, Speed Meter theme)
+ *   needle    image layer of its own: a needle picture (drawn pointing straight up) turned about "pivot" [x, y] (layer
+ *             px from its top-left; else the picture's own px, py) by "measure" (speed in km/h, rpm, fuel 0..1, oil,
+ *             coolant, or any _raw() name) through "table": [[value, degrees clockwise from 12 o'clock], ...] in
+ *             rising value order (straight between points, held at the ends; no data: the first point). "glide": ms
+ *             has the renderer play each turn over that long (cluster-render animations, untested on the car)
+ *   segments  image layer of its own: a bar of segments that light one by one. "picture" is the bar with every
+ *             segment lit (the widget's size); "segs" [[x, y, w, h], ...] each segment's box in it (widget px),
+ *             first to light first; "steps" [v, ...] the value each segment lights at (segment i is lit while the
+ *             value >= steps[i]); "measure" as a needle's (rpm, speed km/h, fuel 0..1, oil, coolant, any _raw()
+ *             name). Unlit segments are see-through, so the face under it shows them dark. Only the segments that
+ *             changed are sent (bimmer-lab-apps fork addition, Vintage theme)
+ * Text widgets: "zeros": n pads a whole-number value with leading zeros to n digits ("000" km/h; fork addition).
  * Any image widget: "own": true gives it its own image layer instead of a place in a packed sheet (above).
  * Any widget: "conn": 0..3 puts its layer (or its sheet) on that connection to cluster-render. The 8-layer limit
  *   is per connection, so a second socket from the same app gets another 8 (DukeAPenguin saw 28 layers over four
@@ -204,6 +219,7 @@ const ShiftScore = require('./shift_score');
 const sun = require('./sun');
 const textRaster = require('./hud_text');
 const { paintIcon } = require('./icons');
+const pictures = require('./pictures');
 const shaders = require('./shaders');
 const calibration = require('./calibration');
 const Car = require('./kit/car');
@@ -221,7 +237,10 @@ const CLAIM_MS = 1000;
 
 const BOOST_SCALE = { factor: 0.01, offset: 0, invalid: 255 }; // see header comment
 // the widget types drawn as pixels (image layers, packed into sheets unless "own": true); the rest are shaders
-const IMAGE_TYPES = { text: true, scale: true, stripe: true, badge: true, gridlabels: true, icon: true, swatchimg: true };
+const IMAGE_TYPES = { text: true, scale: true, stripe: true, badge: true, gridlabels: true, icon: true, swatchimg: true, picture: true, needle: true, segments: true };
+// pictures (pictures.js) are image layers of their own, never packed into a sheet: a face is the size of a sheet
+// already, and a needle turns about its pivot, which a sheet can't
+const OWN_TYPES = { picture: true, needle: true, segments: true };
 const STATUS_ASK_MS = 2000;      // after a rebuild: ask cluster-render for its own status text
 const LAYER_BUDGET = 8;          // cluster-render's limit per client connection (CompositorLimits.per_client; confirmed on the car Nov 5 2026)
 const MAX_CONN = 4;              // connections a layout may ask for ("conn"): 32 layers service-wide / 8 per connection
@@ -455,6 +474,7 @@ class HudApp {
         this.claimBy = null;             // the id of another kit app holding the HUD now (hud_claim), we step aside
         this.testAt = null;              // the shift-light test's start (Date.now()), while it runs
         this.nightOn = false;            // the layout was built with the night colours (nightDim)
+        this.noDim = false;              // the layout asks for no night colours (noNightDim)
 
         this._setupVehicleData();
         this.layouts.onChange(() => this._rebuild());
@@ -720,7 +740,7 @@ class HudApp {
         this.tickTimer = setInterval(() => this._guard('tick', () => this._tick()), TICK_MS);
         // Auto theme: check for sunrise / sunset once a minute; the status line too
         this.themeTimer = setInterval(() => this._guard('theme check', () => {
-            if (this._themeName() !== this.themeName || this._nightDim() !== this.nightOn) this._rebuild();
+            if (this._themeName() !== this.themeName || (this._nightDim() && !this.noDim) !== this.nightOn) this._rebuild();
             this._status();
             if (this.client.ready) this.client.status();      // the scene ids (scenesApart) can change: guard, update
         }), 60000);
@@ -1472,7 +1492,10 @@ class HudApp {
         this.layoutTheme = layout.theme && THEMES[layout.theme] ? layout.theme : null;
         this.themeName = this._themeName();
         this.theme = THEMES[this.themeName] || THEMES.classic;
-        this.nightOn = this._nightDim();
+        // "noNightDim": a layout whose face is a picture (picture widgets keep their colours) stays as drawn at
+        // night too, so its readouts don't turn darker than the face around them
+        this.noDim = layout.noNightDim === true;
+        this.nightOn = this._nightDim() && !this.noDim;
         if (this.nightOn) this.theme = dimTheme(this.theme, NIGHT_DIM);
         this.log.info('layout "' + layout.name + '", theme ' + this.theme.name + (this.layoutTheme ? '' : ' (' + this.setting('hudTheme') + ')'));
         const shown = layout.widgets.filter((w) => !(w.toggle && !this._toggleOn(w.toggle)) && !(w.themes && w.themes.indexOf(this.themeName) < 0));
@@ -1535,7 +1558,7 @@ class HudApp {
         };
         widgets.forEach((w) => {
             const klass = w.class || 'content', z = w.z || 0, conn = this._connOf(w);
-            if (!IMAGE_TYPES[w.type] || w.own === true) { plan.push({ kind: 'layer', w, klass, z, conn }); return; }
+            if (!IMAGE_TYPES[w.type] || w.own === true || OWN_TYPES[w.type]) { plan.push({ kind: 'layer', w, klass, z, conn }); return; }
             let after = -1;
             plan.forEach((e, i) => {
                 if (e.klass !== klass || e.z !== z || e.conn !== conn) return;
@@ -1639,6 +1662,21 @@ class HudApp {
             if (w.w !== x.cells * a.cellW || w.h !== a.cellH) {
                 this.log.info('widget "' + w.id + '": ' + x.cells + ' cells of ' + (w.w / x.cells).toFixed(1) + 'x' + w.h +
                     ' px; the glyphs keep their shape at w ' + x.cells * a.cellW + ', h ' + a.cellH);
+            }
+        } else if (w.type === 'picture' || w.type === 'needle' || w.type === 'segments') {
+            const p = pictures.get(w.picture);
+            if (!p) { this.log.warn('widget "' + w.id + '": no picture "' + w.picture + '" in hud/pictures'); return; }
+            if (p.w !== w.w || p.h !== w.h) { this.log.warn('widget "' + w.id + '": picture "' + w.picture + '" is ' + p.w + 'x' + p.h + ', the widget ' + w.w + 'x' + w.h); return; }
+            if (w.type === 'segments') {
+                // starts with nothing lit; _update lights what the value says
+                x.pic = p; x.lit = 0; x.value = null; x.t = 0;
+                this._blit(x, null, Buffer.alloc(w.w * w.h * 4, 0));
+            } else this._blit(x, null, p.rgba);
+            if (w.type === 'needle') {
+                // the pivot, in px from the layer's top-left (the layout's, else the picture's own); the turn follows in _update
+                const pv = Array.isArray(w.pivot) ? w.pivot : [p.px, p.py];
+                c.set(ref, { px: pv[0], py: pv[1] });
+                x.value = null; x.angle = null; x.t = 0;
             }
         } else if (w.type === 'gridlabels') this._paintGridLabels(x);
         else if (w.type === 'icon') this._blit(x, null, paintIcon(w.icon, w.w, w.h, color(t, w.color || 'fg')));
@@ -1938,8 +1976,87 @@ class HudApp {
         if (!isNum(this.rpmShown) || Math.abs(this.rpmF - this.rpmShown) >= 40) this.rpmShown = Math.max(0, Math.round(this.rpmF / 50) * 50);
     }
 
+    /** A needle's value now, in the units of its "table": speed km/h, rpm, fuel 0..1, oil / coolant C, or any _raw() name. */
+    _needleValue(measure) {
+        const d = this.car.data();
+        if (measure === 'speed') return d.speed;
+        if (measure === 'oil' || measure === 'coolant') return d[measure];
+        return this._raw(measure);
+    }
+
+    /**
+     * A needle: its value through a 120 ms filter (the car sends speed and temperatures a few times a second),
+     * then the angle from its table (value -> degrees clockwise from 12 o'clock, straight lines between the
+     * points, held at the ends), sent only when it moves a tenth of a degree. "glide": ms also has the renderer
+     * play the turn over that long instead of jumping (cluster-render animations; not drawn by the bench).
+     * No value (no data): the needle rests at the table's first point.
+     */
+    _updateNeedle(x, now, force) {
+        const w = x.w, table = w.table;
+        if (!Array.isArray(table) || !table.length) return;
+        const raw = this._needleValue(w.measure);
+        const dt = x.t ? Math.min(500, now - x.t) : 0;
+        x.t = now;
+        if (!isNum(raw)) x.value = null;
+        else x.value = isNum(x.value) ? x.value + (raw - x.value) * (1 - Math.exp(-dt / 120)) : raw;
+        const v = isNum(x.value) ? x.value : table[0][0];
+        let deg = table[table.length - 1][1];
+        if (v <= table[0][0]) deg = table[0][1];
+        else {
+            for (let i = 1; i < table.length; i++) {
+                if (v <= table[i][0]) { deg = table[i - 1][1] + (table[i][1] - table[i - 1][1]) * (v - table[i - 1][0]) / (table[i][0] - table[i - 1][0]); break; }
+            }
+        }
+        if (!force && isNum(x.angle) && Math.abs(deg - x.angle) < 0.1) return;
+        const from = x.angle;
+        x.angle = deg;
+        x.c.set(x.ref, { rotate: deg });
+        if (isNum(w.glide) && w.glide > 0 && isNum(from)) {
+            // one animation at a time: the client keeps every one it sent (a layer plays at most 16)
+            if (x.anim) x.c.stop(x.ref, x.anim);
+            x.anim = x.c.animate(x.ref, { property: 'rotate', keys: '0:' + from.toFixed(2) + ' ' + Math.round(w.glide) + ':' + deg.toFixed(2) });
+        }
+    }
+
+    /**
+     * A segment bar: the value (rpm as the engine filters it; others through the needles' 120 ms filter), the
+     * number of segments whose step it has reached, and only the segments that changed sent up: lit ones as the
+     * picture's pixels, unlit ones cleared.
+     */
+    _updateSegments(x, now, force) {
+        const w = x.w, segs = w.segs, steps = w.steps, p = x.pic;
+        if (!p || !Array.isArray(segs) || !Array.isArray(steps)) return;
+        let v;
+        if (w.measure === 'rpm') v = this.rpmF;
+        else {
+            const raw = this._needleValue(w.measure);
+            const dt = x.t ? Math.min(500, now - x.t) : 0;
+            x.t = now;
+            if (!isNum(raw)) x.value = null;
+            else x.value = isNum(x.value) ? x.value + (raw - x.value) * (1 - Math.exp(-dt / 120)) : raw;
+            v = x.value;
+        }
+        let n = 0;
+        if (isNum(v)) while (n < segs.length && n < steps.length && v >= steps[n]) n++;
+        if (!force && n === x.lit) return;
+        const lo = force ? 0 : Math.min(x.lit, n), hi = force ? segs.length : Math.max(x.lit, n);
+        x.lit = n;
+        const rects = [], parts = [];
+        for (let i = lo; i < hi; i++) {
+            const [sx, sy, sw, sh] = segs[i];
+            const b = Buffer.alloc(sw * sh * 4, 0);
+            if (i < n) for (let r = 0; r < sh; r++) p.rgba.copy(b, r * sw * 4, ((sy + r) * w.w + sx) * 4, ((sy + r) * w.w + sx + sw) * 4);
+            rects.push({ x: sx, y: sy, w: sw, h: sh });
+            parts.push(b);
+        }
+        if (rects.length) this._blit(x, rects, Buffer.concat(parts));
+    }
+
     _update(x, now, force) {
         const w = x.w;
+        if (w.type === 'needle') { this._updateNeedle(x, now, force); return; }
+        if (w.type === 'segments') { this._updateSegments(x, now, force); return; }
+        if (w.type === 'picture') return;
         if (w.type === 'atext') {
             if (!force && now - x.lastPaint < (w.rate || TEXT_MS)) return;
             const s = this._resolve(w.text);
@@ -1948,7 +2065,8 @@ class HudApp {
             x.c.uniform(x.ref, 'u_text', this._atlasCodes(x, s), { type: 'vec4' });
         } else if (w.type === 'text') {
             if (!force && now - x.lastPaint < (w.rate || TEXT_MS)) return;
-            const s = this._resolve(w.text);
+            let s = this._resolve(w.text);
+            if (isNum(w.zeros) && /^d+$/.test(s)) s = s.padStart(w.zeros, '0');
             let role = w.color || 'fg';
             if (w.colorBy === 'verdict' && this.score.last) role = VERDICT[this.score.last.verdict] || role;
             if (w.near && this._nearMark(w.near[0]) === w.near[1]) role = w.nearColor || 'fg';

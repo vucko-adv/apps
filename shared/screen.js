@@ -22,7 +22,7 @@ const path = require('path');
 const DIR = '/dev/shm/bimmer-lab';
 const BEAT_MS = 2000;
 const FRESH_MS = 7000;           // the other app's file older than this: it isn't running
-const NAMES = { cluster: 'Cluster Themes', hud: 'HUD Widgets' };
+const NAMES = { cluster: 'Zeiger', hud: 'HUD Widgets' };
 
 class Screen {
     /**

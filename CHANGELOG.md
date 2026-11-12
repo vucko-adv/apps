@@ -2,6 +2,12 @@
 
 Newest first. Dates are when the build was pushed.
 
+## Nov 12 2026
+
+- **Zeiger 0.1.0:** the first build of this fork. Cluster Themes becomes **Zeiger**, with one theme of its own: **Vintage**, an 80s LCD dash in cream on dark green, with a 48-segment rpm bar (yellow from 5200, red past 7000), oil, water and fuel segment bars with centred values, the speed (3 digits), gear, clock and outside temperature (centred with its °C) in Technology Bold and Grand Sport Condensed. The other themes and HUD Widgets are gone. New widget types for themes drawn in a design tool: `picture` (a picture as it is), `needle` (a picture turned about a pivot by a value table) and `segments` (a bar lit segment by segment from a picture of its lit state); text `zeros` pads a value with leading zeros. `bench/server-win.js` runs the bench on Windows.
+
+Older entries are bimmer-lab's Cluster Themes and HUD Widgets, which Zeiger is forked from.
+
 ## Nov 11 2026
 
 - **Cluster Themes 0.14.6, HUD Widgets 0.12.6:** the Time zone (clock) setting now also lists named zones (US Eastern, Central, Mountain, Pacific, Alaska, Hawaii, Arizona, Canada Atlantic, Mexico, UK / Ireland / Portugal, Central Europe, Eastern Europe). A named zone switches to and from daylight saving by itself, so you set it once. The plain UTC offsets are still there for everywhere else. Night colours (Auto) now works out sunset for the zone you pick instead of one fixed US city. The apps' reads from the car's control units (boost, intake, fuel %, hybrid battery) now go through the kit's read-only link, which refuses anything that isn't a read before it leaves the head unit. New Cluster Themes setting, off by default: **Leave BMW's bottom strip clear** draws the theme only above BMW's own bottom strip (range, clock, belt light, P), squeezed to fit. One M car owner found that leaving the strip clear stopped BMW drawing black boxes over the theme (issue #5). Not yet tested on a car with this setting; please report how it works on yours. HUD Widgets now makes way for Redline: while Redline holds the HUD, HUD Widgets draws nothing, and it comes back by itself when Redline lets go (it uses the kit's HUD claim, the same one Cluster functions uses).
