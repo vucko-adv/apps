@@ -143,6 +143,8 @@
  *             changed are sent (bimmer-lab-apps fork addition, Vintage theme)
  * Text widgets: "zeros": n pads a whole-number value with leading zeros to n digits ("000" km/h; fork addition).
  * Any image widget: "own": true gives it its own image layer instead of a place in a packed sheet (above).
+ *   Pictures and segments get their own layer anyway, unless "own": false (fork addition): then they pack like
+ *   text, so a face cut into its drawn pieces costs a few small sheets instead of a 1920x720 layer (11 MiB).
  * Any widget: "conn": 0..3 puts its layer (or its sheet) on that connection to cluster-render. The 8-layer limit
  *   is per connection, so a second socket from the same app gets another 8 (DukeAPenguin saw 28 layers over four
  *   sockets on his car, Nov 5 2026; the calibration grids probe it here: L5..L16 on connections 2..4). 0 (the
@@ -241,6 +243,9 @@ const IMAGE_TYPES = { text: true, scale: true, stripe: true, badge: true, gridla
 // pictures (pictures.js) are image layers of their own, never packed into a sheet: a face is the size of a sheet
 // already, and a needle turns about its pivot, which a sheet can't
 const OWN_TYPES = { picture: true, needle: true, segments: true };
+// ...unless "own": false: a still picture or a segments bar may share a sheet (a needle turns, so never); fork addition,
+// a face cut into pieces packs into a few sheets instead of one full-screen layer (pixel memory)
+const PACKABLE = { picture: true, segments: true };
 const STATUS_ASK_MS = 2000;      // after a rebuild: ask cluster-render for its own status text
 const LAYER_BUDGET = 8;          // cluster-render's limit per client connection (CompositorLimits.per_client; confirmed on the car Nov 5 2026)
 const MAX_CONN = 4;              // connections a layout may ask for ("conn"): 32 layers service-wide / 8 per connection
@@ -1558,7 +1563,7 @@ class HudApp {
         };
         widgets.forEach((w) => {
             const klass = w.class || 'content', z = w.z || 0, conn = this._connOf(w);
-            if (!IMAGE_TYPES[w.type] || w.own === true || OWN_TYPES[w.type]) { plan.push({ kind: 'layer', w, klass, z, conn }); return; }
+            if (!IMAGE_TYPES[w.type] || w.own === true || (OWN_TYPES[w.type] && !(w.own === false && PACKABLE[w.type]))) { plan.push({ kind: 'layer', w, klass, z, conn }); return; }
             let after = -1;
             plan.forEach((e, i) => {
                 if (e.klass !== klass || e.z !== z || e.conn !== conn) return;
