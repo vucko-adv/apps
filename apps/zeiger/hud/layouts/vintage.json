@@ -7,6 +7,17 @@
  "_about": "Vintage: CAJGER-vintage.svg (an 80s LCD dash, cream on dark green) as a picture (the face), the rpm bar (48 segments, 0-8000, red past 7000) and the oil / water / fuel bars (10 segments each) as segment widgets lit from pictures of their lit state, and the speed (3 digits, leading zeros), gear, clock, outside temperature and the bar values in fonts baked from Technology Bold and Grand Sport Condensed. Made by cluster-design/vintage/build.html. km/h and °C are drawn into the face: pick metric units. Widget reference: shared/hud.js header.",
  "widgets": [
   {
+   "id": "bg",
+   "type": "fill",
+   "color": "bg",
+   "class": "content",
+   "z": 0,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 720
+  },
+  {
    "id": "face1",
    "type": "picture",
    "picture": "vintage_face1",
