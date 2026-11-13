@@ -4,6 +4,7 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 13 2026
 
+- **Zeiger 0.12.1:** a soft black fade along the bottom of Dark Moon, Underpass, Mist, Map, Map Underpass and Map Mist (from y 628 down, nearly black in BMW's bottom strip), so the dark backing BMW draws behind its gear letter there (P R N D, always shown) blends in. The readouts above keep their background. The Vintage themes are black there already.
 - **Zeiger 0.12.0:** **Vintage Green and Vintage Amber with the phone's map.** While waze-on-cluster streams the phone's map, they change by themselves to a layout with the map:
   - the map in a window (x 656-1296, y 341-600) under a veil in the theme's colours, with scanlines and a vignette;
   - the temperature and clock to its left, under a smaller dot-matrix strip;
