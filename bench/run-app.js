@@ -89,7 +89,8 @@ setInterval(() => {
     const v = manual, num = (k, d) => (typeof v[k] === 'number' && isFinite(v[k]) ? v[k] : d);
     const g = Math.round(num('gear', 0));
     hu.feed('de.bmw.infotainment.vehicle.CDS', 'statusEngineSpeed2', { actualValueRPMEngineCrankshaft: raw('rpm', num('rpm', 0)) });
-    hu.feed('de.bmw.infotainment.vehicle.Vehicle2', 'statusCarSpeed2', { speedVehicleCentreOfGravity: raw('speed', num('speed', 0)) });
+    // "stall": ["speed"] stops sending that signal (the fail-safe's stale-speed test); the app keeps its last value
+    if ((v.stall || []).indexOf('speed') < 0) hu.feed('de.bmw.infotainment.vehicle.Vehicle2', 'statusCarSpeed2', { speedVehicleCentreOfGravity: raw('speed', num('speed', 0)) });
     hu.feed('de.bmw.infotainment.vehicle.CDS2', 'statusLongitudinalAccelerationMassCenter', { longitudinalAccelerationCentreOfGravity: raw('accel', num('gLong', 0) * 9.80665) });
     hu.feed('de.bmw.infotainment.vehicle.CDS2', 'statusLateralAccelerationMassCenter', { lateralAccelerationCentreOfGravity: raw('accel', num('gLat', 0) * 9.80665) });
     hu.feed('de.bmw.infotainment.vehicle.CDS', 'statusEngineTemperature', { temperatureEngineDrive: raw('temp', num('coolant', 90)), temperatureEngineOilDrive: raw('temp', num('oil', 100)) });
@@ -128,6 +129,7 @@ process.on('message', (m) => {
     } else if (m.t === 'set') press(m.key, m.value);
     else if (m.t === 'drive') drive = m.value;
     else if (m.t === 'shiftTest' && hud) hud.testShift();
+    else if (m.t === 'hang') { const end = Date.now() + (m.ms || 3000); while (Date.now() < end) { /* the bench's hang test: block the loop */ } }
 });
 process.on('disconnect', () => process.exit(0));
 process.on('SIGTERM', () => process.exit(0));

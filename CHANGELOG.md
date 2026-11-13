@@ -4,6 +4,12 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 13 2026
 
+- **Zeiger 0.16.0:** a **fail-safe**, after G's Dash's.
+  - **If Zeiger hangs:** its theme disappears within about 1.2 s and BMW's own cluster shows. Every layer plays a cluster-render animation that holds its scale and then shrinks it to nothing, and Zeiger renews it every 200 ms.
+  - **If the speed signal stops while the car moves:** for over a second, the theme hides at once and comes back half a second after the speed returns.
+  - Both were tested on the bench, not yet in the car.
+  - Engine: the kit's `car.ageOf()`, and `animate` taking the caller's animation number.
+  - Bench: animations, the hang test (`POST /hang`) and `stall` in manual signals.
 - **Zeiger 0.15.1:** the same small grey **clock** on **Map**, **Map Underpass** and **Map Mist**, under the map's window between the range and the coolant. Map's small font gains the colon. The clock is on the second connection, so the layouts keep their small sheets.
 - **Zeiger 0.15.0:** Dark Moon, Underpass and Mist get a small grey **clock** in the middle of the bottom row, between the range and the coolant. It uses the readouts' own font and follows the **Clock** setting (12 or 24 hours).
 - **Zeiger 0.14.0:** Apex and Apex Sport get a **clock**: white, in their racing face, in the middle of the bottom row. Apex Sport gets a **shift flash**:

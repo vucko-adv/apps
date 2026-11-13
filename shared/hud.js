@@ -263,6 +263,15 @@ const LAYER_BUDGET = 8;          // cluster-render's limit per client connection
 const MAX_CONN = 4;              // connections a layout may ask for ("conn"): 32 layers service-wide / 8 per connection
 const PIXEL_BYTES = 16 * 1024 * 1024;   // cluster-render's pixel memory for every app's images together (CompositorLimits.pixel_bytes)
 const SHEET_AREA_FRAC = 4;       // the first sheet size limit: 1/4 of the target area (see the header)
+// Fail-safe (Zeiger 0.16.0, after G's Dash's failsafe.js): every layer of ours plays a renderer animation that holds
+// its scale for FS_HOLD_MS and then takes it to 0, renewed (the same animation number: the service starts it over)
+// every FS_REARM_MS while the app runs. The app hanging, cluster-render shrinks our layers away on its own clock and
+// BMW's own cluster or HUD shows, never a frozen speed. Moving (FS_MOVING_KMH or more) with the speed signal older than
+// FS_STALE_MS (live data only; a moving car's speed changes all the time): hidden at once, back after FS_RESHOW_MS of
+// fresh speed. Only the speed: a hybrid's rpm stays 0, unchanged, while it drives on electricity. The hold is 6 renewals
+// long, so a busy moment (the page decoding the theme gallery) doesn't blink the theme; the longest gap between two
+// renewals is logged once a minute when it was over 2 of them (FS_LOG_MS), to tune this on the car.
+const FS_ANIM = 99, FS_REARM_MS = 200, FS_HOLD_MS = 1200, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
 const TICK_MS = 50;              // 20 Hz: shift bar and gauges
 const TEXT_MS = 200;             // text re-draws at most 5 times a second (what BMW's own readouts do)
 const TARGET_SIZES = { hud: [800, 480], panel: [1920, 720] };
@@ -785,6 +794,12 @@ class HudApp {
             this._statusSoon();
         });
         c.on('refused', (op, ref, reason) => {
+            // a cluster-render that refuses animations: the fail-safe off for this run, said once (not every renewal)
+            if (op === 'animate') {
+                if (!this.fsOff) this.log.warn('fail-safe: cluster-render refused its animation (' + reason + '): off until the app restarts');
+                this.fsOff = true;
+                return;
+            }
             const w = this._widgetOf(ci, ref);
             this.log.warn('refused ' + op + ' on ' + ref + tag + (w ? ' (' + w + ')' : '') + ': ' + reason);
             if (!this.refused) this.refused = (w || op) + ': ' + reason;   // the first one, until the next rebuild
@@ -1724,6 +1739,7 @@ class HudApp {
             }
         });
         if (this._offset().x || this._offset().y || this._scale() !== 1 || this._stripSy() !== 1) this._place();
+        this._failsafe(Date.now(), true);
         const atlasBytes = this._atlasBytes();
         px += atlasBytes;
         this.pixelBytes = px;
@@ -2160,6 +2176,41 @@ class HudApp {
         const flashing = isNum(rpm) && rpm >= this.setting('redline') - 150;
         this.flash = flashing ? Math.floor(now / 62.5) % 2 === 0 : false;
         this.widgets.forEach((x) => this._guard('widget ' + x.w.id, () => this._update(x, now, false)));
+        this._failsafe(now, false);
+    }
+
+    /**
+     * The fail-safe (FS_* above): renew every layer's hold-then-vanish animation, or vanish now while the speed is
+     * stale. force: at once (a rebuild, a change of state), else every FS_REARM_MS. Each layer's hold value is its own
+     * scale ("Leave BMW's bottom strip clear" squeezes the panel's), about the pivot _place() set.
+     */
+    _failsafe(now, force) {
+        if (!this.placed.length || this.fsOff) { this.fsAt = 0; return; }
+        const age = this._speedAge();
+        if (age !== null) this.fsFresh = 0; else if (!this.fsFresh) this.fsFresh = now;
+        const hide = age !== null || (this.fsHidden === true && now - this.fsFresh < FS_RESHOW_MS);
+        if (hide !== (this.fsHidden === true)) {
+            this.fsHidden = hide; force = true;
+            if (hide) this.log.warn('fail-safe: moving and no new speed for ' + age + ' ms: our layers hidden, the car\'s own show');
+            else this.log.info('fail-safe: fresh speed again: our layers back');
+        }
+        if (!force && now - (this.fsAt || 0) < FS_REARM_MS) return;
+        if (this.fsAt) this.fsGap = Math.max(this.fsGap || 0, now - this.fsAt);
+        if (now - (this.fsLogAt || 0) >= FS_LOG_MS) {
+            if (this.fsGap > 2 * FS_REARM_MS) this.log.info('fail-safe: longest gap between renewals ' + this.fsGap + ' ms (layers vanish after ' + FS_HOLD_MS + ')');
+            this.fsLogAt = now; this.fsGap = 0;
+        }
+        this.fsAt = now;
+        const st = this._stripSy(), sc = this._scale(), s = st !== 1 ? [1, st] : [sc, sc];
+        const keys = hide ? '0:0,0,0' : '0:' + s[0] + ',' + s[1] + ',1 ' + FS_HOLD_MS + ':0,0,0';
+        this.placed.forEach((l) => this._guard('fail-safe', () => l.c.animate(l.ref, { anim: FS_ANIM, property: 'scale', keys, loop: false, interp: 'step' })));
+    }
+    /** ms since the car last sent the speed while it was FS_MOVING_KMH or more and that is over FS_STALE_MS ago, else null */
+    _speedAge() {
+        const d = this.car.data();
+        if (d.demo || typeof this.car.ageOf !== 'function' || !isNum(d.speed) || d.speed < FS_MOVING_KMH) return null;
+        const a = this.car.ageOf('speed');
+        return isNum(a) && a > FS_STALE_MS ? a : null;
     }
 
     /** This drive's distance and moving time (the car's own data only; standing still doesn't count). */

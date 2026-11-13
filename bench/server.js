@@ -103,6 +103,8 @@ function sceneMeta() {
         sx: l.sx, sy: l.sy, px: l.px, py: l.py, rotate: l.rotate,
         exclusive: l.exclusive, iw: l.iw, ih: l.ih, fs: l.fs, time: l.time, uniforms: l.uniforms, binds: l.binds, format: l.format,
         state: l.state, reason: l.reason, warnings: l.kind === 'asset' ? [] : layerWarnings(l),
+        // animations (PROTOCOL.md "Animations"): each with how long it has played, so the page plays it on from there
+        anims: l.anims ? Object.keys(l.anims).map((n) => { const a = l.anims[n]; return { anim: +n, property: a.property, name: a.name, keys: a.keys, loop: a.loop, interp: a.interp, age: Date.now() - a.t0 }; }) : [],
     }));
 }
 function helloMsg() {
@@ -317,6 +319,26 @@ const renderServer = net.createServer((sock) => {
                 sceneChanged();
                 return;
             }
+            case 'animate': {
+                // PROTOCOL.md "Animations": played by the renderer (here the page) by itself; the same number
+                // again replaces it, starting over; at most 16 a layer. Image and effect layers: rotate, translate,
+                // scale, uniform (meshes are not drawn here)
+                if (!l) return refuse('animate', m.ref, 'no such layer');
+                if (['rotate', 'translate', 'scale', 'uniform'].indexOf(m.property) < 0) return refuse('animate', m.ref, 'unknown property "' + m.property + '"');
+                const keys = String(m.keys || '').trim().split(/\s+/).map((k) => { const p = k.split(':'); return [Number(p[0])].concat(String(p[1] || '').split(',').map(Number)); });
+                if (!keys.length || keys.length > 256 || keys.some((k) => k.some((n) => !isFinite(n)))) return refuse('animate', m.ref, 'bad keys "' + m.keys + '"');
+                l.anims = l.anims || {};
+                if (!l.anims[m.anim] && Object.keys(l.anims).length >= 16) return refuse('animate', m.ref, 'a layer plays at most 16 animations');
+                l.anims[m.anim] = { property: m.property, name: m.name, keys, loop: !!m.loop, interp: m.interp === 'step' ? 'step' : 'linear', t0: Date.now() };
+                sceneChanged();
+                return;
+            }
+            case 'stop': {
+                if (!l) return refuse('stop', m.ref, 'no such layer');
+                if (l.anims) delete l.anims[m.anim];
+                sceneChanged();
+                return;
+            }
             case 'status':
                 const conns = new Set(Array.from(layers.values()).map((l) => l.conn)).size;
                 const assets = layers.size - layerCount();
@@ -499,6 +521,15 @@ const web = http.createServer(async (req, res) => {
     }
     if (req.method === 'POST' && url === '/restart') {
         restartApp('restart button');
+        res.writeHead(204); return res.end();
+    }
+    if (req.method === 'POST' && url === '/hang') {
+        // the app's event loop blocked for { ms } (default 3000): what a hang on the head unit looks like (its socket
+        // stays open, it sends nothing); the fail-safe should take its layers away
+        const b = await body(req), ms = Math.min(30000, Math.max(100, Number(b.ms) || 3000));
+        if (!child) { res.writeHead(409); return res.end('app not running'); }
+        child.send({ t: 'hang', ms });
+        log('info', 'bench: the app hangs for ' + ms + ' ms');
         res.writeHead(204); return res.end();
     }
     if (req.method === 'POST' && url === '/cap') {

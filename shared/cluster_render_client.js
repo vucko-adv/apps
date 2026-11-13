@@ -435,14 +435,17 @@ class ClusterRender extends EventEmitter {
 
     /* opts: part, property ('rotate', 'translate', 'scale', 'uniform'),
      * name (the uniform's), keys ("t:v[,v,v] ..." or [[t, v...], ...], t in
-     * ms), loop, interp ('linear', 'step'). Returns the animation's number,
-     * 0 when refused here. */
+     * ms), loop, interp ('linear', 'step'), anim (a number of the caller's:
+     * sent again, the service replaces that animation, starting it over;
+     * else a new number). Returns the animation's number, 0 when refused
+     * here. */
     animate(ref, opts) {
         const l = this.layers.get(ref);
         if (!l || !opts.property || !opts.keys) return 0;
         const keys = typeof opts.keys === 'string' ? opts.keys
             : opts.keys.map((k) => k[0] + ':' + k.slice(1).join(',')).join(' ');
-        const anim = l.nextAnim++;
+        const anim = opts.anim > 0 ? Math.floor(opts.anim) : l.nextAnim++;
+        if (anim >= l.nextAnim) l.nextAnim = anim + 1;
         const m = { op: 'animate', ref: ref, anim: anim, property: opts.property, keys: keys,
             loop: flag(opts.loop), interp: opts.interp || 'linear' };
         if (opts.part) m.part = opts.part;

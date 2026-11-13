@@ -107,6 +107,7 @@ class Car {
         const over = (ctx.spec.config && ctx.spec.config.scaling) || {};
         this.S = Object.assign({}, SCALE, over);
         this.live = {}; this.lastCar = 0; this.listeners = [];
+        this.liveAt = {};            // when each live value last arrived (ms), for ageOf()
         this.sim = new Sim(); this.simData = this.sim.sample();
         this.demoActive = false; this.guess = new GearGuess();
         const sc = (k, raw) => {
@@ -116,7 +117,7 @@ class Car {
         };
         const put = (k, v, tick) => {
             if (v === null || v === undefined || (typeof v === 'number' && !isFinite(v))) return;
-            this.live[k] = v; this.lastCar = Date.now();
+            this.live[k] = v; this.lastCar = Date.now(); this.liveAt[k] = this.lastCar;
             // learned gear while driving; nothing at a standstill - the guess can't tell P, N or D
             // there, and "N" shown in park or in D was wrong
             if (k === 'rpm' || k === 'speed') { const g = this.guess.feed(this.live.rpm, this.live.speed); if (g !== null || this.live.speed < 3) this.guessed = this.live.speed < 3 ? undefined : g; }
@@ -191,6 +192,10 @@ class Car {
         if (d.gear === undefined && !this.demoActive) { d.gear = this.guessed; d.gearGuessed = true; }
         return d;
     }
+
+    /** ms since the car last sent value k (live data only), null if it never has. The car notifies a field when it
+     *  changes, so a parked car's values grow old; a moving car's speed changes all the time. */
+    ageOf(k) { return this.liveAt[k] ? Date.now() - this.liveAt[k] : null; }
 
     /** fn(data, tMs) per sample; fn.reset() (optional) when the source switches live<->demo. */
     onSample(fn, reset) { this.listeners.push({ fn, reset }); }

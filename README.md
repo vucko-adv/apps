@@ -68,6 +68,13 @@ If bimmer-lab's Cluster Themes is installed, remove it first, so the two apps do
 
 Installing apps that don't come from BMW on your head unit is done at your own risk and may affect your warranty.
 
+## If something goes wrong
+
+Zeiger never leaves a frozen speed on the cluster:
+
+- **If Zeiger hangs:** its theme disappears within about a second and BMW's own cluster shows. Every layer it draws has a timer that runs in cluster-render, and Zeiger keeps renewing it. If it stops renewing, cluster-render takes the theme away by itself.
+- **If the speed signal stops while you drive:** for a second or more, the theme hides at once and comes back half a second after the speed returns.
+
 ## Black boxes on the cluster
 
 **Black boxes in the middle with the engine running (none with it off), on a car that is not a real M:** the cluster is coded to BMW's M layout. Cars with the M Sport or M Performance package often have it coded in with BimmerCode, and with that layout BMW draws black boxes in the middle over Zeiger's themes (and over other custom cluster apps). The fix is to code the cluster back to the car's own layout (M Sport or M Performance) and restart the head unit. Checked on a G20 with the M package (November 2026): the boxes in the middle went away. Owners of real M cars report the same boxes ([bimmer-lab/apps#11](https://github.com/bimmer-lab/apps/issues/11)).

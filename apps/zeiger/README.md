@@ -37,6 +37,14 @@ Dark Moon's readouts and weather over a photo (`cluster-design/underpass` and `c
 
 Dark Moon's look round the phone's map (waze-on-cluster): the map in a window in the middle with the sun on its top edge, the speed on the left, the selector and drive mode on the right, range and coolant at the bottom with a small grey clock under the map between them. **Map Underpass** and **Map Mist**: the same window and readouts on Underpass's and Mist's photos (`cluster-design/map_underpass`, `cluster-design/map_mist`).
 
+## Fail-safe
+
+Every layer of the theme plays a cluster-render animation: it holds its scale for 1.2 s and then shrinks to nothing. The engine (shared/hud.js `_failsafe`) starts it over every 200 ms, with the same animation number, so the service replaces it. If Zeiger hangs, the renewals stop and cluster-render takes the theme away on its own clock, so BMW's own cluster shows.
+
+While the car moves, if the speed signal is over a second old, the theme hides at once and comes back half a second after the speed returns. Only the speed is checked, because a hybrid's rpm stays at 0, unchanged, while it drives on electricity. The log notes the longest gap between renewals once a minute when it is over 400 ms.
+
+The bench shows both (bench/README.md): the hang button (`POST /hang`) and `stall: ["speed"]` in manual signals.
+
 ## Settings
 
 - **Change with SPORT / COMFORT / ECO PRO:** a theme per drive mode, or one theme always.
