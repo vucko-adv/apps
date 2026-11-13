@@ -15,6 +15,10 @@
 - **Message line** in dot matrix: oil temperature and range.
 - **Self-test:** at power-on everything lights for 2.5 s (888, every letter, BMW · SYSTEM CHECK), as an 80s dash did.
 
+**Sunrise**: a sunrise over mountains with the speed in the middle and **today's weather** on the left: an icon, the outside temperature from the car, the day's weather and its high / low / chance of rain. The forecast comes from Open-Meteo for roughly where the car is (the internet connection's place, about 10 km), so it needs the Store's **Internet uplink** online (a phone's hotspot, USB tethering or an LTE stick); without it the theme says NO INTERNET and keeps the day's last forecast. The setting **Today's weather** turns the fetching off.
+
+<p align="center"><img src="docs/images/zeiger-sunrise.png" width="900" alt="The Sunrise theme"></p>
+
 **Map**: the phone's map over the whole cluster (Waze, Apple Maps or Google Maps over CarPlay, Google Maps over Android Auto, through waze-on-cluster), with only the speed, the selector and drive mode, range with a fuel bar and the coolant temperature over it, in Barlow. For the map to fill the screen, waze-on-cluster needs `map_rect = 0,0,1920,720` in its `waze-on-cluster.conf`; with "Map size" set to Centre the map stays in its 1088x480 window.
 
 <p align="center"><img src="docs/images/zeiger-map.png" width="900" alt="The Map theme"></p>

@@ -1052,7 +1052,8 @@ class HudApp {
 
     _status() {
         // the Waze map's state rides along while that setting is on (and redraws the page's Map tab when it changes)
-        const s = this.statusText() + (this.waze && (this.mapAlways || this.setting('mapInTheme') === true) ? '; Waze: ' + this.waze.info().text : '');
+        const s = this.statusText() + (this.waze && (this.mapAlways || this.setting('mapInTheme') === true) ? '; Waze: ' + this.waze.info().text : '') +
+            (this.wx && this.wx.wanted ? '; Weather: ' + this.wx.info() : '');
         if (s === this.lastStatus) return;
         this.lastStatus = s;
         this.statusListeners.forEach((fn) => { try { fn(s); } catch (e) { this.log.warn('status listener: ' + e); } });
@@ -1336,6 +1337,7 @@ class HudApp {
             if (kind === 'slotUnit') return this.sensorUnit(sn);
             if (kind === 'slotSuffix') return sn && sn.suffix ? sn.suffix : '';
         }
+        if (tok.indexOf('wx') === 0) return this._wxToken(tok);
         if (tok.indexOf('tyreP:') === 0) { const v = this._tyre('p', tok.slice(6)); return isNum(v) ? (us ? fix(v * 14.5038, 0) : fix(v, 1)) : '--'; }
         if (tok.indexOf('tyreT:') === 0) { const v = this._tyre('t', tok.slice(6)); return isNum(v) ? String(Math.round(us ? v * 9 / 5 + 32 : v)) : '--'; }
         if (tok.indexOf('dial:speed:') === 0) {     // a speed dial's label i ({{dial:speed:<i>}}): DIAL_SPEED's steps
@@ -1479,6 +1481,27 @@ class HudApp {
         return p ? [p.lat, p.lon] : [tz.FALLBACK.lat, tz.FALLBACK.lon];
     }
 
+    /** Today's weather (shared/weather.js, Zeiger addition): {{wxIcon}} the icon font's letter, {{wxText}} the day's
+     *  weather in a word or two (or why there is none), {{wxLine}} "H 18°  L 7°   RAIN 40%", {{wxHi}} {{wxLo}} {{wxNow}}
+     *  (° in the units setting), {{wxRain}} (%). Empty or -- while there's no forecast for today. */
+    _wxToken(tok) {
+        const t = this.wx && this.wx.wanted ? this.wx.today() : null, us = this.setting('units') === 'us';
+        const deg = (v) => (isNum(v) ? String(Math.round(us ? v * 9 / 5 + 32 : v)) : '--');
+        switch (tok) {
+            case 'wxIcon': return t ? t.icon : '';
+            case 'wxText':
+                if (t) return t.word;
+                if (!this.wx || !this.wx.wanted) return '';
+                return this.wx.state === 'offline' ? 'NO INTERNET' : this.wx.state === 'error' ? 'NO FORECAST' : '';
+            case 'wxLine': return t ? 'H ' + deg(t.hi) + '°  L ' + deg(t.lo) + '°' + (isNum(t.rain) ? '   RAIN ' + Math.round(t.rain) + '%' : '') : '';
+            case 'wxHi': return deg(t && t.hi);
+            case 'wxLo': return deg(t && t.lo);
+            case 'wxNow': return deg(t && t.now);
+            case 'wxRain': return t && isNum(t.rain) ? String(Math.round(t.rain)) : '--';
+            default: return '--';
+        }
+    }
+
     _resolve(template) { return String(template).replace(/\{\{([a-zA-Z0-9:]+)\}\}/g, (_, t) => this._token(t)); }
 
     /* ---------------- layers ---------------- */
@@ -1505,6 +1528,7 @@ class HudApp {
         this.mapLayout = false;
         this.mapAlways = false;
         this.mapShown = this.setting('mapUp');
+        if (this.wx) this.wx.want(false);    // the layout below asks again
         if (name === 'off') {
             this._wazeWant();
             this.problem = null; this.layoutTheme = null; this.needsBoost = false; this.needsIntake = false; this.needsHv = false; this.needsFuel = false;
@@ -1529,6 +1553,7 @@ class HudApp {
         this.mapLayout = layout.widgets.some((w) => w.holeWhen === 'mapUp');
         this.mapAlways = layout.wantsMap === true;
         this._wazeWant();
+        if (this.wx) this.wx.want(layout.wantsWeather === true && this.setting('weather') !== false);
         this.layoutSlots = layout.slots || [];
         this.layoutTheme = layout.theme && THEMES[layout.theme] ? layout.theme : null;
         this.themeName = this._themeName();

@@ -1,8 +1,8 @@
 {
   "id": "zeiger",
   "title": "Zeiger",
-  "description": "Instrument cluster themes drawn by hand: Vintage, an 80s LCD dash in cream on dark green (rpm bar, oil, water and fuel bars, 3-digit speed, gear, clock, outside temperature)",
-  "version": "0.6.0",
+  "description": "Instrument cluster themes drawn by hand: Vintage 1 and Vintage 2 (80s LCD dashes), Map (the phone's map over the whole cluster, the speed over it) and Sunrise (a sunrise over mountains, the speed and today's weather)",
+  "version": "0.7.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -27,8 +27,10 @@
     "screen.js",
     "runs.js",
     "tz.js",
-    "pictures.js"
+    "pictures.js",
+    "weather.js"
   ],
+  "internet": true,
   "signals": {
     "de.bmw.infotainment.vehicle.CDS": {
       "statusEngineSpeed2": "rs",
@@ -115,6 +117,10 @@
         [
           "map",
           "Map"
+        ],
+        [
+          "sunrise",
+          "Sunrise"
         ],
         [
           "grid",
@@ -225,6 +231,12 @@
           "Centre, 1088x480"
         ]
       ]
+    },
+    {
+      "key": "weather",
+      "label": "Today's weather in the Sunrise theme (Open-Meteo, for where the internet connection is; needs the Store's Internet uplink)",
+      "type": "bool",
+      "default": true
     },
     {
       "key": "units",

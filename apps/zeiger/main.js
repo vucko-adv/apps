@@ -11,6 +11,7 @@
 const mgu = require('./kit/mgu');
 const HudApp = require('./hud');
 const Page = require('./page');
+const Weather = require('./weather');
 
 mgu.run({
     start(ctx) {
@@ -22,13 +23,16 @@ mgu.run({
             ctx.log.error('Cluster failed to start: ' + (e && e.stack || e));
             return;
         }
+        // today's weather for the Sunrise theme (fetched only while that theme shows; weather.js)
+        hud.wx = new Weather(ctx.dataDir, ctx.log);
+        hud.wx.onChange(() => hud._status());
         hud.start();
         new Page(ctx, hud, {
             title: ctx.spec.title, what: 'cluster',
-            look: { name: 'Themes', style: 'hero', tags: { vintage1: '80s amber LCD · km/h', vintage2: '1985 LCD · km/h', map: 'phone map · minimal', grid: 'calibration', mapcal: 'map calibration' } },
+            look: { name: 'Themes', style: 'hero', tags: { vintage1: '80s amber LCD · km/h', vintage2: '1985 LCD · km/h', map: 'phone map · minimal', sunrise: 'sunrise · weather', grid: 'calibration', mapcal: 'map calibration' } },
             tabs: ['look', 'alerts', 'settings'],
-            settings: ['units', 'clock', 'timeZone', 'tankLitres', 'mapSize', 'shiftX', 'hideBoxes', 'stripClear', 'demo'],
+            settings: ['units', 'clock', 'timeZone', 'tankLitres', 'mapSize', 'weather', 'shiftX', 'hideBoxes', 'stripClear', 'demo'],
         }).start();
-        process.on('exit', () => { try { hud.stop(); } catch (e) { /* exiting anyway */ } });
+        process.on('exit', () => { try { hud.wx.stop(); hud.stop(); } catch (e) { /* exiting anyway */ } });
     },
 });
