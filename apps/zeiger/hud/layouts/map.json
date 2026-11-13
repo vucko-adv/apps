@@ -4,10 +4,11 @@
  "packWaste": 1.5,
  "theme": "map",
  "wantsMap": true,
- "_about": "Map: the phone's map (Waze, Apple Maps or Google Maps over CarPlay, Google Maps over Android Auto; waze-on-cluster on the panel at its own 1088x480 size, map_rect empty) in a window in the middle of a black cluster, ending left of BMW's gear box (x 1396; the box at about x 1420-1610, y 318-433 on a G20 can't be seen on black); the speed and km/h, the selector letter and the drive mode, range with a fuel bar and the coolant temperature with its bar round it. Barlow Medium (OFL). Made by cluster-design/map/build.html. Widget reference: shared/hud.js header.",
+ "noNightDim": true,
+ "_about": "Map: the phone's map (Waze, Apple Maps or Google Maps over CarPlay, Google Maps over Android Auto; waze-on-cluster on the panel at its own 1088x480 size) in a window in the middle of Dark Moon's sunrise seen from orbit, the sun on the window's top edge (cluster-design/darkmoon/orbit_scene.js, its pixels moved with Theme position); the speed and km/h on the left, the selector letter and the drive mode on the right, range with a fuel bar and the coolant temperature with its bar at the bottom, symmetric about the window. The window ends left of BMW's gear box (x 1422-1610, y 318-433), which falls on black space. Barlow Medium (OFL). Made by cluster-design/map/build.html. Widget reference: shared/hud.js header.",
  "widgets": [
   {
-   "id": "bg",
+   "id": "backdrop",
    "type": "fill",
    "color": "bg",
    "toggle": "!mapUp",
@@ -19,21 +20,13 @@
    "h": 720
   },
   {
-   "id": "bg_map",
-   "type": "fill",
-   "color": "bg",
-   "toggle": "mapUp",
-   "hole": [
-    416,
-    120,
-    980,
-    480
-   ],
-   "holeWhen": "mapUp",
-   "holeInset": 2,
-   "holeRadius": 24,
+   "id": "bg",
+   "type": "picture",
+   "picture": "map_bg",
+   "own": true,
+   "followsShift": true,
    "class": "content",
-   "z": 0,
+   "z": 1,
    "x": 0,
    "y": 0,
    "w": 1920,
@@ -58,9 +51,9 @@
    "own": false,
    "class": "content",
    "z": 2,
-   "x": 1620,
+   "x": 1590,
    "y": 612,
-   "w": 190,
+   "w": 200,
    "h": 40
   },
   {
@@ -438,7 +431,7 @@
    "measure": "coolant",
    "class": "content",
    "z": 3,
-   "x": 1655,
+   "x": 1595,
    "y": 640,
    "w": 150,
    "h": 8,
@@ -807,9 +800,9 @@
    "font": "m_big",
    "color": "fg",
    "align": "center",
-   "x": 38,
-   "y": 287,
-   "w": 380,
+   "x": 8,
+   "y": 192,
+   "w": 400,
    "h": 143
   },
   {
@@ -822,8 +815,8 @@
    "font": "m_small",
    "color": "dim",
    "align": "center",
-   "x": 148,
-   "y": 444,
+   "x": 128,
+   "y": 350,
    "w": 160,
    "h": 38
   },
@@ -838,7 +831,7 @@
    "color": "fg",
    "align": "center",
    "x": 1602,
-   "y": 301,
+   "y": 206,
    "w": 220,
    "h": 129
   },
@@ -848,13 +841,13 @@
    "class": "content",
    "z": 4,
    "conn": 1,
-   "text": "{{mode}}",
+   "text": "{{modeShort}}",
    "font": "m_small",
    "color": "dim",
    "align": "center",
-   "x": 1532,
-   "y": 444,
-   "w": 360,
+   "x": 1607,
+   "y": 350,
+   "w": 210,
    "h": 38
   },
   {
@@ -882,7 +875,7 @@
    "font": "m_small",
    "color": "fg",
    "align": "right",
-   "x": 1685,
+   "x": 1625,
    "y": 602,
    "w": 120,
    "h": 38

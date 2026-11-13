@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Today's weather for the cluster (Zeiger addition, the Sunrise theme): Open-Meteo's forecast (open-meteo.com, free,
+ * Today's weather for the cluster (Zeiger addition, the Dark Moon theme): Open-Meteo's forecast (open-meteo.com, free,
  * no key; data CC BY 4.0) for roughly where the car is. The head unit gives apps no GPS position, so the place is
  * the one the internet connection's address belongs to (ipinfo.io: the phone's or the LTE stick's operator, often
  * its nearest big city), rounded to 0.1 degree (about 10 km) before it goes to Open-Meteo.

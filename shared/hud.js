@@ -267,6 +267,26 @@ const PLACE_KEYS = ['hudX', 'hudY', 'hudScale', 'stripClear'];
 // y 662. A theme drawn only above it is reported (#5, an M car) to stop BMW painting its black boxes over the theme.
 // cluster-render has no clip, so the switch squeezes every layer to 662 / 720 of its height about the panel's top.
 const STRIP_TOP = 662;
+// themes saved under an older name: the setting reads as the theme's name now
+const RENAMED = { sunrise: 'dark_moon' };
+
+/** An RGBA picture w x h moved dx px to the right (negative: left), its edge column repeated into the gap. */
+function shiftPixels(rgba, w, h, dx) {
+    dx = Math.max(-w + 1, Math.min(w - 1, Math.round(dx)));
+    if (!dx) return rgba;
+    const out = Buffer.alloc(w * h * 4), row = w * 4, n = Math.abs(dx) * 4;
+    for (let y = 0; y < h; y++) {
+        const r0 = y * row;
+        if (dx > 0) {
+            rgba.copy(out, r0 + n, r0, r0 + row - n);
+            for (let i = 0; i < n; i += 4) rgba.copy(out, r0 + i, r0, r0 + 4);
+        } else {
+            rgba.copy(out, r0, r0 + n, r0 + row);
+            for (let i = row - n; i < row; i += 4) rgba.copy(out, r0 + i, r0 + row - 4, r0 + row);
+        }
+    }
+    return out;
+}
 // settings that only change what a text shows (the next tick paints it), no rebuild
 const LIVE_KEYS = ['warnOil', 'warnCoolant', 'warnBoost', 'badge', 'badgeBMW', 'gFlipLat', 'gFlipLong', 'gRange', 'gTrail'];
 // g (after cauliflowermossgrape's G-Force, MIT, idea only): a sample over G_BAD is a bad reading, not a corner;
@@ -620,9 +640,12 @@ class HudApp {
         const s = this.ctx.settings.item(key);
         const v = this.ctx.settings.get(key);
         if (!s) return v;
+        const has = (x) => (s.options || []).some((o) => o[0] === x);
         const ok = s.type === 'bool' ? typeof v === 'boolean'
-            : s.type === 'choice' ? (s.options || []).some((o) => o[0] === v)
+            : s.type === 'choice' ? has(v)
                 : s.type === 'number' ? isNum(v) && (!s.steps || s.steps.indexOf(v) >= 0) : true;
+        // a theme saved under the name it had before (Sunrise is Dark Moon since Zeiger 0.9.0)
+        if (!ok && s.type === 'choice' && RENAMED[v] && has(RENAMED[v])) return RENAMED[v];
         return ok ? v : s.default;
     }
 
@@ -1459,7 +1482,7 @@ class HudApp {
                 if (!m) return '';
                 const base = m === 'sport' ? 'SPORT' : m === 'eco' ? 'ECO PRO' : 'COMFORT';
                 const v = this.driveMode ? this.driveVariant : null;
-                // {{modeShort}} (Zeiger addition): SPORT+, ECO PRO+, INDIVIDUAL, for a narrow box (Sunrise's, beside BMW's gear box)
+                // {{modeShort}} (Zeiger addition): SPORT+, ECO PRO+, INDIVIDUAL, for a narrow box (Dark Moon's, beside BMW's gear box)
                 if (tok === 'modeShort') return v === 'plus' ? base + '+' : v === 'individual' ? 'INDIVIDUAL' : base;
                 return base + (v === 'plus' ? ' PLUS' : v === 'individual' ? ' INDIVIDUAL' : '');
             }
@@ -1580,13 +1603,22 @@ class HudApp {
         }
         this.problem = null;
         // "Theme position" (cluster, Zeiger addition): px to the right (negative: left) for every widget but a
-        // full-width one (the black backdrop stays put, so BMW's own cluster never shows at an edge)
+        // full-width one (the black backdrop stays put, so BMW's own cluster never shows at an edge). A full-width
+        // picture with "followsShift" (a scene whose middle has to stay under the readouts: Dark Moon's sun over the
+        // speed, Map's window round the map) moves its pixels instead, the edge column repeated into the gap
         const shiftX = this.target === 'panel' && this.ctx.settings.item('shiftX') ? Number(this.setting('shiftX')) || 0 : 0;
-        if (shiftX) layout = Object.assign({}, layout, { widgets: layout.widgets.map((w) => (w.w >= this.size[0] ? w : Object.assign({}, w, { x: w.x + shiftX }))) });
+        if (shiftX) {
+            layout = Object.assign({}, layout, {
+                widgets: layout.widgets.map((w) => (w.w < this.size[0] ? Object.assign({}, w, { x: w.x + shiftX })
+                    : w.followsShift === true ? Object.assign({}, w, { pixelShift: shiftX }) : w)),
+            });
+        }
         // "selfTest": ms the layout starts with every segment lit and every text showing its "test" string, as an 80s
         // dash did at power-on (Vintage 2); the values take over by themselves once it ends
         this.testUntil = isNum(layout.selfTest) && layout.selfTest > 0 ? Date.now() + layout.selfTest : 0;
-        this.mapLayout = layout.widgets.some((w) => w.holeWhen === 'mapUp');
+        // a layout with a window onto the Waze map: a fill with a hole while it shows, or one that says so ("wantsMap":
+        // Map, whose window is cut into its picture)
+        this.mapLayout = layout.wantsMap === true || layout.widgets.some((w) => w.holeWhen === 'mapUp');
         this.mapAlways = layout.wantsMap === true;
         this._wazeWant();
         if (this.wx) this.wx.want(layout.wantsWeather === true && this.setting('weather') !== false);
@@ -1777,7 +1809,7 @@ class HudApp {
                 // starts with nothing lit; _update lights what the value says
                 x.pic = p; x.lit = 0; x.value = null; x.t = 0;
                 this._blit(x, null, Buffer.alloc(w.w * w.h * 4, 0));
-            } else this._blit(x, null, p.rgba);
+            } else this._blit(x, null, w.pixelShift ? shiftPixels(p.rgba, w.w, w.h, w.pixelShift) : p.rgba);
             if (w.type === 'needle') {
                 // the pivot, in px from the layer's top-left (the layout's, else the picture's own); the turn follows in _update
                 const pv = Array.isArray(w.pivot) ? w.pivot : [p.px, p.py];
