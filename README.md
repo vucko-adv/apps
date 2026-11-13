@@ -36,11 +36,11 @@ Both work in either units (km/h or mph, °C or °F, bar or psi).
 
 <p align="center"><img src="docs/images/zeiger-apex-sport.png" width="900" alt="The Apex Sport theme"></p>
 
-**Dark Moon**: a sunrise seen from orbit. Black space and stars, the sun coming up behind a dark moon over the Earth's thin blue limb, the speed in the moon's disc right under the sun. The selector and drive mode (COMFORT, SPORT, SPORT+, ECO PRO) are on the right and **today's weather** on the left: an icon, the outside temperature from the car, the day's weather and its high / low / chance of rain. Everything mirrors about the middle. The forecast comes from Open-Meteo for roughly where the car is (the internet connection's place, about 10 km), so it needs the Store's **Internet uplink** online (a phone's hotspot, USB tethering or an LTE stick); without it the theme says NO INTERNET and keeps the day's last forecast. The setting **Today's weather** turns the fetching off.
+**Dark Moon**: a sunrise seen from orbit. Black space and stars, the sun coming up behind a dark moon over the Earth's thin blue limb, the speed in the moon's disc right under the sun. The selector and drive mode (COMFORT, SPORT, SPORT+, ECO PRO) are on the right and **today's weather** on the left: an icon, the outside temperature from the car, the day's weather and its high / low / chance of rain. The range and coolant are at the bottom, with a small grey clock between them. Everything mirrors about the middle. The forecast comes from Open-Meteo for roughly where the car is (the internet connection's place, about 10 km), so it needs the Store's **Internet uplink** online (a phone's hotspot, USB tethering or an LTE stick); without it the theme says NO INTERNET and keeps the day's last forecast. The setting **Today's weather** turns the fetching off.
 
 <p align="center"><img src="docs/images/zeiger-dark-moon.png" width="900" alt="The Dark Moon theme"></p>
 
-**Underpass** and **Mist**: Dark Moon's readouts and weather over a photo. Underpass: low sun on a tiled wall over a stairway, two people going up in silhouette. Mist: a misty valley between two dark hills, light breaking through the cloud.
+**Underpass** and **Mist**: Dark Moon's readouts, weather and clock over a photo. Underpass: low sun on a tiled wall over a stairway, two people going up in silhouette. Mist: a misty valley between two dark hills, light breaking through the cloud.
 
 <p align="center"><img src="docs/images/zeiger-underpass.png" width="900" alt="The Underpass theme"></p>
 

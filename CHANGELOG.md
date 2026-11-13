@@ -4,6 +4,7 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 13 2026
 
+- **Zeiger 0.15.0:** Dark Moon, Underpass and Mist get a small grey **clock** in the middle of the bottom row, between the range and the coolant. It uses the readouts' own font and follows the **Clock** setting (12 or 24 hours).
 - **Zeiger 0.14.0:** Apex and Apex Sport get a **clock**: white, in their racing face, in the middle of the bottom row. Apex Sport gets a **shift flash**:
   - Toward the shift point the whole rev band flashes: white from 500 rpm before it, yellow from 250 before, red at it.
   - The shift point is **Redline (shift light)** less **Shift point before redline**, lower while the engine is cold.
