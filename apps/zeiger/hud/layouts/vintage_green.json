@@ -5,6 +5,7 @@
  "theme": "vintage_green",
  "noNightDim": true,
  "selfTest": 2500,
+ "withMap": "vintage_green_map",
  "_about": "Vintage Green: an LCD from 1985 (cream on dark green): a continuous rpm wedge lit, orange / amber from 5200, red from the scale's red (about 6750 rpm), slanted seven-segment speed, gear, clock and outside temperature over ghost 8s, P R N D S M with the selector lit, oil / water / fuel bars under pixel icons, a dot-matrix message line, scanlines, and a 2.5 s self-test at power-on. Made by cluster-design/vintage2/build.html. km/h and °C are drawn into the face: pick metric units. Widget reference: shared/hud.js header.",
  "widgets": [
   {

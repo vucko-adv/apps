@@ -48,6 +48,7 @@ class Waze {
         this.wanted = false;
         this.st = null;              // the last status read: { state, target } or null (no file / unreadable / stale)
         this.up = false;             // the map is showing on the panel
+        this.streaming = false;      // the phone's map is coming in, on whatever target (hud.js: Vintage Map's switch)
         this.sending = false;
         this.nextTry = 0;
         this.problem = null;         // 'busy' | an error text, from the last send
@@ -110,8 +111,11 @@ class Waze {
         if (s && s.target === 'map' && !this.wanted && this.moved) this._setMoved(false);   // it's back
         if (s && s.target === 'panel' && this.problem) this.problem = null;
         const up = !!(this.wanted && s && s.target === 'panel' && s.state === 'showing');
+        // "streaming": the phone's map is coming in (showing, or frozen for a moment), on whatever target, wanted or not
+        const streaming = !!(s && (s.state === 'showing' || s.state === 'frozen'));
         const text = this.info().text;
-        const changed = up !== this.up || text !== this.lastText;
+        const changed = up !== this.up || text !== this.lastText || streaming !== this.streaming;
+        this.streaming = streaming;
         this.up = up;
         this.lastText = text;
         this._sync();

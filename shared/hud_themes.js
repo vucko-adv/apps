@@ -108,6 +108,26 @@ const THEMES = {
         bg: [1, 1, 1, 255], panel: [63, 45, 14, 255], line: [255, 176, 32, 255], head: [77, 255, 122, 255],
         ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [63, 45, 14, 255],
     },
+    // Vintage Green Map (layout vintage_green_map.json, Zeiger): Vintage Green's colours, shown in its place while the phone's map is on
+    vintage_green_map: {
+        name: 'Vintage Green Map',
+        fg: [232, 240, 191, 255], dim: [120, 140, 100, 255], track: [19, 74, 51, 255], arc: [238, 52, 50, 255],
+        glow: 0.6, stripe: false,
+        bar: { low: [232, 240, 191], mid: [255, 163, 26], high: [238, 52, 50], midAt: 'shift' },
+        rev: { from: [232, 240, 191], to: [232, 240, 191] },
+        bg: [1, 1, 1, 255], panel: [19, 74, 51, 255], line: [232, 240, 191, 255], head: [232, 240, 191, 255],
+        ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [19, 74, 51, 255],
+    },
+    // Vintage Amber Map (layout vintage_amber_map.json, Zeiger): Vintage Amber's colours, shown in its place while the phone's map is on
+    vintage_amber_map: {
+        name: 'Vintage Amber Map',
+        fg: [255, 176, 32, 255], dim: [140, 100, 30, 255], track: [63, 45, 14, 255], arc: [238, 52, 50, 255],
+        glow: 0.6, stripe: false,
+        bar: { low: [77, 255, 122], mid: [255, 176, 32], high: [238, 52, 50], midAt: 'shift' },
+        rev: { from: [77, 255, 122], to: [77, 255, 122] },
+        bg: [1, 1, 1, 255], panel: [63, 45, 14, 255], line: [255, 176, 32, 255], head: [77, 255, 122, 255],
+        ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [63, 45, 14, 255],
+    },
     // Map (layout map.json): the phone's map in a window in the middle, white readouts round it on black (Zeiger addition)
     map: {
         name: 'Map',

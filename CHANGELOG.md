@@ -4,6 +4,13 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 13 2026
 
+- **Zeiger 0.12.0:** **Vintage Green and Vintage Amber with the phone's map.** While waze-on-cluster streams the phone's map, they change by themselves to a layout with the map:
+  - the map in a window (x 656-1296, y 341-600) under a veil in the theme's colours, with scanlines and a vignette;
+  - the temperature and clock to its left, under a smaller dot-matrix strip;
+  - the speed to its right;
+  - between them, a window as tall as the speed's, with the selector's letter over the gear number.
+
+  The plain layout comes back 8 s after the map stops, without the self-test. The setting **Show the phone's map** turns it off. Engine changes (shared/hud.js): a layout's `withMap` names the one to show while the map streams, a full-width fill's map window can follow Theme position (`holeFollowsShift`), and waze.js reports `streaming` on any target. The map stays at waze-on-cluster's own size, so the Map themes are unaffected. 12.2 of the cluster's 16 MiB.
 - **Zeiger 0.11.0:** two more themes, **Map Underpass** and **Map Mist**: the Map theme's window onto the phone's map and its readouts (the speed on the left, the selector on the right, range and coolant at the bottom) on Underpass's and Mist's photos, black where BMW's gear box lands. `cluster-design/photo/photo_theme.js` makes them with `map: true`. 11.7 of the cluster's 16 MiB each.
 - **Zeiger 0.10.0:** two new themes, **Underpass** and **Mist**: Dark Moon's readouts and weather over a photo (low sun on a tiled wall over a stairway; a misty valley between two dark hills). `cluster-design/photo/photo_theme.js` fits a 1920x720 photo to the cluster: soft scrims behind the readouts (white on them reads at 8:1 or better), black wherever BMW's gear box lands (Mist's right hill raised there), the picture moving with Theme position. 12.3 of the cluster's 16 MiB each.
 - **Zeiger 0.9.1:** **Dark Moon**: the speed and the selector line up with the weather. All three columns share one band: the speed's digits, the selector letter and the temperature start on one line (y 245), and km/h, the drive mode and the forecast's last line end on one line (y 413).

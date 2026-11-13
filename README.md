@@ -17,6 +17,10 @@
 
 <p align="center"><img src="docs/images/zeiger-vintage-amber.png" width="900" alt="The Vintage Amber theme"></p>
 
+**With the phone's map:** while the phone's map is on (CarPlay or Android Auto through waze-on-cluster), Vintage Green and Vintage Amber change by themselves to a layout with the map. The map sits in a window under a veil in the theme's colours, with scanlines like an old screen. The temperature and clock move to its left and the speed to its right, with a tall window between them: the selector's letter over the gear number. When the map has been off for a few seconds, the plain layout comes back. The setting **Show the phone's map** turns this off.
+
+<p align="center"><img src="docs/images/zeiger-vintage-green-map.png" width="900" alt="Vintage Green with the phone's map"></p>
+
 **Dark Moon**: a sunrise seen from orbit. Black space and stars, the sun coming up behind a dark moon over the Earth's thin blue limb, the speed in the moon's disc right under the sun. The selector and drive mode (COMFORT, SPORT, SPORT+, ECO PRO) are on the right and **today's weather** on the left: an icon, the outside temperature from the car, the day's weather and its high / low / chance of rain. Everything mirrors about the middle. The forecast comes from Open-Meteo for roughly where the car is (the internet connection's place, about 10 km), so it needs the Store's **Internet uplink** online (a phone's hotspot, USB tethering or an LTE stick); without it the theme says NO INTERNET and keeps the day's last forecast. The setting **Today's weather** turns the fetching off.
 
 <p align="center"><img src="docs/images/zeiger-dark-moon.png" width="900" alt="The Dark Moon theme"></p>

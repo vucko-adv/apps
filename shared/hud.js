@@ -269,6 +269,8 @@ const PLACE_KEYS = ['hudX', 'hudY', 'hudScale', 'stripClear'];
 const STRIP_TOP = 662;
 // themes saved under an older name: the setting reads as the theme's name now
 const RENAMED = { sunrise: 'dark_moon' };
+// a "withMap" layout stays this long after the phone's map stops (a map pausing for a moment doesn't switch back and forth)
+const MAP_VARIANT_OFF_MS = 8000;
 
 /** An RGBA picture w x h moved dx px to the right (negative: left), its edge column repeated into the gap. */
 function shiftPixels(rgba, w, h, dx) {
@@ -511,9 +513,16 @@ class HudApp {
         this.mapLayout = false;          // the active layout has a map window (a widget with holeWhen "mapUp")
         // the Waze map inside the theme (Cluster Themes, config.waze; waze.js): "mapUp" is on while it shows
         this.waze = this.config.waze ? new Waze(Object.assign({ dataDir: ctx.dataDir }, this.config.waze), this.log, () => this._guard('waze', () => {
+            if (this._mapVariantCheck()) return;
             if (this.mapLayout && this.setting('mapUp') !== this.mapShown) this._rebuild(); else this._status();
         })) : null;
         this.mapShown = false;           // "mapUp" when the layout was built
+        // the "withMap" layout in place of the chosen one (Vintage Map): on as soon as the phone's map streams, off once
+        // it has been off MAP_VARIANT_OFF_MS (a phone's map pausing for a moment doesn't switch the dash back and forth)
+        this.mapVariant = false;
+        this.hasWithMap = false;         // the chosen layout has a "withMap"
+        this.mapVariantT = null;
+        this.noSelfTestOnce = false;
         // the screen shared with the other app (screen.js): stepping aside while the driver gave it to the other one
         this.screen = new Screen(this.target === 'panel' ? 'cluster' : 'hud', ctx.dataDir, this.log,
             () => !!(this.started && this.activeName && this.activeName !== 'off'), () => this._guard('screen', () => this._rebuild()),
@@ -888,6 +897,7 @@ class HudApp {
         clearInterval(this.dmeTimer);
         clearInterval(this.claimTimer);
         clearTimeout(this.statusAskT);
+        clearTimeout(this.mapVariantT); this.mapVariantT = null;
         if (this.waze) this._guard('waze stop', () => this.waze.stop());
         this._guard('screen stop', () => this.screen.stop());
         this.clients.forEach((c) => c.close());
@@ -955,6 +965,36 @@ class HudApp {
 
     /** fn(text) whenever the status line changes. */
     onStatus(fn) { this.statusListeners.push(fn); if (this.lastStatus) fn(this.lastStatus); }
+
+    /**
+     * The "withMap" switch (Vintage Map): on as soon as waze-on-cluster streams the phone's map (showing or frozen, on
+     * whatever target) with the setting "mapInTheme" on; off once the map has been off MAP_VARIANT_OFF_MS. Rebuilds
+     * when the chosen layout has a "withMap", without its self-test. True when it rebuilt.
+     */
+    _mapVariantCheck() {
+        const on = !!(this.waze && this.waze.streaming && this.setting('mapInTheme') !== false);
+        if (!on) {
+            if (!this.mapVariant || this.mapVariantT) return false;
+            this.mapVariantT = setTimeout(() => this._guard('map variant', () => {
+                this.mapVariantT = null;
+                if (this.waze && this.waze.streaming && this.setting('mapInTheme') !== false) return;
+                this.mapVariant = false;
+                if (!this.hasWithMap) return;
+                this.log.info('the phone\'s map is off: the plain layout again');
+                this.noSelfTestOnce = true;
+                this._rebuild();
+            }), MAP_VARIANT_OFF_MS);
+            return false;
+        }
+        clearTimeout(this.mapVariantT); this.mapVariantT = null;
+        if (this.mapVariant) return false;
+        this.mapVariant = true;
+        if (!this.hasWithMap) return false;
+        this.log.info('the phone\'s map is on: the layout with the map');
+        this.noSelfTestOnce = true;
+        this._rebuild();
+        return true;
+    }
 
     /** The layout name to show now: per drive mode when that's on and known, else the plain setting. */
     _layoutName() {
@@ -1601,21 +1641,33 @@ class HudApp {
             this._wazeWant();
             return;
         }
+        // "withMap" (Zeiger: Vintage Green / Amber): the layout to show in its place while the phone's map is on
+        // (waze-on-cluster streaming, the setting "mapInTheme" on); back to this one when the map has been off a while
+        this.hasWithMap = typeof layout.withMap === 'string' && layout.withMap.length > 0;
+        if (this.mapVariant && this.setting('mapInTheme') === false) this.mapVariant = false;
+        if (this.hasWithMap && this.mapVariant) {
+            try { layout = this.layouts.load(layout.withMap); } catch (e) { this.log.warn('layout "' + layout.withMap + '" unusable (' + e.message + '); showing "' + name + '"'); }
+        }
         this.problem = null;
         // "Theme position" (cluster, Zeiger addition): px to the right (negative: left) for every widget but a
         // full-width one (the black backdrop stays put, so BMW's own cluster never shows at an edge). A full-width
         // picture with "followsShift" (a scene whose middle has to stay under the readouts: Dark Moon's sun over the
         // speed, Map's window round the map) moves its pixels instead, the edge column repeated into the gap
         const shiftX = this.target === 'panel' && this.ctx.settings.item('shiftX') ? Number(this.setting('shiftX')) || 0 : 0;
+        // A full-width fill's map window with "holeFollowsShift" moves too (Vintage Map: the window between its readouts;
+        // waze-on-cluster's map stays put, so the window must stay inside the map's own rect)
         if (shiftX) {
             layout = Object.assign({}, layout, {
                 widgets: layout.widgets.map((w) => (w.w < this.size[0] ? Object.assign({}, w, { x: w.x + shiftX })
-                    : w.followsShift === true ? Object.assign({}, w, { pixelShift: shiftX }) : w)),
+                    : w.followsShift === true ? Object.assign({}, w, { pixelShift: shiftX })
+                        : w.holeFollowsShift === true && Array.isArray(w.hole) ? Object.assign({}, w, { hole: [w.hole[0] + shiftX, w.hole[1], w.hole[2], w.hole[3]] }) : w)),
             });
         }
         // "selfTest": ms the layout starts with every segment lit and every text showing its "test" string, as an 80s
         // dash did at power-on (Vintage 2); the values take over by themselves once it ends
-        this.testUntil = isNum(layout.selfTest) && layout.selfTest > 0 ? Date.now() + layout.selfTest : 0;
+        // (not when the rebuild is the switch to or from the "withMap" layout: the dash is already on)
+        this.testUntil = !this.noSelfTestOnce && isNum(layout.selfTest) && layout.selfTest > 0 ? Date.now() + layout.selfTest : 0;
+        this.noSelfTestOnce = false;
         // a layout with a window onto the Waze map: a fill with a hole while it shows, or one that says so ("wantsMap":
         // Map, whose window is cut into its picture)
         this.mapLayout = layout.wantsMap === true || layout.widgets.some((w) => w.holeWhen === 'mapUp');
