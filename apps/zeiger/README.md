@@ -27,6 +27,11 @@ A sunrise over mountains drawn in code by `cluster-design/sunrise/build.html`, t
 - **Warnings:** oil and water values flash red over their limits.
 - **Calibration grid** and **Map calibration** help measure what BMW hides on your car's cluster.
 
+## Black boxes
+
+- **In the middle, with the engine running, on a car that is not a real M:** the cluster is coded to BMW's M layout (often done with BimmerCode on cars with the M Sport or M Performance package). Code it back to the car's own layout (M Sport or M Performance) and restart the head unit; the boxes go away (checked on a G20, November 2026).
+- **Just left of the gear letter:** BMW draws it behind its gear display on every car, over any theme. It can't be seen on the Vintage themes (black background there); it shows on Sunrise and Map.
+
 ## How a theme is made
 
 1. Draw the cluster at 1920x720 (Illustrator, export SVG).
