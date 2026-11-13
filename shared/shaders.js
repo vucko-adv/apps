@@ -1287,7 +1287,14 @@ const BANDFLASH = `// Apex's rev band flashing toward the shift point, one clust
 //   u_size  the layer's size px; u_org  its top-left in the layout's px (the band's numbers are in those)
 //   u_geo   x0, block pitch, blocks, gap      u_top  level top y, end top y, x where the level starts, bend
 //   u_h     the band's height px              u_color rgb 0..1     u_on 0 / 1
+// highp only where the GPU has it in fragment shaders: many embedded GPUs don't, and a shader that asks for it
+// anyway doesn't compile there (cruzen991/Cluster saw that on a car, Nov 2026). In mediump the layout's px numbers
+// keep about half a px up to 1024 and 1 px past it: the edges a little coarser, the flash the same.
+#ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
+#else
+precision mediump float;
+#endif
 varying vec2 v_uv;
 uniform vec2 u_size;
 uniform vec2 u_org;

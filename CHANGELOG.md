@@ -4,6 +4,7 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 13 2026
 
+- **Zeiger 0.16.1:** Apex Sport's shift flash shader asks for `highp` only where the GPU has it in fragment shaders, else `mediump`. Many embedded GPUs lack it, and a shader that demands it doesn't compile there; cruzen991/Cluster saw that on a car. On a GPU with `highp` nothing changes. Without it, the flash now shows, its edges a little coarser.
 - **Zeiger 0.16.0:** a **fail-safe**, after G's Dash's.
   - **If Zeiger hangs:** its theme disappears within about 1.2 s and BMW's own cluster shows. Every layer plays a cluster-render animation that holds its scale and then shrinks it to nothing, and Zeiger renews it every 200 ms.
   - **If the speed signal stops while the car moves:** for over a second, the theme hides at once and comes back half a second after the speed returns.
