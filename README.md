@@ -27,9 +27,13 @@
 
 <p align="center"><img src="docs/images/zeiger-mist.png" width="900" alt="The Mist theme"></p>
 
-**Map**: Dark Moon's look round the phone's map (Waze, Apple Maps or Google Maps over CarPlay, Google Maps over Android Auto, through waze-on-cluster). The map is in a window in the middle with the sun rising on its top edge; the speed is on the left, the selector and drive mode on the right, range and coolant at the bottom.
+**Map**: Dark Moon's look round the phone's map (Waze, Apple Maps or Google Maps over CarPlay, Google Maps over Android Auto, through waze-on-cluster). The map is in a window in the middle with the sun rising on its top edge; the speed is on the left, the selector and drive mode on the right, range and coolant at the bottom. **Map Underpass** and **Map Mist** put the same window and readouts on Underpass's and Mist's photos.
 
 <p align="center"><img src="docs/images/zeiger-map.png" width="900" alt="The Map theme"></p>
+
+<p align="center"><img src="docs/images/zeiger-map-underpass.png" width="900" alt="The Map Underpass theme"></p>
+
+<p align="center"><img src="docs/images/zeiger-map-mist.png" width="900" alt="The Map Mist theme"></p>
 
 More themes will follow. Each one starts as a drawing (Illustrator, SVG) that is turned into a theme.
 
