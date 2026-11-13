@@ -12,6 +12,18 @@ An LCD from 1985, drawn in code by `cluster-design/vintage2/build.html` (`?v=gre
 
 While the phone's map is on, both change by themselves to a layout with the map (`?m=1` in the same build page): the map in a window under a veil in the theme's colours, the temperature and clock to its left, the speed to its right, and between them a tall window with the selector's letter over the gear number. A few seconds after the map goes, the plain layout comes back. The setting **Show the phone's map** turns this off.
 
+## Apex and Apex Sport
+
+A racing cluster, drawn in code by `cluster-design/apex/build.html` (`?v=sport` for Apex Sport) from the same drawing as its design pictures (`draw.js`).
+
+- **Rpm:** a band of 32 blocks (up to 1500, level to 6500, down to 8000) that fills in one continuous line through the blocks: 4 px strips of a `segments` widget, lit white (Sport: yellow), orange from 6000, red from 6500.
+- **Middle:** the speed, the gear (`{{gearnum}}`) and P R N D M. The letter in use is bigger and white (`{{is:stage:X}}`); the others are dim (`{{isnt:stage:X}}`), and the fourth place shows D, or S in the sport programme.
+- **Bars:** boost (0-1.6 bar) and braking (`brakeG`, 0-1.2 g), one segment at a time.
+- **Bottom row:** coolant (40-130 °C) and fuel in 2 px strips.
+- **Apex Sport:** a red glow over a red tray line, the band thicker.
+
+The glows are one quarter-size picture stretched by the GPU. The rest of the face is 6-7 pieces. Every sheet is chosen by its z group, so the theme takes about 8-9 MiB of pixel memory and 15-16 layers on two connections.
+
 ## Dark Moon
 
 A sunrise seen from orbit, drawn in code by `cluster-design/darkmoon/build.html`: the speed in a dark moon's disc under the sun, the selector and drive mode on the right, today's weather on the left (Open-Meteo, through the Store's Internet uplink), everything mirrored about the middle.

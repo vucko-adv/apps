@@ -4,6 +4,16 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 13 2026
 
+- **Zeiger 0.13.0:** two new themes, **Apex** and **Apex Sport**: a racing cluster.
+  - **Rpm:** a 32-block band across the top (up to 1500, level to 6500, down to 8000). It fills in one continuous line through the blocks, white (Sport: yellow), orange from 6000, red from 6500.
+  - **Middle:** the speed, with the gear and P R N D M (S in the sport programme) to its right.
+  - **Bars:** boost and braking bars to its left.
+  - **Bottom row:** coolant and fuel / range.
+  - **Apex Sport** adds a red glow over a red tray line and a thicker band. It is meant for SPORT with **Change with SPORT / COMFORT / ECO PRO**.
+  - **Engine:**
+    - `{{brakeG}}` (braking in g, also a `measure`) and `{{isnt:<token>:<value>[:<other>...]}}`.
+    - A layout's glow can be a small stretched picture that is the background too (no `fill` layer).
+    - Both themes take about 8-9 MiB of pixel memory.
 - **Zeiger 0.12.1:** a soft black fade along the bottom of Dark Moon, Underpass, Mist, Map, Map Underpass and Map Mist (from y 628 down, nearly black in BMW's bottom strip), so the dark backing BMW draws behind its gear letter there (P R N D, always shown) blends in. The readouts above keep their background. The Vintage themes are black there already.
 - **Zeiger 0.12.0:** **Vintage Green and Vintage Amber with the phone's map.** While waze-on-cluster streams the phone's map, they change by themselves to a layout with the map:
   - the map in a window (x 656-1296, y 341-600) under a veil in the theme's colours, with scanlines and a vignette;

@@ -128,6 +128,27 @@ const THEMES = {
         bg: [1, 1, 1, 255], panel: [63, 45, 14, 255], line: [255, 176, 32, 255], head: [77, 255, 122, 255],
         ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [63, 45, 14, 255],
     },
+    // Apex (layout apex.json, Zeiger): a racing cluster, white readouts, the gear orange; "off" is the unlit selector
+    // letters' grey. The glows are drawn into the fonts (cluster-design/apex/build.html), so "glow" stays 0
+    apex: {
+        name: 'Apex',
+        fg: [242, 244, 247, 255], dim: [138, 144, 153, 255], track: [22, 24, 28, 255], arc: [255, 59, 48, 255],
+        glow: 0, stripe: false,
+        bar: { low: [242, 244, 247], mid: [255, 159, 28], high: [255, 59, 48], midAt: 'shift' },
+        rev: { from: [174, 180, 189], to: [236, 239, 243] },
+        bg: [0, 0, 0, 255], panel: [22, 24, 28, 255], line: [242, 244, 247, 255], head: [138, 144, 153, 255],
+        ink: [0, 0, 0, 255], accent: [255, 159, 28, 255], well: [22, 24, 28, 255], off: [74, 79, 87, 255],
+    },
+    // Apex Sport (layout apex_sport.json, Zeiger): Apex for SPORT, a red glow behind the middle, the band and the gear yellow
+    apex_sport: {
+        name: 'Apex Sport',
+        fg: [242, 244, 247, 255], dim: [138, 144, 153, 255], track: [27, 13, 13, 255], arc: [255, 42, 31, 255],
+        glow: 0, stripe: false,
+        bar: { low: [255, 236, 60], mid: [255, 138, 0], high: [255, 42, 31], midAt: 'shift' },
+        rev: { from: [240, 196, 0], to: [255, 236, 60] },
+        bg: [0, 0, 0, 255], panel: [27, 13, 13, 255], line: [255, 42, 31, 255], head: [138, 144, 153, 255],
+        ink: [0, 0, 0, 255], accent: [255, 210, 26, 255], well: [27, 13, 13, 255], off: [74, 79, 87, 255],
+    },
     // Map (layout map.json): the phone's map in a window in the middle, white readouts round it on black (Zeiger addition)
     map: {
         name: 'Map',

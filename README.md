@@ -21,6 +21,20 @@
 
 <p align="center"><img src="docs/images/zeiger-vintage-green-map.png" width="900" alt="Vintage Green with the phone's map"></p>
 
+**Apex** and **Apex Sport**: a racing cluster, one layout in two looks.
+
+- **Rpm:** a band of 32 blocks across the top. It rises from 0 to 1500, runs level to 6500 and falls to 8000. It fills in one continuous line as the revs rise, through the blocks: white, orange from 6000, red from 6500.
+- **Speed** in the middle. The **gear** is to its right (P, R, N or the number), with P R N D M under it and the one in use lit (S in the sport programme).
+- **Boost and braking:** two bars left of the speed. Boost reads 0-1.6 bar. Braking reads 0-1.2 g, how hard the car is slowing, from its own acceleration sensor.
+- **Coolant** and **fuel / range** bars along the bottom.
+- **Apex Sport** is made for SPORT: a red glow rises behind the middle from a red line, the band is thicker and lit yellow, and the gear is yellow. To have them change with the drive mode, turn on **Change with SPORT / COMFORT / ECO PRO** and pick Apex for Comfort and Apex Sport for Sport.
+
+Both work in either units (km/h or mph, °C or °F, bar or psi).
+
+<p align="center"><img src="docs/images/zeiger-apex.png" width="900" alt="The Apex theme"></p>
+
+<p align="center"><img src="docs/images/zeiger-apex-sport.png" width="900" alt="The Apex Sport theme"></p>
+
 **Dark Moon**: a sunrise seen from orbit. Black space and stars, the sun coming up behind a dark moon over the Earth's thin blue limb, the speed in the moon's disc right under the sun. The selector and drive mode (COMFORT, SPORT, SPORT+, ECO PRO) are on the right and **today's weather** on the left: an icon, the outside temperature from the car, the day's weather and its high / low / chance of rain. Everything mirrors about the middle. The forecast comes from Open-Meteo for roughly where the car is (the internet connection's place, about 10 km), so it needs the Store's **Internet uplink** online (a phone's hotspot, USB tethering or an LTE stick); without it the theme says NO INTERNET and keeps the day's last forecast. The setting **Today's weather** turns the fetching off.
 
 <p align="center"><img src="docs/images/zeiger-dark-moon.png" width="900" alt="The Dark Moon theme"></p>

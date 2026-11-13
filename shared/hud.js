@@ -189,7 +189,9 @@
  * {{spd:<i>}} (speed scale label i of SPEED_SCALE: 0..200 mph, 0..320 km/h) {{range}} {{u:distLc}} (mi, km) {{u:dist}} (MI, KM) {{ambient}} (outside, signed: +75) {{u:speedLc}} (mph, km/h) {{ampmLc}} (am, pm) {{torque}} {{u:torque}} (lb-ft, Nm) {{torquePct}} {{powerPct}} (% of config.engine's peak) {{boostHi}} {{boostMid}}
  * (gauge labels for 1.4 / 0.7 bar in the display unit) {{stage}} (P R N, D / S / M by the shifter programme) {{gearInD}} (gear number while in D) {{mode}} (COMFORT, SPORT, SPORT PLUS, SPORT INDIVIDUAL, ECO PRO, ...)
  * {{temp:<deg C>}} (that temperature in the display unit, °F rounded to 10, for gauge labels) {{setup:engine|chassis|steering|gearbox}} (what that part is set to in the drive mode now)
- * {{time}} {{ampm}} {{u:temp}} (°F / °C) {{gLat}} {{gLong}} (g, 2 decimals) {{gSide}} ("0.42 L", "0.42 R")
+ * {{time}} {{ampm}} {{u:temp}} (°F / °C) {{gLat}} {{gLong}} (g, 2 decimals) {{brakeG}} (braking g, 0.00 while not slowing;
+ * also a needle's / segments' "measure") {{isnt:<token>:<value>[:<other>...]}} (the value unless the token shows it or
+ * one of the others; {{is:...}}'s opposite) {{gSide}} ("0.42 L", "0.42 R")
  * {{gFwd}} ("0.31 ACC", "0.31 BRK") {{gBest}} (the most g this drive) {{gMax}} (the G-meter's range, "1.2") {{signal:<car.data() key>}} (raw, 1 decimal).
  * Redline (shift_score.js): {{rpm10}} (rpm to 10) {{shiftAt}} {{lastShift}} {{lastGears}} (4 > 5)
  * {{verdict}} {{shiftPrompt}} (SHIFT at the shift point) {{coldNote}} (only while the oil is cold).
@@ -1359,6 +1361,8 @@ class HudApp {
             const g = this.car.data()[name];
             return isNum(g) && Math.abs(g) <= G_BAD ? g : null;
         }
+        // braking, g: the longitudinal g while it slows the car (as the G-meter's best braking), else 0 (Apex's BRAKE bar)
+        if (name === 'brakeG') { const v = this._raw('gLong'); return isNum(v) ? Math.max(0, -v) : null; }
         if (name === 'intake') {
             if (isNum(this.intakeDme) && Date.now() - this.intakeDmeAt < 10000) return this.intakeDme;
             return this.car.data().demo ? 31 : null;
@@ -1422,6 +1426,9 @@ class HudApp {
         const fix = (v, n) => (isNum(v) ? v.toFixed(n) : '--');
         // {{is:<token>:<value>}}: the value while the token shows it, else nothing (Vintage 2's P R N D S M, one letter each)
         if (tok.indexOf('is:') === 0) { const p = tok.split(':'); return p.length === 3 && this._token(p[1]) === p[2] ? p[2] : ''; }
+        // {{isnt:<token>:<value>[:<other>...]}}: the value unless the token shows it or one of the others (Apex's dim
+        // selector letters, under the lit one: {{isnt:stage:D:S}} is a dim D, gone in D and in S)
+        if (tok.indexOf('isnt:') === 0) { const p = tok.split(':'); if (p.length < 3) return ''; const v = this._token(p[1]); return p.slice(2).indexOf(v) >= 0 ? '' : p[2]; }
         if (tok.indexOf('slot') === 0 && tok.indexOf(':') > 0) {
             const kind = tok.slice(0, tok.indexOf(':')), sn = this.slotSensor(this.activeName, tok.slice(kind.length + 1), this.layoutSlots);
             if (kind === 'slot') return this.sensorValue(sn);
@@ -1480,7 +1487,7 @@ class HudApp {
             case 'boostHi': return us ? '20' : '1.4';
             case 'boostMid': return us ? '10' : '0.7';
             case 'ampmLc': return this._token('ampm').toLowerCase();
-            case 'gLat': case 'gLong': { const v = this._raw(tok); return isNum(v) ? Math.abs(v).toFixed(2) : '--'; }
+            case 'gLat': case 'gLong': case 'brakeG': { const v = this._raw(tok); return isNum(v) ? Math.abs(v).toFixed(2) : '--'; }
             case 'gSide': case 'gFwd': {
                 // the car's left / right (gFlipLat: its sign the other way round); brake on top doesn't change the words
                 const v = this._raw(tok === 'gSide' ? 'gLat' : 'gLong');

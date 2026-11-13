@@ -1,8 +1,8 @@
 {
   "id": "zeiger",
   "title": "Zeiger",
-  "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Amber (an 80s LCD dash), Dark Moon (a sunrise seen from orbit, the speed under the sun, today's weather), Underpass and Mist (photos, with Dark Moon's readouts), and Map, Map Underpass and Map Mist (the phone's map in the middle of Dark Moon's look or of a photo)",
-  "version": "0.12.1",
+  "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Amber (an 80s LCD dash), Apex and Apex Sport (a racing cluster with boost and braking bars), Dark Moon (a sunrise seen from orbit, the speed under the sun, today's weather), Underpass and Mist (photos, with Dark Moon's readouts), and Map, Map Underpass and Map Mist (the phone's map in the middle of Dark Moon's look or of a photo)",
+  "version": "0.13.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -115,6 +115,14 @@
           "Vintage Amber"
         ],
         [
+          "apex",
+          "Apex"
+        ],
+        [
+          "apex_sport",
+          "Apex Sport"
+        ],
+        [
           "map",
           "Map"
         ],
@@ -173,6 +181,14 @@
           "Vintage Amber"
         ],
         [
+          "apex",
+          "Apex"
+        ],
+        [
+          "apex_sport",
+          "Apex Sport"
+        ],
+        [
           "map",
           "Map"
         ],
@@ -217,6 +233,14 @@
           "Vintage Amber"
         ],
         [
+          "apex",
+          "Apex"
+        ],
+        [
+          "apex_sport",
+          "Apex Sport"
+        ],
+        [
           "map",
           "Map"
         ],
@@ -259,6 +283,14 @@
         [
           "vintage_amber",
           "Vintage Amber"
+        ],
+        [
+          "apex",
+          "Apex"
+        ],
+        [
+          "apex_sport",
+          "Apex Sport"
         ],
         [
           "map",

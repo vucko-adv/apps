@@ -29,7 +29,7 @@ mgu.run({
         hud.start();
         new Page(ctx, hud, {
             title: ctx.spec.title, what: 'cluster',
-            look: { name: 'Themes', style: 'hero', tags: { vintage_green: '1985 LCD · green · km/h', vintage_amber: '1985 LCD · amber · km/h', map: 'phone map · minimal', map_underpass: 'phone map · photo', map_mist: 'phone map · photo', dark_moon: 'dark moon · weather', underpass: 'photo · weather', mist: 'photo · weather', grid: 'calibration', mapcal: 'map calibration' } },
+            look: { name: 'Themes', style: 'hero', tags: { vintage_green: '1985 LCD · green · km/h', vintage_amber: '1985 LCD · amber · km/h', apex: 'racing · white · boost', apex_sport: 'racing · red glow · boost', map: 'phone map · minimal', map_underpass: 'phone map · photo', map_mist: 'phone map · photo', dark_moon: 'dark moon · weather', underpass: 'photo · weather', mist: 'photo · weather', grid: 'calibration', mapcal: 'map calibration' } },
             tabs: ['look', 'alerts', 'settings'],
             settings: ['units', 'clock', 'timeZone', 'tankLitres', 'weather', 'shiftX', 'hideBoxes', 'stripClear', 'demo'],
         }).start();
