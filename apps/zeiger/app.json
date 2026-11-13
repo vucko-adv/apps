@@ -2,7 +2,7 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Amber (an 80s LCD dash), Dark Moon (a sunrise seen from orbit, the speed under the sun, today's weather) and Map (Dark Moon's look round the phone's map)",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
