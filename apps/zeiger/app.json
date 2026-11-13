@@ -2,7 +2,7 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Amber (an 80s LCD dash), Map (the phone's map over the whole cluster, the speed over it) and Sunrise (a sunrise over mountains, the speed and today's weather)",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
