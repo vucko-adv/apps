@@ -21,6 +21,12 @@
 
 <p align="center"><img src="docs/images/zeiger-dark-moon.png" width="900" alt="The Dark Moon theme"></p>
 
+**Underpass** and **Mist**: Dark Moon's readouts and weather over a photo. Underpass: low sun on a tiled wall over a stairway, two people going up in silhouette. Mist: a misty valley between two dark hills, light breaking through the cloud.
+
+<p align="center"><img src="docs/images/zeiger-underpass.png" width="900" alt="The Underpass theme"></p>
+
+<p align="center"><img src="docs/images/zeiger-mist.png" width="900" alt="The Mist theme"></p>
+
 **Map**: Dark Moon's look round the phone's map (Waze, Apple Maps or Google Maps over CarPlay, Google Maps over Android Auto, through waze-on-cluster). The map is in a window in the middle with the sun rising on its top edge; the speed is on the left, the selector and drive mode on the right, range and coolant at the bottom.
 
 <p align="center"><img src="docs/images/zeiger-map.png" width="900" alt="The Map theme"></p>

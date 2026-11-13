@@ -1,8 +1,8 @@
 {
   "id": "zeiger",
   "title": "Zeiger",
-  "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Amber (an 80s LCD dash), Dark Moon (a sunrise seen from orbit, the speed under the sun, today's weather) and Map (Dark Moon's look round the phone's map)",
-  "version": "0.9.1",
+  "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Amber (an 80s LCD dash), Dark Moon (a sunrise seen from orbit, the speed under the sun, today's weather), Underpass and Mist (photos, with Dark Moon's readouts) and Map (Dark Moon's look round the phone's map)",
+  "version": "0.10.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -123,6 +123,14 @@
           "Dark Moon"
         ],
         [
+          "underpass",
+          "Underpass"
+        ],
+        [
+          "mist",
+          "Mist"
+        ],
+        [
           "grid",
           "Calibration grid"
         ],
@@ -163,6 +171,14 @@
         [
           "dark_moon",
           "Dark Moon"
+        ],
+        [
+          "underpass",
+          "Underpass"
+        ],
+        [
+          "mist",
+          "Mist"
         ]
       ]
     },
@@ -191,6 +207,14 @@
         [
           "dark_moon",
           "Dark Moon"
+        ],
+        [
+          "underpass",
+          "Underpass"
+        ],
+        [
+          "mist",
+          "Mist"
         ]
       ]
     },
@@ -219,6 +243,14 @@
         [
           "dark_moon",
           "Dark Moon"
+        ],
+        [
+          "underpass",
+          "Underpass"
+        ],
+        [
+          "mist",
+          "Mist"
         ]
       ]
     },

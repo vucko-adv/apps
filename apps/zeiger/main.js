@@ -23,13 +23,13 @@ mgu.run({
             ctx.log.error('Cluster failed to start: ' + (e && e.stack || e));
             return;
         }
-        // today's weather for the Dark Moon theme (fetched only while that theme shows; weather.js)
+        // today's weather for Dark Moon, Underpass and Mist (fetched only while that theme shows; weather.js)
         hud.wx = new Weather(ctx.dataDir, ctx.log);
         hud.wx.onChange(() => hud._status());
         hud.start();
         new Page(ctx, hud, {
             title: ctx.spec.title, what: 'cluster',
-            look: { name: 'Themes', style: 'hero', tags: { vintage_green: '1985 LCD · green · km/h', vintage_amber: '1985 LCD · amber · km/h', map: 'phone map · minimal', dark_moon: 'dark moon · weather', grid: 'calibration', mapcal: 'map calibration' } },
+            look: { name: 'Themes', style: 'hero', tags: { vintage_green: '1985 LCD · green · km/h', vintage_amber: '1985 LCD · amber · km/h', map: 'phone map · minimal', dark_moon: 'dark moon · weather', underpass: 'photo · weather', mist: 'photo · weather', grid: 'calibration', mapcal: 'map calibration' } },
             tabs: ['look', 'alerts', 'settings'],
             settings: ['units', 'clock', 'timeZone', 'tankLitres', 'weather', 'shiftX', 'hideBoxes', 'stripClear', 'demo'],
         }).start();

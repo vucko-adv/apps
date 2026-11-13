@@ -14,6 +14,10 @@ An LCD from 1985, drawn in code by `cluster-design/vintage2/build.html` (`?v=gre
 
 A sunrise seen from orbit, drawn in code by `cluster-design/darkmoon/build.html`: the speed in a dark moon's disc under the sun, the selector and drive mode on the right, today's weather on the left (Open-Meteo, through the Store's Internet uplink), everything mirrored about the middle.
 
+## Underpass and Mist
+
+Dark Moon's readouts and weather over a photo (`cluster-design/underpass` and `cluster-design/mist`, built by `cluster-design/photo/photo_theme.js`): soft scrims behind the readouts so they read on it, and black wherever BMW's gear box lands.
+
 ## Map
 
 Dark Moon's look round the phone's map (waze-on-cluster): the map in a window in the middle with the sun on its top edge, the speed on the left, the selector and drive mode on the right, range and coolant at the bottom.
@@ -22,7 +26,7 @@ Dark Moon's look round the phone's map (waze-on-cluster): the map in a window in
 
 - **Change with SPORT / COMFORT / ECO PRO:** a theme per drive mode, or one theme always.
 - **Theme position:** px to the right (negative: left), -12 by default.
-- **Today's weather** (Dark Moon): on by default.
+- **Today's weather** (Dark Moon, Underpass, Mist): on by default.
 - **Units:** metric (km/h and °C are part of the drawing). **Clock:** 12 or 24 hours. **Time zone.** **Tank size.**
 - **Warnings:** oil and water values flash red over their limits.
 - **Calibration grid** and **Map calibration** help measure what BMW hides on your car's cluster.
