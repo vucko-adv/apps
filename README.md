@@ -21,7 +21,7 @@
 
 <p align="center"><img src="docs/images/zeiger-sunrise.png" width="900" alt="The Sunrise theme"></p>
 
-**Map**: the phone's map over the whole cluster (Waze, Apple Maps or Google Maps over CarPlay, Google Maps over Android Auto, through waze-on-cluster), with only the speed, the selector and drive mode, range with a fuel bar and the coolant temperature over it, in Barlow. For the map to fill the screen, waze-on-cluster needs `map_rect = 0,0,1920,720` in its `waze-on-cluster.conf`; with "Map size" set to Centre the map stays in its 1088x480 window.
+**Map**: the phone's map (Waze, Apple Maps or Google Maps over CarPlay, Google Maps over Android Auto, through waze-on-cluster) in a window in the middle of a black cluster, with only the speed, the selector and drive mode, range with a fuel bar and the coolant temperature round it, in Barlow. The window ends just left of the black box BMW draws behind its gear display, so the box falls on black and can't be seen. waze-on-cluster draws the map at its own size (leave `map_rect` empty in its conf); a map stretched over the whole cluster (`map_rect = 0,0,1920,720`) isn't supported any more.
 
 <p align="center"><img src="docs/images/zeiger-map.png" width="900" alt="The Map theme"></p>
 
@@ -43,7 +43,7 @@ Installing apps that don't come from BMW on your head unit is done at your own r
 
 **Black boxes in the middle with the engine running (none with it off), on a car that is not a real M:** the cluster is coded to BMW's M layout. Cars with the M Sport or M Performance package often have it coded in with BimmerCode, and with that layout BMW draws black boxes in the middle over Zeiger's themes (and over other custom cluster apps). The fix is to code the cluster back to the car's own layout (M Sport or M Performance) and restart the head unit. Checked on a G20 with the M package (November 2026): the boxes in the middle went away. Owners of real M cars report the same boxes ([bimmer-lab/apps#11](https://github.com/bimmer-lab/apps/issues/11)).
 
-**One black box just left of the gear letter:** BMW draws it behind its own gear display on every car, over any theme, and it can't be turned off (on a G20 about x 1420-1610, y 320-435 of the 1920x720 cluster). It can't be seen on Vintage Green and Vintage Amber, whose background there is black; it shows on Sunrise and Map.
+**One black box just left of the gear letter:** BMW draws it behind its own gear display on every car, over any theme, and it can't be turned off (on a G20 about x 1420-1610, y 320-435 of the 1920x720 cluster). It can't be seen on Vintage Green, Vintage Amber and Map, whose background there is black; it shows on Sunrise.
 
 ## Credits
 

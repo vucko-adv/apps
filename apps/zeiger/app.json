@@ -1,8 +1,8 @@
 {
   "id": "zeiger",
   "title": "Zeiger",
-  "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Amber (an 80s LCD dash), Map (the phone's map over the whole cluster, the speed over it) and Sunrise (a sunrise over mountains, the speed and today's weather)",
-  "version": "0.8.1",
+  "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Amber (an 80s LCD dash), Map (the phone's map in a window in the middle, the speed beside it) and Sunrise (a sunrise over mountains, the speed and today's weather)",
+  "version": "0.8.2",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -227,22 +227,6 @@
       "label": "Show the phone's map (waze-on-cluster) in the Map theme",
       "type": "bool",
       "default": true
-    },
-    {
-      "key": "mapSize",
-      "label": "Map size (as waze-on-cluster draws it)",
-      "type": "choice",
-      "default": "full",
-      "options": [
-        [
-          "full",
-          "Full screen (map_rect 0,0,1920,720)"
-        ],
-        [
-          "centre",
-          "Centre, 1088x480"
-        ]
-      ]
     },
     {
       "key": "weather",

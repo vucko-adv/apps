@@ -4,7 +4,7 @@
  "packWaste": 1.5,
  "theme": "map",
  "wantsMap": true,
- "_about": "Map: the phone's map (Waze, Apple Maps or Google Maps over CarPlay, Google Maps over Android Auto; waze-on-cluster on the panel) over the whole cluster with \"Map size\" Full screen (waze-on-cluster.conf map_rect = 0,0,1920,720), or in a 1088x480 window with Centre; the speed and km/h, the selector letter and the drive mode, range with a fuel bar and the coolant temperature with its bar, over dark shades so they read on any map. Barlow Medium (OFL). Made by cluster-design/map/build.html. Widget reference: shared/hud.js header.",
+ "_about": "Map: the phone's map (Waze, Apple Maps or Google Maps over CarPlay, Google Maps over Android Auto; waze-on-cluster on the panel at its own 1088x480 size, map_rect empty) in a window in the middle of a black cluster, ending left of BMW's gear box (x 1396; the box at about x 1420-1610, y 318-433 on a G20 can't be seen on black); the speed and km/h, the selector letter and the drive mode, range with a fuel bar and the coolant temperature with its bar round it. Barlow Medium (OFL). Made by cluster-design/map/build.html. Widget reference: shared/hud.js header.",
  "widgets": [
   {
    "id": "bg",
@@ -19,17 +19,14 @@
    "h": 720
   },
   {
-   "id": "bg_centre",
+   "id": "bg_map",
    "type": "fill",
    "color": "bg",
-   "toggle": [
-    "mapUp",
-    "mapSize=centre"
-   ],
+   "toggle": "mapUp",
    "hole": [
     416,
     120,
-    1088,
+    980,
     480
    ],
    "holeWhen": "mapUp",
@@ -41,48 +38,6 @@
    "y": 0,
    "w": 1920,
    "h": 720
-  },
-  {
-   "id": "shade_l",
-   "type": "picture",
-   "picture": "map_shade_l",
-   "stretch": true,
-   "toggle": "mapUp",
-   "class": "content",
-   "z": 1,
-   "conn": 1,
-   "x": 0,
-   "y": 0,
-   "w": 640,
-   "h": 720
-  },
-  {
-   "id": "shade_r",
-   "type": "picture",
-   "picture": "map_shade_r",
-   "stretch": true,
-   "toggle": "mapUp",
-   "class": "content",
-   "z": 1,
-   "conn": 1,
-   "x": 1280,
-   "y": 0,
-   "w": 640,
-   "h": 720
-  },
-  {
-   "id": "shade_b",
-   "type": "picture",
-   "picture": "map_shade_b",
-   "stretch": true,
-   "toggle": "mapUp",
-   "class": "content",
-   "z": 1,
-   "conn": 1,
-   "x": 0,
-   "y": 520,
-   "w": 1920,
-   "h": 200
   },
   {
    "id": "fuel_still",

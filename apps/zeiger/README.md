@@ -12,7 +12,7 @@ An LCD from 1985, drawn in code by `cluster-design/vintage2/build.html` (`?v=gre
 
 ## Map
 
-The phone's map (waze-on-cluster) over the whole cluster, the speed, selector, drive mode, range and coolant over it.
+The phone's map (waze-on-cluster, at its own size: `map_rect` empty in its conf) in a window in the middle of a black cluster, the speed, selector, drive mode, range and coolant round it. The window ends just left of BMW's gear box, so the box falls on black.
 
 ## Sunrise
 
@@ -30,7 +30,7 @@ A sunrise over mountains drawn in code by `cluster-design/sunrise/build.html`, t
 ## Black boxes
 
 - **In the middle, with the engine running, on a car that is not a real M:** the cluster is coded to BMW's M layout (often done with BimmerCode on cars with the M Sport or M Performance package). Code it back to the car's own layout (M Sport or M Performance) and restart the head unit; the boxes go away (checked on a G20, November 2026).
-- **Just left of the gear letter:** BMW draws it behind its gear display on every car, over any theme. It can't be seen on the Vintage themes (black background there); it shows on Sunrise and Map.
+- **Just left of the gear letter:** BMW draws it behind its gear display on every car, over any theme. It can't be seen on the Vintage themes and Map (black background there); it shows on Sunrise.
 
 ## How a theme is made
 

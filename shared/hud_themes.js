@@ -108,7 +108,7 @@ const THEMES = {
         bg: [1, 1, 1, 255], panel: [63, 45, 14, 255], line: [255, 176, 32, 255], head: [77, 255, 122, 255],
         ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [63, 45, 14, 255],
     },
-    // Map (layout map.json): the phone's map over the whole cluster, white readouts over dark shades (Zeiger addition)
+    // Map (layout map.json): the phone's map in a window in the middle, white readouts round it on black (Zeiger addition)
     map: {
         name: 'Map',
         fg: [255, 255, 255, 255], dim: [175, 185, 200, 255], track: [60, 70, 85, 255], arc: [255, 59, 59, 255],

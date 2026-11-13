@@ -31,7 +31,7 @@ mgu.run({
             title: ctx.spec.title, what: 'cluster',
             look: { name: 'Themes', style: 'hero', tags: { vintage_green: '1985 LCD · green · km/h', vintage_amber: '1985 LCD · amber · km/h', map: 'phone map · minimal', sunrise: 'sunrise · weather', grid: 'calibration', mapcal: 'map calibration' } },
             tabs: ['look', 'alerts', 'settings'],
-            settings: ['units', 'clock', 'timeZone', 'tankLitres', 'mapSize', 'weather', 'shiftX', 'hideBoxes', 'stripClear', 'demo'],
+            settings: ['units', 'clock', 'timeZone', 'tankLitres', 'weather', 'shiftX', 'hideBoxes', 'stripClear', 'demo'],
         }).start();
         process.on('exit', () => { try { hud.wx.stop(); hud.stop(); } catch (e) { /* exiting anyway */ } });
     },
