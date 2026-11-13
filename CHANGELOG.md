@@ -4,6 +4,11 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 13 2026
 
+- **Zeiger 0.14.0:** Apex and Apex Sport get a **clock**: white, in their racing face, in the middle of the bottom row. Apex Sport gets a **shift flash**:
+  - Toward the shift point the whole rev band flashes: white from 500 rpm before it, yellow from 250 before, red at it.
+  - The shift point is **Redline (shift light)** less **Shift point before redline**, lower while the engine is cold.
+  - The new setting **Shift flash** turns it off.
+  - Engine: the `bandflash` effect widget. A flash sends a colour and an on / off, not pixels.
 - **Zeiger 0.13.0:** two new themes, **Apex** and **Apex Sport**: a racing cluster.
   - **Rpm:** a 32-block band across the top (up to 1500, level to 6500, down to 8000). It fills in one continuous line through the blocks, white (Sport: yellow), orange from 6000, red from 6500.
   - **Middle:** the speed, with the gear and P R N D M (S in the sport programme) to its right.

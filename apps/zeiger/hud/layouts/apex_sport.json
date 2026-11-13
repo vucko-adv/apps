@@ -1,7 +1,7 @@
 {
  "schemaVersion": 2,
  "name": "Apex Sport",
- "packWaste": 3,
+ "packWaste": 8,
  "theme": "apex_sport",
  "noNightDim": true,
  "_about": "Apex Sport: a racing cluster (Nov 13 2026): a rev band across the top (up to 1500, level to 6500, down to 8000) of 32 blocks, filled in a continuous line as the revs rise (yellow, orange from 6000, red from 6500); the speed in the middle, the gear and P R N D M right of it, boost and braking bars left of it, coolant and fuel / range along the bottom; a red glow rising from a red tray line, the band thicker. Made by cluster-design/apex/build.html?v=sport. Widget reference: shared/hud.js header.",
@@ -4399,7 +4399,7 @@
    "picture": "apex_sport_fuel",
    "measure": "fuel",
    "class": "content",
-   "z": 13,
+   "z": 12,
    "conn": 1,
    "x": 1430,
    "y": 620,
@@ -5461,6 +5461,45 @@
    ]
   },
   {
+   "id": "shiftflash",
+   "type": "bandflash",
+   "toggle": "shiftFlash",
+   "class": "content",
+   "x": 98,
+   "y": 42,
+   "w": 1724,
+   "h": 260,
+   "geo": [
+    128,
+    52,
+    32,
+    4
+   ],
+   "top": [
+    72,
+    214,
+    440,
+    52
+   ],
+   "bandH": 58,
+   "stages": [
+    [
+     -500,
+     "fg"
+    ],
+    [
+     -250,
+     "accent"
+    ],
+    [
+     0,
+     "hot"
+    ]
+   ],
+   "hz": 5,
+   "z": 14
+  },
+  {
    "id": "speed",
    "type": "text",
    "class": "content",
@@ -5524,7 +5563,7 @@
    "id": "sel_off_P",
    "type": "text",
    "class": "content",
-   "z": 14,
+   "z": 13,
    "conn": 1,
    "text": "{{isnt:stage:P}}",
    "font": "apex_sel_off",
@@ -5554,7 +5593,7 @@
    "id": "sel_off_R",
    "type": "text",
    "class": "content",
-   "z": 14,
+   "z": 13,
    "conn": 1,
    "text": "{{isnt:stage:R}}",
    "font": "apex_sel_off",
@@ -5584,7 +5623,7 @@
    "id": "sel_off_N",
    "type": "text",
    "class": "content",
-   "z": 14,
+   "z": 13,
    "conn": 1,
    "text": "{{isnt:stage:N}}",
    "font": "apex_sel_off",
@@ -5614,7 +5653,7 @@
    "id": "sel_off_D",
    "type": "text",
    "class": "content",
-   "z": 14,
+   "z": 13,
    "conn": 1,
    "text": "{{isnt:stage:D:S}}",
    "font": "apex_sel_off",
@@ -5644,7 +5683,7 @@
    "id": "sel_off_M",
    "type": "text",
    "class": "content",
-   "z": 14,
+   "z": 13,
    "conn": 1,
    "text": "{{isnt:stage:M}}",
    "font": "apex_sel_off",
@@ -5734,7 +5773,7 @@
    "id": "range",
    "type": "text",
    "class": "content",
-   "z": 13,
+   "z": 12,
    "conn": 1,
    "text": "{{range}} {{u:distLc}}",
    "font": "apex_val",
@@ -5744,6 +5783,21 @@
    "y": 606,
    "w": 186,
    "h": 29
+  },
+  {
+   "id": "clock",
+   "type": "text",
+   "class": "content",
+   "z": 12,
+   "conn": 1,
+   "text": "{{time}}",
+   "font": "apex_clock",
+   "color": "fg",
+   "align": "center",
+   "x": 882,
+   "y": 588,
+   "w": 160,
+   "h": 36
   }
  ]
 }

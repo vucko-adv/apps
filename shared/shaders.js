@@ -1279,4 +1279,50 @@ void main() {
 }
 `;
 
-module.exports = { shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, dial: DIAL, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES };
+const BANDFLASH = `// Apex's rev band flashing toward the shift point, one cluster-render "effect" layer (GLSL ES 1.00): the band's
+// blocks, the same shape as its pictures (cluster-design/apex/draw.js): the top at u_top.y at both ends, rising to
+// u_top.x at u_top.z, level, falling again, mirrored about the middle, each bend rounded by a parabola over u_top.w px
+// either side; blocks u_geo.y px apart (a u_geo.w px gap), the first starting and the last ending flush. While u_on is 1
+// every block is lit in u_color with a bloom round the band; while it's 0, nothing (the band under it shows).
+//   u_size  the layer's size px; u_org  its top-left in the layout's px (the band's numbers are in those)
+//   u_geo   x0, block pitch, blocks, gap      u_top  level top y, end top y, x where the level starts, bend
+//   u_h     the band's height px              u_color rgb 0..1     u_on 0 / 1
+precision highp float;
+varying vec2 v_uv;
+uniform vec2 u_size;
+uniform vec2 u_org;
+uniform vec4 u_geo;
+uniform vec4 u_top;
+uniform float u_h;
+uniform vec3 u_color;
+uniform float u_on;
+
+float leftTop(float u) {
+    float x0 = u_geo.x, lvl = u_top.x, end = u_top.y, xa = u_top.z, bend = u_top.w;
+    float s1 = (lvl - end) / (xa - x0);
+    if (u <= xa - bend) return end + s1 * (u - x0);
+    if (u >= xa + bend) return lvl;
+    float t = u - (xa - bend);
+    return end + s1 * (xa - bend - x0) + s1 * t - s1 * t * t / (4.0 * bend);
+}
+
+void main() {
+    if (u_on < 0.5) { gl_FragColor = vec4(0.0); return; }
+    vec2 p = u_org + v_uv * u_size;
+    float x0 = u_geo.x, seg = u_geo.y, n = u_geo.z, gap = u_geo.w, x1 = x0 + seg * n, mid = (x0 + x1) * 0.5;
+    float cx = clamp(p.x, x0, x1);
+    float top = leftTop(cx <= mid ? cx : 2.0 * mid - cx);
+    // how far outside the band (0 or less: inside), up / down and past its ends
+    float d = max(max(top - p.y, p.y - (top + u_h)), max(x0 - p.x, p.x - x1));
+    // in a block, not a gap (the sides vertical, as the pictures')
+    float k = floor((p.x - x0) / seg), fx = p.x - x0 - k * seg;
+    float g0 = k < 0.5 ? 0.0 : gap * 0.5, g1 = k > n - 1.5 ? seg : seg - gap * 0.5;
+    float inBlock = clamp(fx - g0 + 0.5, 0.0, 1.0) * clamp(g1 - fx + 0.5, 0.0, 1.0);
+    float cover = clamp(0.5 - d, 0.0, 1.0) * inBlock;
+    // the bloom gone by 26 px out (the layer reaches 30): no edge where the layer ends
+    float bloom = 0.6 * exp(-max(d, 0.0) / 9.0) * clamp((26.0 - d) / 8.0, 0.0, 1.0);
+    gl_FragColor = vec4(u_color, max(cover, bloom));
+}
+`;
+
+module.exports = { bandflash: BANDFLASH, shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, dial: DIAL, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES };

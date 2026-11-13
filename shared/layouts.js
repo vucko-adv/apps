@@ -43,6 +43,7 @@ const TYPES = {
     picture: ['picture'],
     needle: ['picture', 'measure', 'table'],
     segments: ['picture', 'measure', 'segs', 'steps'],
+    bandflash: ['geo', 'top', 'bandH', 'stages'],
 };
 const CLASSES = ['ambient', 'content', 'overlay', 'alert'];
 

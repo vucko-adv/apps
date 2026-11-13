@@ -26,8 +26,9 @@
 - **Rpm:** a band of 32 blocks across the top. It rises from 0 to 1500, runs level to 6500 and falls to 8000. It fills in one continuous line as the revs rise, through the blocks: white, orange from 6000, red from 6500.
 - **Speed** in the middle. The **gear** is to its right (P, R, N or the number), with P R N D M under it and the one in use lit (S in the sport programme).
 - **Boost and braking:** two bars left of the speed. Boost reads 0-1.6 bar. Braking reads 0-1.2 g, how hard the car is slowing, from its own acceleration sensor.
-- **Coolant** and **fuel / range** bars along the bottom.
+- **Coolant** and **fuel / range** bars along the bottom, and the **clock** between them.
 - **Apex Sport** is made for SPORT: a red glow rises behind the middle from a red line, the band is thicker and lit yellow, and the gear is yellow. To have them change with the drive mode, turn on **Change with SPORT / COMFORT / ECO PRO** and pick Apex for Comfort and Apex Sport for Sport.
+- **Shift flash (Apex Sport):** toward the shift point the whole band flashes. It flashes white from 500 rpm before the shift point, yellow from 250 before, and red at it. The shift point is **Redline (shift light)** less **Shift point before redline**, lower while the engine is cold. A redline of 6000 with 0 before it flashes at 5500, 5750 and 6000. The setting **Shift flash** turns it off.
 
 Both work in either units (km/h or mph, °C or °F, bar or psi).
 

@@ -141,6 +141,13 @@
  *             value >= steps[i]); "measure" as a needle's (rpm, speed km/h, fuel 0..1, oil, coolant, any _raw()
  *             name). Unlit segments are see-through, so the face under it shows them dark. Only the segments that
  *             changed are sent (bimmer-lab-apps fork addition, Vintage theme)
+ *   bandflash effect layer (shaders.js bandflash; Zeiger addition, Apex Sport): Apex's rev band (its blocks, the shape of
+ *             its pictures) flashing in one colour toward the shift point: "stages" [[rpm from the shift point, colour
+ *             role], ...] in rising order ([[-500, 'fg'], [-250, 'accent'], [0, 'hot']]: white, yellow, red), the last
+ *             one the rpm has reached flashes "hz" (5) times a second; the shift point is the gear-shift one (redline
+ *             less "shiftBefore", lower while the engine is cold). Geometry in the layout's px: "geo" [x0, block pitch,
+ *             blocks, gap], "top" [level top y, end top y, x where the level starts, bend], "bandH". Usually with
+ *             "toggle": "shiftFlash".
  * Text widgets: "zeros": n pads a whole-number value with leading zeros to n digits ("000" km/h; fork addition).
  * Picture "stretch": true (Zeiger addition): the picture's own image (any size) drawn over the widget's whole rect by
  *   the GPU, e.g. a 64x8 gradient as a 640x720 shade, for the memory of its 64x8; an own layer, never packed.
@@ -2050,6 +2057,14 @@ class HudApp {
             c.uniform(ref, 'u_red', rgb(LIGHTS.red));
             c.uniform(ref, 'u_blue', rgb(LIGHTS.blue));
             c.uniform(ref, 'u_off', [w.off === undefined ? 0.14 : w.off]);
+        } else if (w.type === 'bandflash') {
+            c.uniform(ref, 'u_size', [w.w, w.h]);
+            c.uniform(ref, 'u_org', [w.x, w.y]);
+            c.uniform(ref, 'u_geo', w.geo);
+            c.uniform(ref, 'u_top', w.top);
+            c.uniform(ref, 'u_h', [w.bandH]);
+            c.uniform(ref, 'u_color', [1, 1, 1]);
+            c.uniform(ref, 'u_on', [0]);
         } else if (w.type === 'fill') {
             c.uniform(ref, 'u_size', [w.w, w.h]);
             c.uniform(ref, 'u_color', rgba(color(t, w.color || 'bg')));
@@ -2474,6 +2489,18 @@ class HudApp {
             x.last = key;
             x.c.uniform(x.ref, 'u_lit', [lit]);
             x.c.uniform(x.ref, 'u_strobe', [sp.now ? 1 : 0]);
+        } else if (w.type === 'bandflash') {
+            // the last stage the rpm has reached (its "at" is rpm from the shift point: -500, -250, 0), its colour on and
+            // off "hz" times a second (5: a 100 ms half, two of the 50 ms ticks, so every flash is the same length)
+            const rpm = this._raw('rpm'), sp = this._shift(), st = w.stages || [];
+            let k = -1;
+            if (isNum(rpm)) st.forEach((s, i) => { if (rpm >= sp.rpm + s[0]) k = i; });
+            const half = 500 / (w.hz || 5), on = k >= 0 && Math.floor(now / half) % 2 === 0;
+            const key = on ? k : -1;
+            if (!force && key === x.last) return;
+            x.last = key;
+            if (on) x.c.uniform(x.ref, 'u_color', rgb(color(this.theme, st[k][1])));
+            x.c.uniform(x.ref, 'u_on', [on ? 1 : 0]);
         }
     }
 
