@@ -379,6 +379,28 @@ function sceneIdsOf(text) {
     return panel && hud ? { panel, hud } : null;
 }
 
+// Zeiger, hunting the G20's black boxes (about x 796-1037 y 267-369 and x 1224-1395 y 300-375 over every theme, gone
+// with the ignition off, never over Waze on BMW's own map): from cluster-render's status, the stock content each slot
+// shows (map status 1 or 2), the map target's state and the guide hold's, so the page can show what goes away when
+// the boxes do. Our own scenes by name; the HMI's by id (0x1000310 the CarPlay maneuver box, 0x1000314 the seat belt).
+const OUR_SCENES = { '0x10004f0': 'our map', '0x10004f1': 'our hold', '0x10004f8': 'our panel' };
+function boxesOf(text) {
+    const shown = [], hold = [], guard = [];
+    let map = null;
+    String(text).split('\n').forEach((l) => {
+        let m;
+        if ((m = /^target (guide\S*): slot (0x[0-9a-fA-F]+)[^:]*: (\w+)/.exec(l))) hold.push(m[2] + ' ' + m[3]);
+        else if ((m = /^target map: [^:]*: (\w+)/.exec(l))) map = m[1];
+        else if ((m = /^slot (0x[0-9a-fA-F]+) status (\d+):(.*)$/.exec(l))) {
+            const vis = m[3].split(',').map((r) => /0x([0-9a-fA-F]+) class \d+ map (\d+)/.exec(r))
+                .filter((r) => r && (r[2] === '1' || r[2] === '2')).map((r) => OUR_SCENES['0x' + r[1].toLowerCase()] || '0x' + r[1].toLowerCase());
+            if (vis.length) shown.push(m[1] + ' ' + vis.join('+'));
+        } else if (/^guard: .*guide/.test(l)) guard.push(l.slice(7));
+    });
+    return 'BMW slots: ' + (shown.join(', ') || 'none shown') + ' | map ' + (map || '-') + ', hold ' + (hold.join(', ') || 'none') +
+        (guard.length ? ' (' + guard.join(', ') + ')' : '');
+}
+
 function rgb(c) { return [c[0] / 255, c[1] / 255, c[2] / 255]; }
 
 /**
@@ -730,6 +752,15 @@ class HudApp {
         c.on('budget', (capKb, maxKb, reason) => this.log.info('budget' + tag + ' ' + capKb + '/' + maxKb + ' kb/s (' + reason + ')'));
         c.on('status', (text) => {
             this.log.info('cluster-render status: ' + text);
+            // the slots' line on the page's Settings tab (the black boxes, above)
+            if (this.target === 'panel') {
+                const b = boxesOf(text);
+                if (b !== this.boxesInfo) {
+                    this.boxesInfo = b;
+                    this.log.info(b);
+                    this.statusListeners.forEach((fn) => { try { fn(this.lastStatus); } catch (e) { this.log.warn('status listener: ' + e); } });
+                }
+            }
             const ids = sceneIdsOf(text);
             if (!ids) return;
             const apart = ids.panel !== ids.hud;
@@ -1422,10 +1453,15 @@ class HudApp {
                 const d = this.car.data();
                 return (d.stage === 'D' || (!d.stage && isNum(d.gear))) && isNum(d.gear) && d.gear > 0 ? String(d.gear) : '';
             }
-            case 'mode': {
-                if (!this.driveMode) return '';
-                const base = this.driveMode === 'sport' ? 'SPORT' : this.driveMode === 'eco' ? 'ECO PRO' : 'COMFORT';
-                return base + (this.driveVariant === 'plus' ? ' PLUS' : this.driveVariant === 'individual' ? ' INDIVIDUAL' : '');
+            case 'mode': case 'modeShort': {
+                // the demo drive sends no drive mode: COMFORT there, so a theme's mode line shows on the bench (Zeiger)
+                const m = this.driveMode || (this.car.data().demo ? 'comfort' : null);
+                if (!m) return '';
+                const base = m === 'sport' ? 'SPORT' : m === 'eco' ? 'ECO PRO' : 'COMFORT';
+                const v = this.driveMode ? this.driveVariant : null;
+                // {{modeShort}} (Zeiger addition): SPORT+, ECO PRO+, INDIVIDUAL, for a narrow box (Sunrise's, beside BMW's gear box)
+                if (tok === 'modeShort') return v === 'plus' ? base + '+' : v === 'individual' ? 'INDIVIDUAL' : base;
+                return base + (v === 'plus' ? ' PLUS' : v === 'individual' ? ' INDIVIDUAL' : '');
             }
             case 'gear': {
                 const d = this.car.data();

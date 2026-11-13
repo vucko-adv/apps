@@ -2,30 +2,28 @@
 
 <p align="center">Hand-drawn instrument cluster themes for BMW iDrive 7 head units (MGU), installed through the community MGU Store.</p>
 
-<p align="center"><img src="docs/images/zeiger-vintage2.png" width="900" alt="The Vintage 2 theme on the instrument cluster"></p>
+<p align="center"><img src="docs/images/zeiger-vintage-green.png" width="900" alt="The Vintage Green theme on the instrument cluster"></p>
 
 ## Themes
 
-**Vintage 2**: an LCD from 1985, cream on dark green.
+**Vintage Green** and **Vintage Amber**: an LCD from 1985, one layout in two colourings. Green: cream on dark green. Amber: amber readouts and scale, green lit segments and labels, dark amber windows.
 
-- **Rpm:** one continuous wedge from 0 to 8000 that grows taller as it fills, cream into orange from 5200 and red from the scale's red line (about 6750).
+- **Rpm:** one continuous wedge from 0 to 8000 that grows taller as it fills, cream into orange (Amber: green into amber) from 5200 and red from the scale's red line (about 6750).
 - **Speed, gear, clock, outside temperature:** slanted seven-segment digits over ghost 8s, the unlit segments of an LCD.
 - **Selector:** P R N D S M with the one in use lit, the gear number under it while driving.
 - **Oil, water, fuel:** 10-segment bars under pixel icons, their values below (oil 40-150 °C, water 40-130 °C, fuel 0-100 %).
-- **Message line** in dot matrix: oil temperature and range.
+- **Message line** in dot matrix: the range and the average speed this drive.
 - **Self-test:** at power-on everything lights for 2.5 s (888, every letter, BMW · SYSTEM CHECK), as an 80s dash did.
 
-**Sunrise**: a sunrise over mountains with the speed in the middle and **today's weather** on the left: an icon, the outside temperature from the car, the day's weather and its high / low / chance of rain. The forecast comes from Open-Meteo for roughly where the car is (the internet connection's place, about 10 km), so it needs the Store's **Internet uplink** online (a phone's hotspot, USB tethering or an LTE stick); without it the theme says NO INTERNET and keeps the day's last forecast. The setting **Today's weather** turns the fetching off.
+<p align="center"><img src="docs/images/zeiger-vintage-amber.png" width="900" alt="The Vintage Amber theme"></p>
+
+**Sunrise**: a sunrise over mountains with the speed in the middle, the selector and drive mode (COMFORT, SPORT, SPORT+, ECO PRO) on the right, and **today's weather** on the left: an icon, the outside temperature from the car, the day's weather and its high / low / chance of rain. The forecast comes from Open-Meteo for roughly where the car is (the internet connection's place, about 10 km), so it needs the Store's **Internet uplink** online (a phone's hotspot, USB tethering or an LTE stick); without it the theme says NO INTERNET and keeps the day's last forecast. The setting **Today's weather** turns the fetching off.
 
 <p align="center"><img src="docs/images/zeiger-sunrise.png" width="900" alt="The Sunrise theme"></p>
 
 **Map**: the phone's map over the whole cluster (Waze, Apple Maps or Google Maps over CarPlay, Google Maps over Android Auto, through waze-on-cluster), with only the speed, the selector and drive mode, range with a fuel bar and the coolant temperature over it, in Barlow. For the map to fill the screen, waze-on-cluster needs `map_rect = 0,0,1920,720` in its `waze-on-cluster.conf`; with "Map size" set to Centre the map stays in its 1088x480 window.
 
 <p align="center"><img src="docs/images/zeiger-map.png" width="900" alt="The Map theme"></p>
-
-**Vintage 1**: an 80s LCD dash in amber and green: amber readouts and scale, green lit segments and labels, dark amber windows, a 48-segment rpm bar amber from 5200.
-
-<p align="center"><img src="docs/images/zeiger-vintage1.png" width="900" alt="The Vintage 1 theme"></p>
 
 More themes will follow. Each one starts as a drawing (Illustrator, SVG) that is turned into a theme.
 

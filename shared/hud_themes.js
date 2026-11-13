@@ -86,27 +86,27 @@ const THEMES = {
         bg: [0, 0, 0, 255], panel: [0, 0, 0, 255], line: [70, 74, 82, 255], head: [226, 228, 232, 255],
         ink: [12, 12, 14, 255], accent: [240, 243, 248, 255], well: [0, 0, 0, 255],
     },
-    // Vintage 1 (layout vintage1.json): the Vintage artwork in the 80s amber/green LCD colours: amber readouts and
-    // scale, green lit segments and labels, dark amber windows (fork addition)
-    vintage1: {
-        name: 'Vintage 1',
-        fg: [255, 176, 32, 255], dim: [140, 100, 30, 255], track: [63, 45, 14, 255], arc: [238, 52, 50, 255],
-        glow: 0, stripe: false,
-        bar: { low: [77, 255, 122], mid: [255, 176, 32], high: [238, 52, 50], midAt: 'shift' },
-        rev: { from: [77, 255, 122], to: [77, 255, 122] },
-        bg: [1, 1, 1, 255], panel: [63, 45, 14, 255], line: [255, 176, 32, 255], head: [77, 255, 122, 255],
-        ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [63, 45, 14, 255],
-    },
-    // Vintage 2 (layout vintage2.json): an LCD from 1985, cream on dark green, a gradient rpm wedge, slanted digits over
-    // ghost 8s, scanlines; "glow" lights the readouts (fork addition)
-    vintage2: {
-        name: 'Vintage 2',
+    // Vintage Green (layout vintage_green.json, was Vintage 2): an LCD from 1985, cream on dark green, a gradient rpm
+    // wedge, slanted digits over ghost 8s, scanlines; "glow" lights the readouts (Zeiger addition)
+    vintage_green: {
+        name: 'Vintage Green',
         fg: [232, 240, 191, 255], dim: [120, 140, 100, 255], track: [19, 74, 51, 255], arc: [238, 52, 50, 255],
         glow: 0.6, stripe: false,
         bar: { low: [232, 240, 191], mid: [255, 163, 26], high: [238, 52, 50], midAt: 'shift' },
         rev: { from: [232, 240, 191], to: [232, 240, 191] },
         bg: [1, 1, 1, 255], panel: [19, 74, 51, 255], line: [232, 240, 191, 255], head: [232, 240, 191, 255],
         ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [19, 74, 51, 255],
+    },
+    // Vintage Amber (layout vintage_amber.json): Vintage Green's layout in the old Vintage 1's colours, amber readouts,
+    // green lit segments and labels, dark amber windows (Zeiger addition)
+    vintage_amber: {
+        name: 'Vintage Amber',
+        fg: [255, 176, 32, 255], dim: [140, 100, 30, 255], track: [63, 45, 14, 255], arc: [238, 52, 50, 255],
+        glow: 0.6, stripe: false,
+        bar: { low: [77, 255, 122], mid: [255, 176, 32], high: [238, 52, 50], midAt: 'shift' },
+        rev: { from: [77, 255, 122], to: [77, 255, 122] },
+        bg: [1, 1, 1, 255], panel: [63, 45, 14, 255], line: [255, 176, 32, 255], head: [77, 255, 122, 255],
+        ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [63, 45, 14, 255],
     },
     // Map (layout map.json): the phone's map over the whole cluster, white readouts over dark shades (Zeiger addition)
     map: {

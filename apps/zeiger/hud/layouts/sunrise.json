@@ -840,7 +840,7 @@
    "class": "content",
    "z": 4,
    "conn": 1,
-   "text": "{{mode}}",
+   "text": "{{modeShort}}",
    "font": "s_small",
    "color": "dim",
    "align": "center",

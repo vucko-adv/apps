@@ -1,8 +1,8 @@
 {
   "id": "zeiger",
   "title": "Zeiger",
-  "description": "Instrument cluster themes drawn by hand: Vintage 1 and Vintage 2 (80s LCD dashes), Map (the phone's map over the whole cluster, the speed over it) and Sunrise (a sunrise over mountains, the speed and today's weather)",
-  "version": "0.7.0",
+  "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Amber (an 80s LCD dash), Map (the phone's map over the whole cluster, the speed over it) and Sunrise (a sunrise over mountains, the speed and today's weather)",
+  "version": "0.8.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -100,19 +100,19 @@
       "key": "hudLayout",
       "label": "Theme (when not by drive mode)",
       "type": "choice",
-      "default": "vintage2",
+      "default": "vintage_green",
       "options": [
         [
           "off",
           "Off (BMW's own cluster)"
         ],
         [
-          "vintage1",
-          "Vintage 1"
+          "vintage_green",
+          "Vintage Green"
         ],
         [
-          "vintage2",
-          "Vintage 2"
+          "vintage_amber",
+          "Vintage Amber"
         ],
         [
           "map",
@@ -142,23 +142,27 @@
       "key": "inComfort",
       "label": "In Comfort",
       "type": "choice",
-      "default": "vintage2",
+      "default": "vintage_green",
       "options": [
         [
           "off",
           "Off (BMW's own cluster)"
         ],
         [
-          "vintage1",
-          "Vintage 1"
+          "vintage_green",
+          "Vintage Green"
         ],
         [
-          "vintage2",
-          "Vintage 2"
+          "vintage_amber",
+          "Vintage Amber"
         ],
         [
           "map",
           "Map"
+        ],
+        [
+          "sunrise",
+          "Sunrise"
         ]
       ]
     },
@@ -166,23 +170,27 @@
       "key": "inSport",
       "label": "In Sport",
       "type": "choice",
-      "default": "vintage2",
+      "default": "vintage_green",
       "options": [
         [
           "off",
           "Off (BMW's own cluster)"
         ],
         [
-          "vintage1",
-          "Vintage 1"
+          "vintage_green",
+          "Vintage Green"
         ],
         [
-          "vintage2",
-          "Vintage 2"
+          "vintage_amber",
+          "Vintage Amber"
         ],
         [
           "map",
           "Map"
+        ],
+        [
+          "sunrise",
+          "Sunrise"
         ]
       ]
     },
@@ -190,23 +198,27 @@
       "key": "inEco",
       "label": "In Eco Pro",
       "type": "choice",
-      "default": "vintage2",
+      "default": "vintage_green",
       "options": [
         [
           "off",
           "Off (BMW's own cluster)"
         ],
         [
-          "vintage1",
-          "Vintage 1"
+          "vintage_green",
+          "Vintage Green"
         ],
         [
-          "vintage2",
-          "Vintage 2"
+          "vintage_amber",
+          "Vintage Amber"
         ],
         [
           "map",
           "Map"
+        ],
+        [
+          "sunrise",
+          "Sunrise"
         ]
       ]
     },
@@ -487,7 +499,7 @@
       "label": "Theme position (px to the right)",
       "type": "number",
       "unit": "px",
-      "default": 6,
+      "default": -12,
       "steps": [
         -20,
         -16,

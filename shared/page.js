@@ -567,6 +567,9 @@ class Page {
         });
         // what the engine says it is doing (layers, pixel memory, why nothing shows): for checking on the car
         cv.text(this.hud.lastStatus || '', CX, bottom - 6, 15, C.label, { literal: true });
+        // what BMW shows in which display slot (Zeiger, the G20's black boxes), on the line above when the rows leave room
+        const rowsEnd = 84 + (per - 1) * 64 + 56;
+        if (this.hud.boxesInfo && rowsEnd < bottom - 44) cv.text(this.hud.boxesInfo, CX, bottom - 28, 15, C.label, { literal: true });
     }
 
     /* ---------- rows ---------- */
