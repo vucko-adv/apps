@@ -879,6 +879,21 @@
    "y": 602,
    "w": 120,
    "h": 38
+  },
+  {
+   "id": "clock",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{time}}",
+   "font": "m_small",
+   "color": "dim",
+   "align": "center",
+   "x": 860,
+   "y": 602,
+   "w": 200,
+   "h": 38
   }
  ]
 }

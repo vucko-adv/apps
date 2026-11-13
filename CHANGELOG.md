@@ -4,6 +4,7 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 13 2026
 
+- **Zeiger 0.15.1:** the same small grey **clock** on **Map**, **Map Underpass** and **Map Mist**, under the map's window between the range and the coolant. Map's small font gains the colon. The clock is on the second connection, so the layouts keep their small sheets.
 - **Zeiger 0.15.0:** Dark Moon, Underpass and Mist get a small grey **clock** in the middle of the bottom row, between the range and the coolant. It uses the readouts' own font and follows the **Clock** setting (12 or 24 hours).
 - **Zeiger 0.14.0:** Apex and Apex Sport get a **clock**: white, in their racing face, in the middle of the bottom row. Apex Sport gets a **shift flash**:
   - Toward the shift point the whole rev band flashes: white from 500 rpm before it, yellow from 250 before, red at it.

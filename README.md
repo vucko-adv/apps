@@ -46,7 +46,7 @@ Both work in either units (km/h or mph, °C or °F, bar or psi).
 
 <p align="center"><img src="docs/images/zeiger-mist.png" width="900" alt="The Mist theme"></p>
 
-**Map**: Dark Moon's look round the phone's map (Waze, Apple Maps or Google Maps over CarPlay, Google Maps over Android Auto, through waze-on-cluster). The map is in a window in the middle with the sun rising on its top edge; the speed is on the left, the selector and drive mode on the right, range and coolant at the bottom. **Map Underpass** and **Map Mist** put the same window and readouts on Underpass's and Mist's photos.
+**Map**: Dark Moon's look round the phone's map (Waze, Apple Maps or Google Maps over CarPlay, Google Maps over Android Auto, through waze-on-cluster). The map is in a window in the middle with the sun rising on its top edge; the speed is on the left, the selector and drive mode on the right, range and coolant at the bottom, with a small grey clock under the map between them. **Map Underpass** and **Map Mist** put the same window and readouts on Underpass's and Mist's photos.
 
 <p align="center"><img src="docs/images/zeiger-map.png" width="900" alt="The Map theme"></p>
 
