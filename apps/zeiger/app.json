@@ -2,7 +2,7 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Amber (an 80s LCD dash), Apex and Apex Sport (a racing cluster with boost and braking bars), Dark Moon (a sunrise seen from orbit, the speed under the sun, today's weather), Underpass and Mist (photos, with Dark Moon's readouts), and Map, Map Underpass and Map Mist (the phone's map in the middle of Dark Moon's look or of a photo)",
-  "version": "0.16.1",
+  "version": "0.17.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -95,6 +95,38 @@
       ]
     }
   ],
+  "startWidget": {
+    "comment": "Home-screen widget (widget.js): the theme the cluster shows now. The layout and cells are BMW's Drive Recorder widget on this firmware, as the kit's Live Data's (checked on a G05): the big widget's picture goes into BackgroundImage1 (384 x 256), which the HMI scales up, crops (safe: the share of each edge it cuts) and fades at the edges; the small widget shows only the text lines.",
+    "name": "Zeiger",
+    "layout": "LT_Table_OnlineApps_DriveRecorderWidget",
+    "image": "BackgroundImage1",
+    "size": [
+      384,
+      256
+    ],
+    "safe": [
+      0.09,
+      0.1
+    ],
+    "cells": {
+      "ErrorInfo": [
+        false,
+        "Bool"
+      ],
+      "background": [
+        true,
+        "Bool"
+      ],
+      "ProgressbarVisible": [
+        false,
+        "Bool"
+      ],
+      "TextRecordings": [
+        "",
+        "Text"
+      ]
+    }
+  },
   "settings": [
     {
       "key": "hudLayout",

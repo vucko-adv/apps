@@ -68,6 +68,14 @@ If bimmer-lab's Cluster Themes is installed, remove it first, so the two apps do
 
 Installing apps that don't come from BMW on your head unit is done at your own risk and may affect your warranty.
 
+## Home-screen widget
+
+Zeiger has a widget for the iDrive home screen, like BMW's own Weather or News widgets. To place it, hold a finger on a home-screen tile and pick **Zeiger** from the list.
+
+- **Big widget:** the theme the cluster shows now, with its picture and name, and the drive mode when the theme changes with it. **Off** when Zeiger isn't drawing.
+- **Small widget:** the same in words.
+- A tap opens Zeiger.
+
 ## If something goes wrong
 
 Zeiger never leaves a frozen speed on the cluster:

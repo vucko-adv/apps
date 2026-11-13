@@ -2,6 +2,14 @@
 
 Newest first. Dates are when the build was pushed.
 
+## Nov 14 2026
+
+- **Zeiger 0.17.0:** a **home-screen widget**. Hold a finger on a home-screen tile and pick Zeiger.
+  - **Big widget:** the theme the cluster shows now, with its picture and name, and the drive mode when the theme follows it. **Off** when Zeiger isn't drawing.
+  - **Small widget:** the same in words.
+  - It's BMW's own widget mechanism for apps (StartWidget), which the kit already had, on the Drive Recorder layout checked on a G05. The build makes its resources.
+  - Not yet seen on a car.
+
 ## Nov 13 2026
 
 - **Zeiger 0.16.1:** Apex Sport's shift flash shader asks for `highp` only where the GPU has it in fragment shaders, else `mediump`. Many embedded GPUs lack it, and a shader that demands it doesn't compile there; cruzen991/Cluster saw that on a car. On a GPU with `highp` nothing changes. Without it, the flash now shows, its edges a little coarser.

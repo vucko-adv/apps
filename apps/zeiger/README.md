@@ -37,6 +37,14 @@ Dark Moon's readouts and weather over a photo (`cluster-design/underpass` and `c
 
 Dark Moon's look round the phone's map (waze-on-cluster): the map in a window in the middle with the sun on its top edge, the speed on the left, the selector and drive mode on the right, range and coolant at the bottom with a small grey clock under the map between them. **Map Underpass** and **Map Mist**: the same window and readouts on Underpass's and Mist's photos (`cluster-design/map_underpass`, `cluster-design/map_mist`).
 
+## Home-screen widget
+
+`widget.js`, through app.json `startWidget` and the kit's `ctx.widget` (kit/runtime/mgu.js). It uses BMW's Drive Recorder widget layout, as the kit's Live Data does (checked on a G05).
+
+- **Big widget:** a 384 x 256 picture with ZEIGER, the shown theme's gallery picture (hud/previews, shrunk by averaging), its name, and the drive mode while "Change with SPORT / COMFORT / ECO PRO" is on.
+- **Small widget:** the layout's text lines only.
+- **Refresh:** redrawn when the theme or the mode changes, else the same picture again every 30 s, in case the HMI dropped it.
+
 ## Fail-safe
 
 Every layer of the theme plays a cluster-render animation: it holds its scale for 1.2 s and then shrinks to nothing. The engine (shared/hud.js `_failsafe`) starts it over every 200 ms, with the same animation number, so the service replaces it. If Zeiger hangs, the renewals stop and cluster-render takes the theme away on its own clock, so BMW's own cluster shows.

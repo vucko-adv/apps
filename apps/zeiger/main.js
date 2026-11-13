@@ -12,6 +12,7 @@ const mgu = require('./kit/mgu');
 const HudApp = require('./hud');
 const Page = require('./page');
 const Weather = require('./weather');
+const ZeigerWidget = require('./widget');
 
 mgu.run({
     start(ctx) {
@@ -33,6 +34,8 @@ mgu.run({
             tabs: ['look', 'alerts', 'settings'],
             settings: ['units', 'clock', 'timeZone', 'tankLitres', 'weather', 'shiftX', 'hideBoxes', 'stripClear', 'demo'],
         }).start();
+        // the home-screen widget: the theme the cluster shows now (widget.js)
+        if (ctx.widget) { try { new ZeigerWidget(ctx, hud).start(); } catch (e) { ctx.log.warn('widget: ' + (e && e.message || e)); } }
         process.on('exit', () => { try { hud.wx.stop(); hud.stop(); } catch (e) { /* exiting anyway */ } });
     },
 });
