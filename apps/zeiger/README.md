@@ -6,11 +6,34 @@ Redraws the whole instrument cluster with a hand-drawn theme. Open **Zeiger** fr
 
 <p align="center"><img src="../../docs/images/zeiger-vintage-green.png" width="900" alt="Vintage Green"></p>
 
-## Vintage Green and Vintage Amber
+## Vintage Green, Vintage Amber and Vintage Cyan
 
 An LCD from 1985, drawn in code by `cluster-design/vintage2/build.html` (`?v=green`, `?v=amber`): a continuous rpm wedge (lit, orange or amber from 5200, red from about 6750), slanted digits over ghost 8s, P R N D S M, oil / water / fuel bars under pixel icons, a dot-matrix line with the range and the average speed, scanlines, and a 2.5 s self-test at power-on. Green is cream on dark green; Amber has amber readouts, green lit segments and labels and dark amber windows.
 
 While the phone's map is on, both change by themselves to a layout with the map (`?m=1` in the same build page): the map in a window under a veil in the theme's colours, the temperature and clock to its left, the speed to its right, and between them a tall window with the selector's letter over the gear number. A few seconds after the map goes, the plain layout comes back. The setting **Show the phone's map** turns this off. The switch keeps the face pieces both layouts share on the cluster and sends only the rest, so it stays quick while the map's video uses most of the link to the cluster. Vintage takes 6.5 MiB of cluster-render's 16 MiB (its map version 7.3), next to the map's 3.2.
+
+**Vintage Cyan** (`?v=cyan`): cyan fluorescent readouts on dark teal windows, with a layout of its own.
+
+- **Rpm:** a dot-matrix band (286 dot columns, ghost dots unlit) over a tick scale with dot-matrix numbers.
+- **Speed:** 78 px higher than in Green and Amber.
+- **TURBO** (left of the speed): an amber lamp over a boost bar of 16 rising segments, 0.1 bar each.
+- **ECON** (right of the speed): two halves of 8 segments growing from the middle outward.
+  - Green: `econEco`, the engine load under 35 % of its peak torque; coasting fills it.
+  - Red: `econLoad`, the load over it; full torque fills it.
+- **Bottom:** three dot-matrix strips: the outside temperature, the range and average speed, the clock.
+- **Roundel:** drawn in code in the theme's colours (BMW's white quadrants lit, its blue ones the windows' ghost colour).
+- **Size:** 6.7 MiB in 23 layers on 3 connections.
+- **No map version yet.**
+
+## VFD
+
+A fluorescent display in the manner of the late-80s Japanese digital dashes, drawn in code by `cluster-design/vfd/build.html` (the design picture: `design.html`). Pale mint phosphor with a soft bloom on black.
+
+- **Top:** the fuel band (dot columns, E to F, the pump orange under 15 %), the speed in slanted segment digits with SPEED and km/h, and the coolant line (C to H) with a 4x4 dot block riding on it, one of 17 places 5 °C apart.
+- **Middle:** the rpm band (207 dot columns, red from 7000) over a straight scale 0-8 with a red dashed end, and the drive mode in a green lamp on the left. Right of the scale is black, where BMW draws its gear box.
+- **Bottom:** three teal filter windows: SHIFT POSITION with the selector's letter and the gear number; the clock with OIL and OUT in dot matrix; RANGE.
+- **Self-test:** 2.5 s with everything lit at power-on. No roundel: the dashes it follows had none.
+- **Engine:** the coolant block and the orange pump are `segments` with `"one": true` (only the last segment reached is lit). The bloom is drawn into the fonts and pictures, so the colour theme's glow stays 0. The face is cut into 8 regions, each a z group of its own: 19 layers on 3 connections and 4.4 MiB of cluster-render's 16 MiB.
 
 ## Apex and Apex Sport
 

@@ -31,7 +31,7 @@ mgu.run({
         hud.start();
         new Page(ctx, hud, {
             title: ctx.spec.title, what: 'cluster',
-            look: { name: 'Themes', style: 'hero', tags: { vintage_green: '1985 LCD · green · km/h', vintage_amber: '1985 LCD · amber · km/h', apex: 'racing · white · boost', apex_sport: 'racing · red glow · boost', map: 'phone map · minimal', map_underpass: 'phone map · photo', map_mist: 'phone map · photo', dark_moon: 'dark moon · weather', sunrise_hills: 'mountains · weather · BMW strip', underpass: 'photo · weather', mist: 'photo · weather', grid: 'calibration', mapcal: 'map calibration' } },
+            look: { name: 'Themes', style: 'hero', tags: { vintage_green: '1985 LCD · green · km/h', vintage_amber: '1985 LCD · amber · km/h', vintage_cyan: '1985 LCD · cyan · turbo · econ', vfd: 'fluorescent · mint · teal windows', apex: 'racing · white · boost', apex_sport: 'racing · red glow · boost', map: 'phone map · minimal', map_underpass: 'phone map · photo', map_mist: 'phone map · photo', dark_moon: 'dark moon · weather', sunrise_hills: 'mountains · weather · BMW strip', underpass: 'photo · weather', mist: 'photo · weather', grid: 'calibration', mapcal: 'map calibration' } },
             tabs: ['look', 'alerts', 'settings'],
             settings: ['units', 'clock', 'timeZone', 'tankLitres', 'weather', 'widgetShows', 'shiftX', 'hideBoxes', 'stripClear', 'demo'],
         }).start();

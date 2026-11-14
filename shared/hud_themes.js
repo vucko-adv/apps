@@ -128,6 +128,30 @@ const THEMES = {
         bg: [1, 1, 1, 255], panel: [63, 45, 14, 255], line: [255, 176, 32, 255], head: [77, 255, 122, 255],
         ink: [1, 1, 1, 255], accent: [238, 52, 50, 255], well: [63, 45, 14, 255],
     },
+    // Vintage Cyan (layout vintage_cyan.json, Zeiger): Vintage's LCD in cyan fluorescent readouts on dark teal windows,
+    // with its own layout (a dot-matrix rpm band, the TURBO and ECON bars beside the speed, three dot-matrix strips)
+    vintage_cyan: {
+        name: 'Vintage Cyan',
+        fg: [79, 247, 230, 255], dim: [40, 130, 125, 255], track: [11, 48, 47, 255], arc: [255, 74, 58, 255],
+        glow: 0.6, stripe: false,
+        bar: { low: [79, 247, 230], mid: [255, 207, 58], high: [255, 74, 58], midAt: 'shift' },
+        rev: { from: [79, 247, 230], to: [79, 247, 230] },
+        bg: [1, 1, 1, 255], panel: [11, 48, 47, 255], line: [79, 247, 230, 255], head: [79, 247, 230, 255],
+        ink: [1, 1, 1, 255], accent: [255, 74, 58, 255], well: [11, 48, 47, 255],
+    },
+    // VFD (layout vfd.json, Zeiger): a fluorescent display, pale mint phosphor on black, teal filter windows along the
+    // bottom; "win" the windows' yellow-green readouts, "lamp" the drive mode's green. The bloom is drawn into the fonts
+    // and pictures (cluster-design/vfd/build.html), so "glow" stays 0
+    vfd: {
+        name: 'VFD',
+        fg: [217, 251, 227, 255], dim: [191, 230, 205, 255], track: [20, 106, 115, 255], arc: [255, 74, 58, 255],
+        glow: 0, stripe: false,
+        bar: { low: [217, 251, 227], mid: [255, 122, 34], high: [255, 74, 58], midAt: 'shift' },
+        rev: { from: [217, 251, 227], to: [217, 251, 227] },
+        bg: [1, 1, 1, 255], panel: [18, 98, 107, 255], line: [217, 251, 227, 255], head: [230, 247, 164, 255],
+        ink: [1, 1, 1, 255], accent: [255, 122, 34, 255], well: [12, 69, 76, 255],
+        win: [230, 247, 164, 255], lamp: [76, 240, 111, 255],
+    },
     // Apex (layout apex.json, Zeiger): a racing cluster, white readouts, the gear orange; "off" is the unlit selector
     // letters' grey. The glows are drawn into the fonts (cluster-design/apex/build.html), so "glow" stays 0
     apex: {

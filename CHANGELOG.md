@@ -4,6 +4,31 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 14 2026
 
+- **Zeiger 0.20.0:** a new theme, **VFD**: a fluorescent display as the late-80s Japanese digital dashes had.
+  - **The look:**
+    - Pale mint phosphor glowing on black.
+    - Dot-matrix fuel and rpm bands; the rpm scale has a red dashed end.
+    - A dot block riding along the coolant line from C to H.
+    - Big slanted segment digits for the speed.
+    - Three teal filter windows: shift position and gear; the clock with the oil and outside temperatures; the range.
+    - The drive mode in a green lamp.
+    - A 2.5 s self-test at power-on. No roundel, as the dashes it follows had none.
+  - **On the cluster:** BMW's gear box falls on black. It takes 4.4 MiB of cluster-render's 16 MiB in 19 layers on 3 connections.
+  - **Engine:** a `segments` widget's `"one": true` lights only the last segment reached: a marker riding along a scale. VFD uses it for the coolant block, and for the pump that turns orange under 15 % fuel.
+  - Checked on the bench, not yet on a car.
+- **Also in 0.20.0:** a third Vintage, **Vintage Cyan**, with a layout of its own.
+  - **Colours:** cyan fluorescent readouts on dark teal windows. The roundel is drawn in the theme's colours.
+  - **Rpm:** a dot-matrix band with ghost dots, orange from 5200 and red from 6750, over a tick scale with dot-matrix numbers. It replaces the long wedge.
+  - **Middle row:** the speed sits 78 px higher. Left of it, an amber **TURBO** lamp over a boost bar (0-1.6 bar, rising segments).
+  - **ECON bar,** right of the speed, as on 80s econometers:
+    - Green fills to the left while you drive economically; coasting fills it.
+    - Red fills to the right under load; full throttle fills it.
+    - Its segments grow from the middle toward the ends.
+    - It reads the engine's load from its torque. Standing still, it stays empty.
+  - **Bottom:** three dot-matrix strips: the outside temperature; the range and average speed (under the speed); the clock.
+  - **Size and limits:** 6.7 MiB in 23 layers. BMW's gear box falls on black. There is no map version yet: while the phone's map is on, it stays as it is.
+  - **Engine:** measures `econEco` and `econLoad`, the engine load (torquePct) under or over 35 % of its peak torque, each 0..1. The message font (`v2_dots`) gains the degree sign.
+  - Checked on the bench, not yet on a car.
 - **Zeiger 0.19.0:** **Sunrise** is back: the first Sunrise theme (a sunrise over mountains, today's weather), as its own theme next to Dark Moon.
   - **It ends above BMW's own bottom strip:**
     - Nothing is drawn below y 646 except a black band to 662 (to 658 over the strip's drive mode and gear, x 1196-1424).

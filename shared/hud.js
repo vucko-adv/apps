@@ -140,7 +140,11 @@
  *             first to light first; "steps" [v, ...] the value each segment lights at (segment i is lit while the
  *             value >= steps[i]); "measure" as a needle's (rpm, speed km/h, fuel 0..1, oil, coolant, any _raw()
  *             name). Unlit segments are see-through, so the face under it shows them dark. Only the segments that
- *             changed are sent (bimmer-lab-apps fork addition, Vintage theme)
+ *             changed are sent (bimmer-lab-apps fork addition, Vintage theme). "one": true (Zeiger addition, VFD's
+ *             coolant block and low-fuel pump) lights only the last segment reached, a marker riding along the scale.
+ *             Measures "econEco" / "econLoad" (Zeiger addition, Vintage Cyan's ECON bar): the engine load (torquePct)
+ *             under / over ECON_MID as 0..1, the green half filling left while driving economically (coasting fills
+ *             it) and the red half right under load; 0 while standing still
  *   bandflash effect layer (shaders.js bandflash; Zeiger addition, Apex Sport): Apex's rev band (its blocks, the shape of
  *             its pictures) flashing in one colour toward the shift point: "stages" [[rpm from the shift point, colour
  *             role], ...] in rising order ([[-500, 'fg'], [-250, 'accent'], [0, 'hot']]: white, yellow, red), the last
@@ -359,6 +363,9 @@ const unitName = (map, v) => map[v] || (Object.values(map).indexOf(v) >= 0 ? v :
 const PROGRAMS = { S_MINUS_PROGRAMM: 'S', M_MINUS_PROGRAMM: 'M', 1: 'S', 2: 'M' };
 const MODE_NAME = { comfort: 'Comfort', sport: 'Sport', eco: 'Eco Pro' };
 const FRESH_MS = 3000;
+// the ECON bar's middle (econEco / econLoad): the engine load, as a fraction of its peak torque, where neither side is
+// lit; under it the eco side fills (coasting fills it), over it the load side (full throttle fills it)
+const ECON_MID = 0.35;
 const TZ_AUTO = -9999;           // the "timeZone" setting's Automatic: the head unit's own time zone
 // A plug-in hybrid's high-voltage battery charge: read-only UDS 22 DDBC from its battery unit (SME, 0x07), 0.1 %.
 // The read Redline 2.0 and eDrive use (cauliflowermossgrape/idrive7-apps, MIT; apps/redline/electrical.js).
@@ -1433,6 +1440,16 @@ class HudApp {
             if (name === 'torquePct') return Math.max(0, d.torque) / (e.torqueNm || 500) * 100;
             return isNum(d.rpm) ? Math.max(0, d.torque) * d.rpm / 9549 / (e.powerKw || 285) * 100 : null;
         }
+        if (name === 'econEco' || name === 'econLoad') {
+            // the ECON bar (Zeiger addition, Vintage Cyan; the econometers of 80s dashes): the engine's load (torquePct)
+            // about ECON_MID. econEco: how far under it, 0..1 (coasting, torque 0, is 1); econLoad: how far over it,
+            // 0..1 (full torque is 1). Standing still (under 5 km/h) both are 0: idling isn't economical driving.
+            const t = this._raw('torquePct'), v = this.car.data().speed;
+            if (!isNum(t)) return null;
+            if (!isNum(v) || v < 5) return 0;
+            const load = Math.min(1, Math.max(0, t / 100));
+            return name === 'econEco' ? Math.max(0, (ECON_MID - load) / ECON_MID) : Math.max(0, (load - ECON_MID) / (1 - ECON_MID));
+        }
         if (name.indexOf('setupLevel:') === 0) { const s = this._setup(); return s ? SETUP_LEVEL[s[name.slice(11)]] || 0 : 0; }
         const d = this.car.data();
         return Object.prototype.hasOwnProperty.call(d, name) ? d[name] : null;
@@ -2422,13 +2439,16 @@ class HudApp {
         let n = 0;
         if (isNum(v)) while (n < segs.length && n < steps.length && v >= steps[n]) n++;
         if (!force && n === x.lit) return;
-        const lo = force ? 0 : Math.min(x.lit, n), hi = force ? segs.length : Math.max(x.lit, n);
+        // "one": only the last segment reached is lit (a marker riding along a scale): the old one cleared, the new one drawn
+        const one = w.one === true;
+        const lo = force ? 0 : one ? Math.max(0, Math.min(x.lit, n) - 1) : Math.min(x.lit, n), hi = force ? segs.length : Math.max(x.lit, n);
         x.lit = n;
         const rects = [], parts = [];
         for (let i = lo; i < hi; i++) {
+            if (one && !force && i !== lo && i !== hi - 1) continue;      // the old marker and the new one
             const [sx, sy, sw, sh] = segs[i];
             const b = Buffer.alloc(sw * sh * 4, 0);
-            if (i < n) for (let r = 0; r < sh; r++) p.rgba.copy(b, r * sw * 4, ((sy + r) * w.w + sx) * 4, ((sy + r) * w.w + sx + sw) * 4);
+            if (one ? i === n - 1 : i < n) for (let r = 0; r < sh; r++) p.rgba.copy(b, r * sw * 4, ((sy + r) * w.w + sx) * 4, ((sy + r) * w.w + sx + sw) * 4);
             rects.push({ x: sx, y: sy, w: sw, h: sh });
             parts.push(b);
         }

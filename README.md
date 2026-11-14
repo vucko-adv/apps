@@ -17,9 +17,32 @@
 
 <p align="center"><img src="docs/images/zeiger-vintage-amber.png" width="900" alt="The Vintage Amber theme"></p>
 
+**Vintage Cyan:** the same LCD in cyan fluorescent readouts on dark teal windows, with a layout of its own.
+
+- **Rpm:** a dot-matrix band across the top.
+- **Middle row:**
+  - The speed in the middle.
+  - An amber **TURBO** lamp over a boost bar on its left.
+  - On its right, an **ECON** bar, as 80s econometers had. Green fills to the left while you drive economically; red fills to the right when you accelerate hard.
+- **Bottom:** the outside temperature, the range and average speed, and the clock in three dot-matrix strips.
+- **Roundel:** in the theme's own colours.
+
+<p align="center"><img src="docs/images/zeiger-vintage-cyan.png" width="900" alt="The Vintage Cyan theme"></p>
+
 **With the phone's map:** while the phone's map is on (CarPlay or Android Auto through waze-on-cluster), Vintage Green and Vintage Amber change by themselves to a layout with the map. The map sits in a window under a veil in the theme's colours, with scanlines like an old screen. The temperature and clock move to its left and the speed to its right, with a tall window between them: the selector's letter over the gear number. When the map has been off for a few seconds, the plain layout comes back. The setting **Show the phone's map** turns this off.
 
 <p align="center"><img src="docs/images/zeiger-vintage-green-map.png" width="900" alt="Vintage Green with the phone's map"></p>
+
+**VFD**: a fluorescent display, as the late-80s Japanese digital dashes had: pale mint phosphor glowing on black, with teal filter windows along the bottom.
+
+- **Speed:** big slanted segment digits in the middle, SPEED before them and km/h after.
+- **Fuel** (left) and **rpm** (middle): bands of phosphor dots that fill from the left. The rpm scale runs 0 to 8 with a red dashed end, and the band turns red from 7000. The pump turns orange under 15 % fuel.
+- **Coolant** (right): a block of dots rides along a line from C to H.
+- **Windows:** the selector's letter and the gear number (SHIFT POSITION); the clock, with the oil and outside temperatures in dot matrix; the range.
+- **Drive mode:** a green lamp on the left (DRIVE COMFORT, SPORT, ECO PRO).
+- **Self-test:** at power-on everything lights for 2.5 s, as such a dash did.
+
+<p align="center"><img src="docs/images/zeiger-vfd.png" width="900" alt="The VFD theme"></p>
 
 **Apex** and **Apex Sport**: a racing cluster, one layout in two looks.
 
