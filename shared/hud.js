@@ -162,7 +162,14 @@
  *   on first use and named <app id>_<n>. Sheets never span connections.
  * Pixel memory: cluster-render has 16 MiB for every app's images together and counts each image twice
  *   (Compositor::add_image; a layer past it is refused with "the service's pixel memory is full"), so every
- *   image layer costs w*h*8 bytes. The rebuild log and the status row say what a layout costs.
+ *   image layer costs w*h*8 bytes. The rebuild log and the status row say what a layout costs. The same 16 MiB
+ *   holds waze-on-cluster's map (a 1088x480 video: about 3.2 MiB) while it runs, and the link to the cluster
+ *   (2-5.5 MB/s for every app) carries that video too, so a layout that shows next to it keeps well under 12 MiB.
+ * A rebuild keeps a sheet the new layout has again at the same place, size, connection and z (the only layer of
+ *   its z group in both) when the client's copy of its pixels is the same: it stays on the cluster and isn't sent
+ *   again (Zeiger 0.18.1: Vintage's switch to its map version keeps the face pieces both have). A layer refused for
+ *   room (pixel memory, layer count) has the layout made again REFUSED_RETRY_MS later, up to REFUSED_RETRIES times.
+ *   Only the shown layout's pictures stay decoded (pictures.js keepOnly).
  * Text and badge updates send only the one rectangle around the pixels that changed since the last paint
  *   (changes() below, after PenguinDukeYDAuto/idrive7-EVAHUD's eva_canvas.js, MIT): a 3-digit readout
  *   that goes 123 -> 124 sends its last digit, not the widget.
@@ -263,6 +270,8 @@ const LAYER_BUDGET = 8;          // cluster-render's limit per client connection
 const MAX_CONN = 4;              // connections a layout may ask for ("conn"): 32 layers service-wide / 8 per connection
 const PIXEL_BYTES = 16 * 1024 * 1024;   // cluster-render's pixel memory for every app's images together (CompositorLimits.pixel_bytes)
 const SHEET_AREA_FRAC = 4;       // the first sheet size limit: 1/4 of the target area (see the header)
+const REFUSED_RETRY_MS = 2000;   // a layer refused for room (pixel memory, layers): the layout again after this
+const REFUSED_RETRIES = 2;       // ... at most this many times until something else rebuilds
 // Fail-safe (Zeiger 0.16.0, after G's Dash's failsafe.js): every layer of ours plays a renderer animation that holds
 // its scale for FS_HOLD_MS and then takes it to 0, renewed (the same animation number: the service starts it over)
 // every FS_REARM_MS while the app runs. The app hanging, cluster-render shrinks our layers away on its own clock and
@@ -448,6 +457,9 @@ function rgb(c) { return [c[0] / 255, c[1] / 255, c[2] / 255]; }
  * when they are the same (after idrive7-EVAHUD's eva_canvas.js, MIT). The link is what is short, not the CPU:
  * comparing a widget costs about a tenth of painting it.
  */
+/** A sheet's place in the plan: connection, class, z, rect (a sheet of the layout before with the same key may stay) */
+function sheetKey(s) { return [s.conn, s.klass, s.z, s.x, s.y, s.w, s.h].join('|'); }
+
 function changes(was, now, w, h) {
     const row = w * 4;
     const sameRow = (y) => now.compare(was, y * row, (y + 1) * row, y * row, (y + 1) * row) === 0;
@@ -803,6 +815,8 @@ class HudApp {
             const w = this._widgetOf(ci, ref);
             this.log.warn('refused ' + op + ' on ' + ref + tag + (w ? ' (' + w + ')' : '') + ': ' + reason);
             if (!this.refused) this.refused = (w || op) + ': ' + reason;   // the first one, until the next rebuild
+            // a layer of this layout that found no room: the layout again a little later (not for the layout before's)
+            if (w && /pixel memory|too many layers/.test(String(reason))) this._refusedRetry();
             this._statusSoon();
         });
         c.on('budget', (capKb, maxKb, reason) => this.log.info('budget' + tag + ' ' + capKb + '/' + maxKb + ' kb/s (' + reason + ')'));
@@ -1636,18 +1650,76 @@ class HudApp {
 
     _rebuild() {
         this._guard('rebuild', () => this._rebuildInner());
+        // a rebuild that failed half way: nothing of the layout before left on cluster-render
+        if (this.oldPending) this._dropOld(this.oldPending, null);
+        if (this.keep) { this.keep.forEach((s) => s.c.drop(s.ref)); this.keep = null; }
         this._status();
+    }
+
+    /** Drops the layers of the layout before (old: _rebuildInner's), all but the sheets in keep (a Map, or null). */
+    _dropOld(old, keep) {
+        const stay = {};
+        if (keep) keep.forEach((s) => { stay[s.ci + ':' + s.ref] = true; });
+        old.refs.forEach((r) => { if (!stay[r.key]) r.c.drop(r.ref); });
+        this.oldPending = null;
+    }
+
+    /**
+     * The sheets of the layout before that may stay for the new plan: key -> old sheet, for each new sheet with an
+     * old one at the same place, size, connection, class and z, where that sheet is the only layer of its (connection,
+     * class, z) group in both plans (so keeping it, older than the new layers, can't change what's on top). Whether
+     * its pixels are the same too is seen when the new one is painted (_createSheet). Vintage's switch to its map
+     * version keeps the face pieces both have, so they stay on the cluster and aren't sent again while the phone's
+     * map takes most of the link to the cluster. None after a refusal (noKeepOnce).
+     */
+    _keepable(old, plan) {
+        const keep = new Map();
+        if (this.noKeepOnce) { this.noKeepOnce = false; return keep; }
+        const grp = (e) => e.conn + '|' + e.klass + '|' + e.z;
+        const tally = (list) => { const n = {}; list.forEach((e) => { n[grp(e)] = (n[grp(e)] || 0) + 1; }); return n; };
+        const was = tally(old.plan), now = tally(plan), wanted = {};
+        plan.forEach((e) => { if (e.kind === 'sheet' && now[grp(e)] === 1) wanted[sheetKey(e)] = true; });
+        old.sheets.forEach((s) => {
+            if (!s.ref || !s.c || was[grp(s)] !== 1 || !wanted[sheetKey(s)]) return;
+            s.keptState = old.states.get(s.ci + ':' + s.ref) || null;
+            keep.set(sheetKey(s), s);
+        });
+        return keep;
+    }
+
+    /**
+     * cluster-render refused a layer of this layout for room (its pixel memory or layer count: another app's layers,
+     * or the layout before still counted while it went): the layout once more a little later, without keeping
+     * anything, at most REFUSED_RETRIES times until something else rebuilds.
+     */
+    _refusedRetry() {
+        if (this.retryT || (this.retries || 0) >= REFUSED_RETRIES) return;
+        this.retries = (this.retries || 0) + 1;
+        this.retryT = setTimeout(() => this._guard('retry', () => {
+            this.retryT = null;
+            this.log.info('cluster-render had no room for a layer: the layout once more (' + this.retries + ' of ' + REFUSED_RETRIES + ')');
+            this.noKeepOnce = true;
+            this.retrying = true;
+            this._rebuild();
+        }), REFUSED_RETRY_MS);
     }
 
     _rebuildInner() {
         if (!this.client.ready) return; // the 'ready' handler calls us again
         this._guideHold(false);
-        this._layerRefs().forEach((r) => r.c.drop(r.ref));
+        // the layout shown until now: its layers are dropped before the new ones are made (cluster-render's pixel
+        // memory), all but an image sheet the new layout has again, pixel for pixel (_keepable, _createSheet)
+        const old = { refs: this._layerRefs(), sheets: this.sheets, plan: this.plan || [], states: this.layerStates };
+        this.oldPending = old;
+        if (!this.retrying) this.retries = 0;
+        this.retrying = false;
+        clearTimeout(this.retryT); this.retryT = null;
+        this.plan = [];
         this.placed = [];
         this.widgets.clear();
         this.sheets = [];
         this.pixelBytes = 0;
-        this.layerStates.clear();
+        this.layerStates = new Map();
         this.refused = null;
         clearTimeout(this.statusAskT); this.statusAskT = null;
         this.car.setRedline(this.setting('redline'));
@@ -1658,6 +1730,8 @@ class HudApp {
         this.mapShown = this.setting('mapUp');
         if (this.wx) this.wx.want(false);    // the layout below asks again
         if (name === 'off') {
+            this._dropOld(old, null);
+            pictures.keepOnly([]);
             this._wazeWant();
             this.problem = null; this.layoutTheme = null; this.needsBoost = false; this.needsIntake = false; this.needsHv = false; this.needsFuel = false;
             this.log.info('off: nothing drawn, BMW\'s own ' + (this.target === 'panel' ? 'cluster' : 'HUD') + ' shows');
@@ -1667,6 +1741,7 @@ class HudApp {
         try { layout = this.layouts.load(name); } catch (e) {
             this.problem = e.message;
             this.log.warn('layout "' + name + '" unusable (' + e.message + '); showing nothing');
+            this._dropOld(old, null);
             this._wazeWant();
             return;
         }
@@ -1730,6 +1805,9 @@ class HudApp {
             waste = waste * 2 > 64 ? Infinity : waste * 2;
             plan = this._plan(shown, maxPx, waste);
         }
+        this.keep = this._keepable(old, plan);
+        this._dropOld(old, this.keep);
+        this.kept = 0; this.keptBytes = 0;
         let effects = 0, own = 0, sheets = 0, bytes = 0, px = 0;
         plan.forEach((e) => {
             if (e.kind === 'sheet') { sheets++; bytes += e.w * e.h * 4; px += e.w * e.h * 8; this._guard('sheet ' + e.members[0].id, () => this._createSheet(e)); }
@@ -1738,6 +1816,11 @@ class HudApp {
                 this._guard('widget ' + e.w.id, () => this._create(e.w, null));
             }
         });
+        this.keep.forEach((s) => s.c.drop(s.ref));      // one the new layout didn't take after all
+        this.keep = null;
+        this.plan = plan;
+        pictures.keepOnly(shown.filter((w) => w.picture).map((w) => w.picture));   // only this layout's stay decoded
+        bytes -= this.keptBytes;
         if (this._offset().x || this._offset().y || this._scale() !== 1 || this._stripSy() !== 1) this._place();
         this._failsafe(Date.now(), true);
         const atlasBytes = this._atlasBytes();
@@ -1747,7 +1830,9 @@ class HudApp {
         this.log.info('layout "' + layout.name + '": ' + shown.length + ' widgets, ' + this._layerCount(n) + ' (' + effects + ' effects, ' +
             sheets + ' image sheets' + (own ? ', ' + own + ' own image layers' : '') + ')' +
             (counts.length > 1 ? ' on ' + counts.length + ' connections (' + counts.join(' + ') + ')' : '') + ', sheet limit ' +
-            (maxPx === Infinity ? 'unlimited' : maxPx + ' px') + ', whole-sheet writes ' + bytes + ' bytes, pixel memory ' + mib(px) + ' of 16 MiB' +
+            (maxPx === Infinity ? 'unlimited' : maxPx + ' px') + ', whole-sheet writes ' + bytes + ' bytes' +
+            (this.kept ? ' (' + this.kept + ' sheet' + (this.kept > 1 ? 's' : '') + ', ' + this.keptBytes + ' bytes, kept from the layout before)' : '') +
+            ', pixel memory ' + mib(px) + ' of 16 MiB' +
             (atlasBytes ? ' (' + this.atlases.size + ' glyph atlas' + (this.atlases.size > 1 ? 'es' : '') + ' ' + mib(atlasBytes) + ')' : ''));
         counts.forEach((k, ci) => {
             if (k > LAYER_BUDGET) this.log.warn('layout "' + layout.name + '" needs ' + k + ' layers on connection ' + (ci + 1) + ', cluster-render draws at most ' + LAYER_BUDGET + ' per connection');
@@ -1796,19 +1881,41 @@ class HudApp {
         return plan;
     }
 
-    /** One image layer for a sheet: every member painted into a local buffer, then sent whole once. */
+    /**
+     * One image layer for a sheet: every member painted into a local buffer, then sent whole once; or, when the layout
+     * before had this sheet (this.keep, _keepable) and the client's copy of its pixels is the same, that layer as it is.
+     */
     _createSheet(s) {
         const c = this._clientAt(s.conn);
-        const ref = c.image({ target: this.target, klass: s.klass, z: s.z, x: s.x, y: s.y, w: s.w, h: s.h, iw: s.w, ih: s.h });
-        if (!ref) { this.log.warn('sheet ' + s.klass + '/' + s.z + ' at ' + s.x + ',' + s.y + ' ' + s.w + 'x' + s.h + ': layer refused'); return; }
-        s.ref = ref; s.c = c; s.ci = s.conn;
-        this.placed.push({ c, ref, x: s.x, y: s.y, w: s.w, h: s.h });
+        s.c = c; s.ci = s.conn; s.ref = 0;
         s.buf = Buffer.alloc(s.w * s.h * 4, 0);
-        this.sheets.push(s);
         s.members.forEach((w) => this._guard('widget ' + w.id, () => this._create(w, s)));
         const buf = s.buf;
         s.buf = null;                    // from here on _blit sends dirty rects
-        c.pixels(ref, null, buf);
+        const k = sheetKey(s), was = this.keep ? this.keep.get(k) : null;
+        let ref = 0;
+        if (was) {
+            this.keep.delete(k);
+            const l = was.c === c && c.layers ? c.layers.get(was.ref) : null;
+            if (l && l.image && l.image.length === buf.length && l.image.equals(buf)) ref = was.ref;
+            else was.c.drop(was.ref);    // the same place, other pixels: dropped before the new one is made
+        }
+        const kept = ref !== 0;
+        if (!kept) ref = c.image({ target: this.target, klass: s.klass, z: s.z, x: s.x, y: s.y, w: s.w, h: s.h, iw: s.w, ih: s.h });
+        if (!ref) {
+            this.log.warn('sheet ' + s.klass + '/' + s.z + ' at ' + s.x + ',' + s.y + ' ' + s.w + 'x' + s.h + ': layer refused');
+            s.members.forEach((w) => { const x = this.widgets.get(w.id); if (x && x.sheet === s) this.widgets.delete(w.id); });
+            return;
+        }
+        s.ref = ref;
+        s.members.forEach((w) => { const x = this.widgets.get(w.id); if (x && x.sheet === s) x.ref = ref; });
+        s.placed = kept && was.placed ? was.placed : { c, ref, x: s.x, y: s.y, w: s.w, h: s.h };
+        this.placed.push(s.placed);
+        this.sheets.push(s);
+        if (kept) {
+            this.kept++; this.keptBytes += buf.length;
+            if (was.keptState) this.layerStates.set(s.ci + ':' + ref, was.keptState);
+        } else c.pixels(ref, null, buf);
     }
 
     /**

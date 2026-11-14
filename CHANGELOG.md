@@ -4,6 +4,19 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 14 2026
 
+- **Zeiger 0.18.1:** Vintage Green and Amber load faster and stay on when the phone's map starts.
+  - **Why they went dark:**
+    - Vintage's layers took 10.5 MiB of cluster-render's 16 MiB (its map version 12.2). That memory is for every app together, and the phone's map takes another 3.2 MiB.
+    - At the switch to the map version the old and new layers counted together for a moment, so layers were refused.
+    - Each start sent 5.5-6.4 MB over the link to the cluster, which carries 2-5.5 MB/s for everything, the map's video included.
+  - **Vintage's layers:**
+    - Each face piece is now in a z group of its own, so the planner no longer packs far-apart pieces into big, mostly empty sheets.
+    - They are spread over three connections: 6.5 MiB (map version 7.3) and 3.4 MB sent at a start.
+  - **Engine (shared/hud.js):**
+    - A rebuild keeps a sheet the new layout has again, pixel for pixel. The switch to the map version keeps the face pieces both versions share, so it sends 2.6 MB instead of 6.4.
+    - A layer refused for room has the layout made again 2 s later, at most twice.
+    - Only the shown theme's pictures stay decoded. After going through every theme the app used 138 MB instead of 216 MB on the bench.
+  - Bench: every theme in turn and back to back with the map on, no refusals. Not yet seen on a car.
 - **Zeiger 0.18.0:** the home-screen widget can show the **weather**: the temperature now, the weather in a word, today's high, low and chance of rain, and the next three days.
   - **Two looks:** **Mist** (the Mist theme's photo, the default) and **Sunrise** (the first Sunrise theme's sunrise over mountains, from before Dark Moon). The text uses the cluster themes' own fonts and colours.
   - The new setting **Home-screen widget** picks Weather, Mist, Weather, Sunrise, or the cluster's theme as before.

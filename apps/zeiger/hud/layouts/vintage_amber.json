@@ -1,7 +1,7 @@
 {
  "schemaVersion": 2,
  "name": "Vintage Amber",
- "packWaste": 1.5,
+ "packWaste": 2,
  "theme": "vintage_amber",
  "noNightDim": true,
  "selfTest": 2500,
@@ -25,11 +25,12 @@
    "picture": "vintage_amber_face1",
    "own": false,
    "class": "content",
-   "z": 0,
+   "z": 1,
    "x": 932,
    "y": 56,
    "w": 88,
-   "h": 84
+   "h": 84,
+   "conn": 0
   },
   {
    "id": "face2",
@@ -37,11 +38,12 @@
    "picture": "vintage_amber_face2",
    "own": false,
    "class": "content",
-   "z": 0,
+   "z": 2,
    "x": 100,
    "y": 188,
    "w": 1748,
-   "h": 152
+   "h": 152,
+   "conn": 0
   },
   {
    "id": "face3",
@@ -49,11 +51,12 @@
    "picture": "vintage_amber_face3",
    "own": false,
    "class": "content",
-   "z": 0,
+   "z": 3,
    "x": 560,
    "y": 340,
    "w": 800,
-   "h": 56
+   "h": 56,
+   "conn": 0
   },
   {
    "id": "face4",
@@ -61,11 +64,12 @@
    "picture": "vintage_amber_face4",
    "own": false,
    "class": "content",
-   "z": 0,
+   "z": 4,
    "x": 120,
    "y": 404,
    "w": 44,
-   "h": 220
+   "h": 220,
+   "conn": 0
   },
   {
    "id": "face5",
@@ -73,11 +77,12 @@
    "picture": "vintage_amber_face5",
    "own": false,
    "class": "content",
-   "z": 0,
+   "z": 5,
    "x": 216,
    "y": 404,
    "w": 44,
-   "h": 220
+   "h": 220,
+   "conn": 0
   },
   {
    "id": "face6",
@@ -85,11 +90,12 @@
    "picture": "vintage_amber_face6",
    "own": false,
    "class": "content",
-   "z": 0,
+   "z": 6,
    "x": 308,
    "y": 404,
    "w": 44,
-   "h": 220
+   "h": 220,
+   "conn": 0
   },
   {
    "id": "face7",
@@ -97,11 +103,12 @@
    "picture": "vintage_amber_face7",
    "own": false,
    "class": "content",
-   "z": 0,
+   "z": 7,
    "x": 764,
    "y": 436,
    "w": 424,
-   "h": 216
+   "h": 216,
+   "conn": 0
   },
   {
    "id": "face8",
@@ -109,11 +116,12 @@
    "picture": "vintage_amber_face8",
    "own": false,
    "class": "content",
-   "z": 0,
+   "z": 8,
    "x": 1620,
    "y": 436,
    "w": 216,
-   "h": 216
+   "h": 216,
+   "conn": 2
   },
   {
    "id": "face9",
@@ -121,11 +129,12 @@
    "picture": "vintage_amber_face9",
    "own": false,
    "class": "content",
-   "z": 0,
+   "z": 9,
    "x": 456,
    "y": 540,
    "w": 216,
-   "h": 72
+   "h": 72,
+   "conn": 2
   },
   {
    "id": "face10",
@@ -133,11 +142,12 @@
    "picture": "vintage_amber_face10",
    "own": false,
    "class": "content",
-   "z": 0,
+   "z": 10,
    "x": 1300,
    "y": 540,
    "w": 212,
-   "h": 68
+   "h": 68,
+   "conn": 2
   },
   {
    "id": "rpm",
@@ -146,7 +156,7 @@
    "picture": "vintage_amber_rpm",
    "measure": "rpm",
    "class": "content",
-   "z": 1,
+   "z": 20,
    "x": 105,
    "y": 172,
    "w": 1745,
@@ -3164,7 +3174,8 @@
     7953,
     7972,
     7991
-   ]
+   ],
+   "conn": 2
   },
   {
    "id": "oil_bar",
@@ -3173,7 +3184,7 @@
    "picture": "vintage_amber_oil",
    "measure": "oil",
    "class": "content",
-   "z": 1,
+   "z": 20,
    "x": 121,
    "y": 438,
    "w": 44,
@@ -3251,7 +3262,8 @@
     122.5,
     133.5,
     144.5
-   ]
+   ],
+   "conn": 2
   },
   {
    "id": "water_bar",
@@ -3260,7 +3272,7 @@
    "picture": "vintage_amber_water",
    "measure": "coolant",
    "class": "content",
-   "z": 1,
+   "z": 20,
    "x": 215,
    "y": 438,
    "w": 44,
@@ -3338,7 +3350,8 @@
     107.5,
     116.5,
     125.5
-   ]
+   ],
+   "conn": 2
   },
   {
    "id": "fuel_bar",
@@ -3347,7 +3360,7 @@
    "picture": "vintage_amber_fuel",
    "measure": "fuel",
    "class": "content",
-   "z": 1,
+   "z": 20,
    "x": 309,
    "y": 438,
    "w": 44,
@@ -3425,13 +3438,14 @@
     0.75,
     0.85,
     0.95
-   ]
+   ],
+   "conn": 2
   },
   {
    "id": "speed",
    "type": "text",
    "class": "content",
-   "z": 3,
+   "z": 23,
    "conn": 1,
    "text": "{{speed}}",
    "test": "888",
@@ -3448,7 +3462,7 @@
    "id": "gear",
    "type": "text",
    "class": "content",
-   "z": 5,
+   "z": 25,
    "conn": 1,
    "text": "{{gearInD}}",
    "test": "8",
@@ -3465,7 +3479,7 @@
    "id": "ambient",
    "type": "text",
    "class": "content",
-   "z": 4,
+   "z": 24,
    "conn": 1,
    "text": "{{ambientN}}",
    "test": "88",
@@ -3482,7 +3496,7 @@
    "id": "clock",
    "type": "text",
    "class": "content",
-   "z": 5,
+   "z": 25,
    "conn": 1,
    "text": "{{time}}",
    "test": "88:88",
@@ -3499,7 +3513,7 @@
    "id": "oil",
    "type": "text",
    "class": "content",
-   "z": 4,
+   "z": 24,
    "conn": 1,
    "text": "{{oil}}",
    "test": "888",
@@ -3516,7 +3530,7 @@
    "id": "water",
    "type": "text",
    "class": "content",
-   "z": 4,
+   "z": 24,
    "conn": 1,
    "text": "{{coolant}}",
    "test": "888",
@@ -3533,7 +3547,7 @@
    "id": "fuel",
    "type": "text",
    "class": "content",
-   "z": 4,
+   "z": 24,
    "conn": 1,
    "text": "{{fuelPct}}%",
    "test": "888%",
@@ -3550,7 +3564,7 @@
    "id": "sel_P",
    "type": "text",
    "class": "content",
-   "z": 5,
+   "z": 25,
    "conn": 1,
    "text": "{{is:stage:P}}",
    "test": "P",
@@ -3567,7 +3581,7 @@
    "id": "sel_R",
    "type": "text",
    "class": "content",
-   "z": 5,
+   "z": 25,
    "conn": 1,
    "text": "{{is:stage:R}}",
    "test": "R",
@@ -3584,7 +3598,7 @@
    "id": "sel_N",
    "type": "text",
    "class": "content",
-   "z": 5,
+   "z": 25,
    "conn": 1,
    "text": "{{is:stage:N}}",
    "test": "N",
@@ -3601,7 +3615,7 @@
    "id": "sel_D",
    "type": "text",
    "class": "content",
-   "z": 5,
+   "z": 25,
    "conn": 1,
    "text": "{{is:stage:D}}",
    "test": "D",
@@ -3618,7 +3632,7 @@
    "id": "sel_S",
    "type": "text",
    "class": "content",
-   "z": 5,
+   "z": 25,
    "conn": 1,
    "text": "{{is:stage:S}}",
    "test": "S",
@@ -3635,7 +3649,7 @@
    "id": "sel_M",
    "type": "text",
    "class": "content",
-   "z": 5,
+   "z": 25,
    "conn": 1,
    "text": "{{is:stage:M}}",
    "test": "M",
@@ -3652,7 +3666,7 @@
    "id": "message",
    "type": "text",
    "class": "content",
-   "z": 2,
+   "z": 22,
    "conn": 1,
    "text": "RANGE {{range}} KM · AVG {{avgSpeed}} KM/H",
    "test": "BMW · SYSTEM CHECK",

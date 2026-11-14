@@ -10,7 +10,7 @@ Redraws the whole instrument cluster with a hand-drawn theme. Open **Zeiger** fr
 
 An LCD from 1985, drawn in code by `cluster-design/vintage2/build.html` (`?v=green`, `?v=amber`): a continuous rpm wedge (lit, orange or amber from 5200, red from about 6750), slanted digits over ghost 8s, P R N D S M, oil / water / fuel bars under pixel icons, a dot-matrix line with the range and the average speed, scanlines, and a 2.5 s self-test at power-on. Green is cream on dark green; Amber has amber readouts, green lit segments and labels and dark amber windows.
 
-While the phone's map is on, both change by themselves to a layout with the map (`?m=1` in the same build page): the map in a window under a veil in the theme's colours, the temperature and clock to its left, the speed to its right, and between them a tall window with the selector's letter over the gear number. A few seconds after the map goes, the plain layout comes back. The setting **Show the phone's map** turns this off.
+While the phone's map is on, both change by themselves to a layout with the map (`?m=1` in the same build page): the map in a window under a veil in the theme's colours, the temperature and clock to its left, the speed to its right, and between them a tall window with the selector's letter over the gear number. A few seconds after the map goes, the plain layout comes back. The setting **Show the phone's map** turns this off. The switch keeps the face pieces both layouts share on the cluster and sends only the rest, so it stays quick while the map's video uses most of the link to the cluster. Vintage takes 6.5 MiB of cluster-render's 16 MiB (its map version 7.3), next to the map's 3.2.
 
 ## Apex and Apex Sport
 

@@ -27,4 +27,15 @@ function get(name) {
     return out;
 }
 
-module.exports = { get };
+/**
+ * Forgets every decoded picture but these (the layout shown now; hud.js after each rebuild). A full-panel
+ * background is 5.5 MB of pixels, so keeping every theme's ever shown held tens of MB for good; the others are
+ * decoded again when a layout asks for them.
+ */
+function keepOnly(names) {
+    const keep = Object.create(null);
+    (names || []).forEach((n) => { keep[n] = true; });
+    Array.from(cache.keys()).forEach((k) => { if (!keep[k]) cache.delete(k); });
+}
+
+module.exports = { get, keepOnly };
