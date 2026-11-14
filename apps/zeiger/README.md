@@ -39,11 +39,13 @@ Dark Moon's look round the phone's map (waze-on-cluster): the map in a window in
 
 ## Home-screen widget
 
-`widget.js`, through app.json `startWidget` and the kit's `ctx.widget` (kit/runtime/mgu.js). It uses BMW's Drive Recorder widget layout, as the kit's Live Data does (checked on a G05).
+`widget.js`, through app.json `startWidget` and the kit's `ctx.widget` (kit/runtime/mgu.js). It uses BMW's Drive Recorder widget layout, as the kit's Live Data does (checked on a G05). The setting **Home-screen widget** picks what it shows:
 
-- **Big widget:** a 384 x 256 picture with ZEIGER, the shown theme's gallery picture (hud/previews, shrunk by averaging), its name, and the drive mode while "Change with SPORT / COMFORT / ECO PRO" is on.
-- **Small widget:** the layout's text lines only.
-- **Refresh:** redrawn when the theme or the mode changes, else the same picture again every 30 s, in case the HMI dropped it.
+- **Weather, Mist** (the default) and **Weather, Sunrise:** the weather on Mist's photo, or on the first Sunrise theme's sunrise over mountains (the one before Dark Moon). On the left: the place, the temperature now with its icon, the weather now in a word, and today's high, low and chance of rain (in blue). On the right: the next three days, each with its icon, high (white) and low (grey). It uses the cluster themes' own fonts and colours. Every line on the left shares a baseline with the right, and nothing goes below Sunrise's horizon. While the forecast shown is an old one and there's no internet, OFFLINE shows in amber beside the place. Backgrounds: `cluster-design/mist/widget_bg.html` and `cluster-design/sunrise/widget_bg.html`.
+- **The cluster's theme:** ZEIGER, the shown theme's gallery picture (hud/previews, shrunk by averaging), its name, and the drive mode while "Change with SPORT / COMFORT / ECO PRO" is on.
+- **Weather fetching:** the forecast (`shared/weather.js`, Open-Meteo, 4 days) is fetched while a widget is placed and shows the weather. This is apart from the themes' weather and the **Today's weather** setting. Like the themes, it needs the Store's Internet uplink.
+- **Small widget:** the layout's text lines only (ASCII: the place, the weather now, today's high / low / rain, the next days).
+- **Refresh:** redrawn when what it shows changes, else the same picture again every 30 s, in case the HMI dropped it.
 
 ## Fail-safe
 
@@ -58,6 +60,7 @@ The bench shows both (bench/README.md): the hang button (`POST /hang`) and `stal
 - **Change with SPORT / COMFORT / ECO PRO:** a theme per drive mode, or one theme always.
 - **Theme position:** px to the right (negative: left), -12 by default.
 - **Today's weather** (Dark Moon, Underpass, Mist): on by default.
+- **Home-screen widget:** Weather, Mist (default), Weather, Sunrise, or The cluster's theme.
 - **Units:** metric (km/h and °C are part of the drawing). **Clock:** 12 or 24 hours. **Time zone.** **Tank size.**
 - **Warnings:** oil and water values flash red over their limits.
 - **Calibration grid** and **Map calibration** help measure what BMW hides on your car's cluster.

@@ -72,9 +72,15 @@ Installing apps that don't come from BMW on your head unit is done at your own r
 
 Zeiger has a widget for the iDrive home screen, like BMW's own Weather or News widgets. To place it, hold a finger on a home-screen tile and pick **Zeiger** from the list.
 
-- **Big widget:** the theme the cluster shows now, with its picture and name, and the drive mode when the theme changes with it. **Off** when Zeiger isn't drawing.
-- **Small widget:** the same in words.
-- A tap opens Zeiger.
+The setting **Home-screen widget** picks what it shows:
+
+- **Weather, Mist** (the default) or **Weather, Sunrise:** the weather in the look of the Mist theme or of the first Sunrise theme (a sunrise over mountains).
+  - On the left: where you are, the temperature now, the weather in a word, and today's high, low and chance of rain.
+  - On the right: the next three days.
+  - It needs the Store's Internet uplink, as the themes' weather does.
+- **The cluster's theme:** the theme the cluster shows now, with its picture and name, and the drive mode when the theme changes with it. **Off** when Zeiger isn't drawing.
+
+The small widget shows the same in words. A tap opens Zeiger.
 
 ## If something goes wrong
 

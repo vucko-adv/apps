@@ -1613,13 +1613,13 @@ class HudApp {
      *  weather in a word or two (or why there is none), {{wxLine}} "H 18°  L 7°   RAIN 40%", {{wxHi}} {{wxLo}} {{wxNow}}
      *  (° in the units setting), {{wxRain}} (%). Empty or -- while there's no forecast for today. */
     _wxToken(tok) {
-        const t = this.wx && this.wx.wanted ? this.wx.today() : null, us = this.setting('units') === 'us';
+        const t = this.wx && this.wx.wants('layout') ? this.wx.today() : null, us = this.setting('units') === 'us';
         const deg = (v) => (isNum(v) ? String(Math.round(us ? v * 9 / 5 + 32 : v)) : '--');
         switch (tok) {
             case 'wxIcon': return t ? t.icon : '';
             case 'wxText':
                 if (t) return t.word;
-                if (!this.wx || !this.wx.wanted) return '';
+                if (!this.wx || !this.wx.wants('layout')) return '';
                 return this.wx.state === 'offline' ? 'NO INTERNET' : this.wx.state === 'error' ? 'NO FORECAST' : '';
             case 'wxLine': return t ? 'H ' + deg(t.hi) + '°  L ' + deg(t.lo) + '°' + (isNum(t.rain) ? '   RAIN ' + Math.round(t.rain) + '%' : '') : '';
             case 'wxHi': return deg(t && t.hi);

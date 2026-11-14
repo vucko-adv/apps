@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Today's weather for the cluster (Zeiger addition, the Dark Moon theme): Open-Meteo's forecast (open-meteo.com, free,
+ * Today's weather for the cluster (Zeiger addition, the Dark Moon theme) and the next days for the home-screen widget: Open-Meteo's forecast (open-meteo.com, free,
  * no key; data CC BY 4.0) for roughly where the car is. The head unit gives apps no GPS position, so the place is
  * the one the internet connection's address belongs to (ipinfo.io: the phone's or the LTE stick's operator, often
  * its nearest big city), rounded to 0.1 degree (about 10 km) before it goes to Open-Meteo.
@@ -11,9 +11,14 @@
  * doesn't reach the internet, so names go to the lease's DNS servers. On the head unit with no lease: offline, nothing
  * tried. Off the unit (the bench) the computer's own resolver; WX_PLACE="lat,lon" there skips the address lookup.
  *
- *   want(on)   fetch while on (a layout with "wantsWeather"); a forecast is checked every 30 min, the place every 6 h
- *   today()    { code, hi, lo, rain, now, isDay } in °C / %, or null (none for today yet)
- *   info()     a short line for the status
+ *   want(on, who)  fetch while anyone wants it: who 'layout' (the default: a layout with "wantsWeather") or 'widget'
+ *                  (the home-screen widget); a forecast is checked every 30 min, the place every 6 h
+ *   wants(who)     whether that one wants it now
+ *   today()        { code, hi, lo, rain, now, isDay, icon, word, nowIcon, nowWord } in °C / %, or null (none for
+ *                  today yet); icon / word are the day's, nowIcon / nowWord the weather right now
+ *   days()         today and the next days (DAYS in all): [{ date, wd, code, hi, lo, rain, icon, word }]
+ *   city()         the place's name, or ''
+ *   info()         a short line for the status
  *
  * The last forecast and place are kept in <data>/weather.json, so a start without internet still has today's.
  * Node 8 (the car's): http(s).get, dns.Resolver, no fetch.
@@ -32,6 +37,8 @@ const TICK_MS = 60000;
 const TIMEOUT_MS = 15000;
 const MAX_BODY = 256 * 1024;
 const ON_UNIT = '/var/opt/';         // the data folder's start on the head unit
+const DAYS = 4;                      // today and the next three (the widget's)
+const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 // WMO weather codes (Open-Meteo's weather_code) -> the icon font's letter (s_icon: A sun, B moon, C sun and cloud,
 // D cloud, E fog, F rain, G snow, H storm; I moon and cloud) and a word
@@ -58,7 +65,8 @@ class Weather {
         this.log = log;
         this.file = path.join(this.dataDir, 'weather.json');
         this.onUnit = String(this.dataDir).indexOf(ON_UNIT) === 0;
-        this.wanted = false;
+        this.wanted = false;         // anyone (this.who) wants it
+        this.who = Object.create(null);
         this.timer = null;
         this.busy = false;
         this.nextTry = 0;
@@ -66,7 +74,7 @@ class Weather {
         this.state = 'off';          // off | offline | fetching | ok | error
         this.why = '';
         this.place = null;           // { lat, lon, city, t }
-        this.fc = null;              // { date, offset, code, hi, lo, rain, now, isDay, t }
+        this.fc = null;              // { date, offset, code, hi, lo, rain, now, nowCode, isDay, days: [{ date, code, hi, lo, rain }], t }
         this.listeners = [];
         try {
             const saved = JSON.parse(fs.readFileSync(this.file, 'utf8'));
@@ -80,8 +88,10 @@ class Weather {
     /** cb() when today's forecast changes. */
     onChange(cb) { this.listeners.push(cb); }
 
-    want(on) {
-        on = !!on;
+    want(on, who) {
+        who = who || 'layout';
+        if (on) this.who[who] = true; else delete this.who[who];
+        on = Object.keys(this.who).length > 0;
         if (on === this.wanted) return;
         this.wanted = on;
         clearInterval(this.timer); this.timer = null;
@@ -90,14 +100,33 @@ class Weather {
         this._tick();
     }
 
-    stop() { this.want(false); }
+    wants(who) { return this.who[who || 'layout'] === true; }
+
+    stop() { this.who = Object.create(null); this.want(false); }
 
     /** Today's forecast (°C, %), or null: none yet, or the kept one is from another day. */
     today() {
         const f = this.fc;
         if (!f || f.date !== this._dateAt(f.offset)) return null;
-        const k = kind(f.code, f.isDay);
-        return { code: f.code, hi: f.hi, lo: f.lo, rain: f.rain, now: f.now, isDay: f.isDay, icon: k ? k.icon : '', word: k ? k.word : '' };
+        const k = kind(f.code, f.isDay), n = num(f.nowCode) ? kind(f.nowCode, f.isDay) : null;
+        return { code: f.code, hi: f.hi, lo: f.lo, rain: f.rain, now: f.now, isDay: f.isDay, icon: k ? k.icon : '', word: k ? k.word : '',
+            nowIcon: n ? n.icon : k ? k.icon : '', nowWord: n ? n.word : k ? k.word : '' };
+    }
+
+    /** Today and the next days, from today on (a kept forecast's past days left out); [] when there is none for today. */
+    days() {
+        const t = this.today();
+        if (!t) return [];
+        const from = this.fc.date, list = Array.isArray(this.fc.days) && this.fc.days.length ? this.fc.days : [{ date: from, code: t.code, hi: t.hi, lo: t.lo, rain: t.rain }];
+        return list.filter((d) => d && typeof d.date === 'string' && d.date >= from).slice(0, DAYS).map((d) => {
+            const k = kind(d.code, true), wd = new Date(d.date + 'T12:00:00Z').getUTCDay();
+            return { date: d.date, wd: WEEKDAYS[wd] || '', code: d.code, hi: d.hi, lo: d.lo, rain: d.rain, icon: k ? k.icon : '', word: k ? k.word : '' };
+        });
+    }
+
+    city() {
+        const p = this.fixedPlace ? null : this.place;     // WX_PLACE (the bench) has no name
+        return p && p.city ? String(p.city) : '';
     }
 
     info() {
@@ -127,7 +156,7 @@ class Weather {
         if (!this.wanted || this.busy || Date.now() < this.nextTry) return;
         const lease = this._lease();
         if (!lease && this.onUnit) { this.state = 'offline'; return; }
-        const fresh = this.fc && Date.now() - this.fc.t < FORECAST_MS && this.today();
+        const fresh = this.fc && Array.isArray(this.fc.days) && Date.now() - this.fc.t < FORECAST_MS && this.today();
         const place = this.fixedPlace || (this.place && Date.now() - this.place.t < PLACE_MS ? this.place : null);
         if (fresh && place) { this.state = 'ok'; return; }
         this.busy = true;
@@ -205,21 +234,26 @@ class Weather {
     _forecast(p, lookup, cb) {
         const q = 'latitude=' + p.lat.toFixed(1) + '&longitude=' + p.lon.toFixed(1) +
             '&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
-            '&timezone=auto&forecast_days=1';
+            '&timezone=auto&forecast_days=' + DAYS;
         this._get('https://api.open-meteo.com/v1/forecast?' + q, lookup, (err, j) => {
             if (err) return cb(err);
             const d = j && j.daily, c = j && j.current;
-            const first = (k) => (d && Array.isArray(d[k]) ? d[k][0] : null);
+            const at = (k, i) => (d && Array.isArray(d[k]) ? d[k][i] : null), first = (k) => at(k, 0);
             if (!d || typeof first('time') !== 'string' || !num(first('temperature_2m_max'))) return cb(new Error('open-meteo.com: no forecast in the answer'));
-            const before = JSON.stringify(this.today());
+            const before = JSON.stringify([this.today(), this.days()]), days = [];
+            for (let i = 0; i < DAYS && typeof at('time', i) === 'string' && num(at('temperature_2m_max', i)); i++) {
+                days.push({ date: at('time', i), code: at('weather_code', i), hi: at('temperature_2m_max', i), lo: at('temperature_2m_min', i),
+                    rain: num(at('precipitation_probability_max', i)) ? at('precipitation_probability_max', i) : null });
+            }
             this.fc = {
                 date: first('time'), offset: num(j.utc_offset_seconds) ? j.utc_offset_seconds : 0,
                 code: first('weather_code'), hi: first('temperature_2m_max'), lo: first('temperature_2m_min'),
                 rain: num(first('precipitation_probability_max')) ? first('precipitation_probability_max') : null,
-                now: c && num(c.temperature_2m) ? c.temperature_2m : null, isDay: c ? c.is_day !== 0 : null, t: Date.now(),
+                now: c && num(c.temperature_2m) ? c.temperature_2m : null, nowCode: c && num(c.weather_code) ? c.weather_code : null,
+                isDay: c ? c.is_day !== 0 : null, days, t: Date.now(),
             };
             this._save();
-            if (JSON.stringify(this.today()) !== before) this.listeners.forEach((f) => { try { f(); } catch (e) { /* the listener's own */ } });
+            if (JSON.stringify([this.today(), this.days()]) !== before) this.listeners.forEach((f) => { try { f(); } catch (e) { /* the listener's own */ } });
             cb(null);
         });
     }
@@ -230,4 +264,5 @@ class Weather {
 }
 
 Weather.kind = kind;
+Weather.DAYS = DAYS;
 module.exports = Weather;

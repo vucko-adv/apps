@@ -24,7 +24,8 @@ mgu.run({
             ctx.log.error('Cluster failed to start: ' + (e && e.stack || e));
             return;
         }
-        // today's weather for Dark Moon, Underpass and Mist (fetched only while that theme shows; weather.js)
+        // today's weather for Dark Moon, Underpass and Mist, and the next days for the home-screen widget (fetched only
+        // while such a theme shows or the widget shows the weather; weather.js)
         hud.wx = new Weather(ctx.dataDir, ctx.log);
         hud.wx.onChange(() => hud._status());
         hud.start();
@@ -32,9 +33,9 @@ mgu.run({
             title: ctx.spec.title, what: 'cluster',
             look: { name: 'Themes', style: 'hero', tags: { vintage_green: '1985 LCD · green · km/h', vintage_amber: '1985 LCD · amber · km/h', apex: 'racing · white · boost', apex_sport: 'racing · red glow · boost', map: 'phone map · minimal', map_underpass: 'phone map · photo', map_mist: 'phone map · photo', dark_moon: 'dark moon · weather', underpass: 'photo · weather', mist: 'photo · weather', grid: 'calibration', mapcal: 'map calibration' } },
             tabs: ['look', 'alerts', 'settings'],
-            settings: ['units', 'clock', 'timeZone', 'tankLitres', 'weather', 'shiftX', 'hideBoxes', 'stripClear', 'demo'],
+            settings: ['units', 'clock', 'timeZone', 'tankLitres', 'weather', 'widgetShows', 'shiftX', 'hideBoxes', 'stripClear', 'demo'],
         }).start();
-        // the home-screen widget: the theme the cluster shows now (widget.js)
+        // the home-screen widget: the weather in Mist's or Sunrise's look, or the theme the cluster shows now (widget.js)
         if (ctx.widget) { try { new ZeigerWidget(ctx, hud).start(); } catch (e) { ctx.log.warn('widget: ' + (e && e.message || e)); } }
         process.on('exit', () => { try { hud.wx.stop(); hud.stop(); } catch (e) { /* exiting anyway */ } });
     },

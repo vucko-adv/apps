@@ -4,6 +4,12 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 14 2026
 
+- **Zeiger 0.18.0:** the home-screen widget can show the **weather**: the temperature now, the weather in a word, today's high, low and chance of rain, and the next three days.
+  - **Two looks:** **Mist** (the Mist theme's photo, the default) and **Sunrise** (the first Sunrise theme's sunrise over mountains, from before Dark Moon). The text uses the cluster themes' own fonts and colours.
+  - The new setting **Home-screen widget** picks Weather, Mist, Weather, Sunrise, or the cluster's theme as before.
+  - **Weather data:** `shared/weather.js` now fetches 4 days and the weather right now. It fetches while a theme with weather shows or a widget shows the weather. Each asks on its own, so the **Today's weather** setting still only concerns the themes.
+  - When the forecast shown is an old one and there's no internet, OFFLINE shows beside the place.
+  - Not yet seen on a car.
 - **Zeiger 0.17.0:** a **home-screen widget**. Hold a finger on a home-screen tile and pick Zeiger.
   - **Big widget:** the theme the cluster shows now, with its picture and name, and the drive mode when the theme follows it. **Off** when Zeiger isn't drawing.
   - **Small widget:** the same in words.
