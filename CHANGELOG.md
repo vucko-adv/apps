@@ -4,6 +4,16 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 14 2026
 
+- **Zeiger 0.19.0:** **Sunrise** is back: the first Sunrise theme (a sunrise over mountains, today's weather), as its own theme next to Dark Moon.
+  - **It ends above BMW's own bottom strip:**
+    - Nothing is drawn below y 646 except a black band to 662 (to 658 over the strip's drive mode and gear, x 1196-1424).
+    - BMW's strip (gear, drive mode, ranges, time, outside temperature, warning lights) shows below the theme.
+    - With the strip showing, BMW is reported to leave out its black boxes. The measures are from eroobeeroo's Cluster Layouts, found on cars by thatgrayg22. This is a test: not yet tried on a G20 with Zeiger.
+  - **The other themes are unchanged.**
+  - **Engine:**
+    - A layout's `"ownStrip": true` says it already ends above BMW's strip; **Leave BMW's bottom strip clear** doesn't squeeze it.
+    - A widget's `"fixed": true` stays put when **Theme position** moves the rest.
+  - **Theme:** the land fades to black above the band, and the range and coolant groups sit 36 px higher (`cluster-design/sunrise/strip_sunrise.js` rebuilds it from the 0.8.2 files).
 - **Zeiger 0.18.1:** Vintage Green and Amber load faster and stay on when the phone's map starts.
   - **Why they went dark:**
     - Vintage's layers took 10.5 MiB of cluster-render's 16 MiB (its map version 12.2). That memory is for every app together, and the phone's map takes another 3.2 MiB.

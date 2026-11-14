@@ -152,6 +152,11 @@
  * Picture "stretch": true (Zeiger addition): the picture's own image (any size) drawn over the widget's whole rect by
  *   the GPU, e.g. a 64x8 gradient as a 640x720 shade, for the memory of its 64x8; an own layer, never packed.
  * Any widget: "toggle" may be a list, on while every one is (Zeiger addition).
+ * Any widget: "fixed": true stays where the panel has it when "Theme position" moves the rest (Zeiger addition: the
+ *   black band over BMW's bottom strip). Layout: "ownStrip": true when it ends above BMW's own bottom strip itself
+ *   (nothing below y 646 but a black band to 662, to 658 at x 1196-1424; Zeiger's Sunrise): BMW shows its strip and
+ *   leaves out its black boxes, as Cluster Layouts (eroobeeroo) found on cars; "Leave BMW's bottom strip clear"
+ *   doesn't squeeze it.
  * Any image widget: "own": true gives it its own image layer instead of a place in a packed sheet (above).
  *   Pictures and segments get their own layer anyway, unless "own": false (fork addition): then they pack like
  *   text, so a face cut into its drawn pieces costs a few small sheets instead of a 1920x720 layer (11 MiB).
@@ -564,6 +569,7 @@ class HudApp {
         this.testAt = null;              // the shift-light test's start (Date.now()), while it runs
         this.nightOn = false;            // the layout was built with the night colours (nightDim)
         this.noDim = false;              // the layout asks for no night colours (noNightDim)
+        this.ownStrip = false;           // the layout ends above BMW's bottom strip itself (ownStrip)
 
         this._setupVehicleData();
         this.layouts.onChange(() => this._rebuild());
@@ -648,7 +654,7 @@ class HudApp {
     }
     /** The cluster's squeeze for "Leave BMW's bottom strip clear": 662 / 720 while it's on, else 1. */
     _stripSy() {
-        if (this.target !== 'panel' || !this.ctx.settings.item('stripClear')) return 1;
+        if (this.target !== 'panel' || this.ownStrip || !this.ctx.settings.item('stripClear')) return 1;
         return this.setting('stripClear') === true ? STRIP_TOP / TARGET_SIZES.panel[1] : 1;
     }
     _scale() {
@@ -1757,12 +1763,13 @@ class HudApp {
         // full-width one (the black backdrop stays put, so BMW's own cluster never shows at an edge). A full-width
         // picture with "followsShift" (a scene whose middle has to stay under the readouts: Dark Moon's sun over the
         // speed, Map's window round the map) moves its pixels instead, the edge column repeated into the gap
+        // A widget with "fixed": true stays where the panel has it (Sunrise's black band over BMW's strip, which doesn't move).
         const shiftX = this.target === 'panel' && this.ctx.settings.item('shiftX') ? Number(this.setting('shiftX')) || 0 : 0;
         // A full-width fill's map window with "holeFollowsShift" moves too (Vintage Map: the window between its readouts;
         // waze-on-cluster's map stays put, so the window must stay inside the map's own rect)
         if (shiftX) {
             layout = Object.assign({}, layout, {
-                widgets: layout.widgets.map((w) => (w.w < this.size[0] ? Object.assign({}, w, { x: w.x + shiftX })
+                widgets: layout.widgets.map((w) => (w.fixed === true ? w : w.w < this.size[0] ? Object.assign({}, w, { x: w.x + shiftX })
                     : w.followsShift === true ? Object.assign({}, w, { pixelShift: shiftX })
                         : w.holeFollowsShift === true && Array.isArray(w.hole) ? Object.assign({}, w, { hole: [w.hole[0] + shiftX, w.hole[1], w.hole[2], w.hole[3]] }) : w)),
             });
@@ -1776,6 +1783,11 @@ class HudApp {
         // Map, whose window is cut into its picture)
         this.mapLayout = layout.wantsMap === true || layout.widgets.some((w) => w.holeWhen === 'mapUp');
         this.mapAlways = layout.wantsMap === true;
+        // "ownStrip": the layout is drawn to end above BMW's own bottom strip (Zeiger's Sunrise, Nov 14 2026): nothing
+        // below y 646 but a black band to 662 (to 658 over the strip's drive mode and gear, x 1196-1424), so BMW shows
+        // its strip and, as Cluster Layouts found on cars (thatgrayg22), leaves out its black boxes. The setting "Leave
+        // BMW's bottom strip clear" doesn't squeeze it again.
+        this.ownStrip = layout.ownStrip === true;
         this._wazeWant();
         if (this.wx) this.wx.want(layout.wantsWeather === true && this.setting('weather') !== false);
         this.layoutSlots = layout.slots || [];

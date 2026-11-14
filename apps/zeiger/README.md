@@ -33,6 +33,16 @@ A sunrise seen from orbit, drawn in code by `cluster-design/darkmoon/build.html`
 
 Dark Moon's readouts and weather over a photo (`cluster-design/underpass` and `cluster-design/mist`, built by `cluster-design/photo/photo_theme.js`): soft scrims behind the readouts so they read on it, and black wherever BMW's gear box lands.
 
+## Sunrise
+
+The first Sunrise theme (0.7-0.8, a sunrise over mountains; Dark Moon took its place in 0.9.0) back as its own theme, `sunrise_hills` (a choice saved as `sunrise` still opens Dark Moon). `cluster-design/sunrise/strip_sunrise.js` rebuilds it from the 0.8.2 files in the repo's history.
+
+- **Above BMW's own bottom strip** (layout `"ownStrip": true`): nothing below y 646 but a black band to 662, only to 658 over the strip's drive mode and gear (x 1196-1424). The band covers the edges of BMW's dials and the line BMW draws above its strip, and stays put with **Theme position** (`"fixed"`).
+- **Why:** with its strip showing, BMW is reported to leave out its black boxes (the one left of its gear display, and on cars coded to the M layout the two in the middle). The measures are Cluster Layouts' (eroobeeroo/idrive7-cluster-info), found on cars by thatgrayg22. Not yet tried on a G20 with Zeiger.
+- **Duplicates:** BMW's strip also shows the gear, drive mode, range and outside temperature, which Sunrise shows too.
+- The land fades to black over its last 44 px, and the range and coolant groups sit 36 px higher than before.
+- **Leave BMW's bottom strip clear** doesn't squeeze Sunrise (it's already above the strip); for the other themes the setting works as before.
+
 ## Map
 
 Dark Moon's look round the phone's map (waze-on-cluster): the map in a window in the middle with the sun on its top edge, the speed on the left, the selector and drive mode on the right, range and coolant at the bottom with a small grey clock under the map between them. **Map Underpass** and **Map Mist**: the same window and readouts on Underpass's and Mist's photos (`cluster-design/map_underpass`, `cluster-design/map_mist`).
@@ -59,7 +69,7 @@ The bench shows both (bench/README.md): the hang button (`POST /hang`) and `stal
 
 - **Change with SPORT / COMFORT / ECO PRO:** a theme per drive mode, or one theme always.
 - **Theme position:** px to the right (negative: left), -12 by default.
-- **Today's weather** (Dark Moon, Underpass, Mist): on by default.
+- **Today's weather** (Dark Moon, Underpass, Mist, Sunrise): on by default.
 - **Home-screen widget:** Weather, Mist (default), Weather, Sunrise, or The cluster's theme.
 - **Units:** metric (km/h and °C are part of the drawing). **Clock:** 12 or 24 hours. **Time zone.** **Tank size.**
 - **Warnings:** oil and water values flash red over their limits.
