@@ -2604,7 +2604,7 @@
    "z": 24,
    "conn": 1,
    "text": "{{mode}}",
-   "test": "ECO PRO",
+   "test": "SPORT PLUS",
    "font": "vfd_mode",
    "color": "lamp",
    "align": "center",
@@ -2612,6 +2612,22 @@
    "y": 387,
    "w": 180,
    "h": 27
+  },
+  {
+   "id": "check",
+   "type": "text",
+   "class": "content",
+   "z": 22,
+   "conn": 1,
+   "text": " ",
+   "test": " ",
+   "font": "vfd_dots",
+   "color": "win",
+   "align": "center",
+   "x": 857,
+   "y": 545,
+   "w": 234,
+   "h": 31
   }
  ]
 }

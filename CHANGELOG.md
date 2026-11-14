@@ -4,6 +4,28 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 14 2026
 
+- **Zeiger 0.21.0:** a **start animation** for the themes, about 2.5 s, when the car starts.
+  - **VFD:** the tube strikes, everything lights, the windows come on left to right, then SYSTEM CHECK and OK.
+  - **Vintage:**
+    - The rpm sweeps to the end and back, the bars fill one after another, and the speed counts 000 to 888.
+    - The message types BMW · SYSTEM CHECK, then ALL OK.
+    - Vintage Cyan: TURBO blinks and sweeps, and ECON sweeps green, then red.
+  - **Apex:** a rev sweep. Apex Sport's band flashes white, yellow, red.
+  - **Dark Moon, Mist, Underpass:** the picture comes up out of black.
+  - **Sunrise:** the mountains, then the sky's glow behind them.
+  - **When it plays:**
+    - Once per theme after the car starts, or when a theme is first picked.
+    - Only while the car stands still; it stops at once when the car moves off.
+    - The new setting **Start animation** turns it off.
+  - **Engine (`shared/hud.js`):** a layout's `intro`, or `hud/intros/<layout>.json` (made by `cluster-design/intro/make_intros.js`):
+    - keyframes for values;
+    - stepped texts;
+    - a self-test stretch;
+    - layer opacity curves;
+    - renderer slides;
+    - a black underlay.
+  - **VFD:** a hidden dot-matrix text in its middle window, for SYSTEM CHECK.
+  - **Checked:** on the bench, every theme. Layer opacity and slides are not yet tried on a car.
 - **Zeiger 0.20.0:** a new theme, **VFD**: a fluorescent display as the late-80s Japanese digital dashes had.
   - **The look:**
     - Pale mint phosphor glowing on black.

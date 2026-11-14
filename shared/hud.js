@@ -161,6 +161,20 @@
  *   (nothing below y 646 but a black band to 662, to 658 at x 1196-1424; Zeiger's Sunrise): BMW shows its strip and
  *   leaves out its black boxes, as Cluster Layouts (eroobeeroo) found on cars; "Leave BMW's bottom strip clear"
  *   doesn't squeeze it.
+ * Start animation (Zeiger addition): a layout's "intro", else hud/intros/<layout name>.json, played when the layout
+ *   is first shown (as "selfTest", which it replaces) with the setting "startAnim" on, unless the car moves (over
+ *   INTRO_STILL_KMH; it also ends at once when the car moves off; the demo drive plays it anyway). It starts
+ *   INTRO_LEAD_MS after the layout is made ("lead": ms instead, for a big picture still on its way); t below is ms
+ *   from then.
+ *   { "ms": its length, "test": ms of the self-test (texts show their "test" string, segments are all lit, but those
+ *     below), "values": { measure: [[t, v], ...] } (rpm, speed, fuel, oil, coolant, boost, brakeG, econEco, ... straight
+ *     between the keys; "live": the car's own; "shift", "shift-250": the shift point, or that far from it),
+ *     "texts": { widget id: [[t, "text"], ...] } (each from its t on; "test", "live"), "fade": { widget id or "*":
+ *     [[t, opacity 0..1], ...] } (an image layer's opacity: "*" times the lowest curve of the widgets on it; effect
+ *     layers keep theirs), "move": { widget id: { "from": [dx, dy], "at": t, "ms": length } } (the renderer slides
+ *     that widget's layer from dx, dy to its place), "underlay": true or [x, y, w, h] (a black fill under everything,
+ *     the rest one z up, so a fading or moving backdrop never shows BMW's own cluster) }
+ *   Opacity and moves are cluster-render layer opacity and animations: seen on the bench, not yet on a car.
  * Any image widget: "own": true gives it its own image layer instead of a place in a packed sheet (above).
  *   Pictures and segments get their own layer anyway, unless "own": false (fork addition): then they pack like
  *   text, so a face cut into its drawn pieces costs a few small sheets instead of a 1920x720 layer (11 MiB).
@@ -250,6 +264,7 @@ const sun = require('./sun');
 const textRaster = require('./hud_text');
 const { paintIcon } = require('./icons');
 const pictures = require('./pictures');
+const hudData = require('./hud_data');
 const shaders = require('./shaders');
 const calibration = require('./calibration');
 const Car = require('./kit/car');
@@ -289,6 +304,11 @@ const REFUSED_RETRIES = 2;       // ... at most this many times until something 
 // fresh speed. Only the speed: a hybrid's rpm stays 0, unchanged, while it drives on electricity. The hold is 6 renewals
 // long, so a busy moment (the page decoding the theme gallery) doesn't blink the theme; the longest gap between two
 // renewals is logged once a minute when it was over 2 of them (FS_LOG_MS), to tune this on the car.
+// the start animation ("intro", Zeiger addition): it starts INTRO_LEAD_MS after the layout is made (its layers are on
+// their way to the cluster; until then they show the animation's first frame), ends at once when the car moves faster
+// than INTRO_STILL_KMH (the demo drive plays it anyway, for the bench), redraws its texts every INTRO_TEXT_MS, and
+// moves layers with the renderer's animation number INTRO_ANIM
+const INTRO_LEAD_MS = 500, INTRO_STILL_KMH = 3, INTRO_TEXT_MS = 50, INTRO_ANIM = 98;
 const FS_ANIM = 99, FS_REARM_MS = 200, FS_HOLD_MS = 1200, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
 const TICK_MS = 50;              // 20 Hz: shift bar and gauges
 const TEXT_MS = 200;             // text re-draws at most 5 times a second (what BMW's own readouts do)
@@ -541,6 +561,8 @@ class HudApp {
         this.atlases = new Map();        // "<conn>:<font>" -> { ref, c, ci, cols, rows, cellW, cellH, chars, bytes }: R8 assets, kept across rebuilds
         this.targetState = null;         // { state, holder, reason } of our target
         this.rpmF = null; this.rpmShown = null; this.lastTickT = 0;
+        this.intro = null;               // the start animation playing now (_introSpec), else null
+        this.introShown = new Set();     // the layouts whose start animation has played since the app started
         this.themeName = null;
         this.flash = false;
         this.problem = null;             // why nothing shows (a bad layout), for the status line
@@ -1240,8 +1262,126 @@ class HudApp {
     }
     _shiftPointRaw() { return this.score.shiftPoint(this.car.data().oil).rpm; }
 
+    /* ---------- the start animation ("intro", Zeiger addition; the header's "Start animation") ---------- */
+
+    /** The start animation of layout `name`: its own "intro", else hud/intros/<name>.json; null without one. */
+    _introSpec(name, layout) {
+        let s = layout.intro;
+        if (!s) { try { s = hudData.json('intros/' + name + '.json'); } catch (e) { s = null; } }
+        return s && isNum(s.ms) && s.ms > 0 ? s : null;
+    }
+
+    _introMoving() { const v = this.car.data().speed; return isNum(v) && v > INTRO_STILL_KMH; }
+
+    /** A black fill under the layout (every other widget one z up), so a fading or moving backdrop never shows BMW's own
+     *  cluster through it: [x, y, w, h], or true for the whole display. An effect layer: no pixel memory. */
+    _introUnderlay(layout, r) {
+        const [x, y, w, h] = Array.isArray(r) ? r : [0, 0, this.size[0], this.size[1]];
+        const under = { id: '_introUnder', type: 'fill', color: [1, 1, 1, 255], class: 'content', z: 0, x, y, w, h };
+        return Object.assign({}, layout, { widgets: [under].concat(layout.widgets.map((wd) => Object.assign({}, wd, { z: (wd.z || 0) + 1 }))) });
+    }
+
+    /** Keyframes [[ms, value], ...] at ms t (from the animation's start): straight between them, held at the ends. */
+    _introAt(keys, t, val) {
+        if (t <= keys[0][0]) return val(keys[0]);
+        let i = 0;
+        while (i < keys.length - 1 && keys[i + 1][0] <= t) i++;
+        if (i === keys.length - 1) return val(keys[i]);
+        const a = val(keys[i]), b = val(keys[i + 1]);
+        if (!isNum(a) || !isNum(b)) return isNum(a) ? a : b;
+        return a + (b - a) * (t - keys[i][0]) / (keys[i + 1][0] - keys[i][0]);
+    }
+
+    /** The value the start animation gives `name` now (a measure: rpm, speed, fuel, oil, coolant, boost, brakeG, econEco,
+     *  econLoad, ...), from its "values" keyframes ("live": the car's own, live(); "shift" / "shift-500": the shift point,
+     *  or that far from it); undefined when it sets none, or past a last "live" key. */
+    _introValue(name, live) {
+        const I = this.intro, keys = I && I.spec.values && I.spec.values[name];
+        if (!Array.isArray(keys) || !keys.length) return undefined;
+        const t = Date.now() - I.at;
+        if (t >= keys[keys.length - 1][0] && keys[keys.length - 1][1] === 'live') return undefined;
+        return this._introAt(keys, t, (k) => {
+            const v = k[1];
+            if (v === 'live') return live();
+            if (typeof v === 'string' && v.indexOf('shift') === 0) return this._shift().rpm + (Number(v.slice(5)) || 0);
+            return v;
+        });
+    }
+
+    _introScripted(name) { const I = this.intro; return !!(I && I.spec.values && I.spec.values[name]); }
+
+    /** The text the start animation shows in widget w now ("test": its self-test string, "live": its own value), else
+     *  undefined: steps [[ms, "text"], ...], each shown from its ms on (typewriter lines, counters). */
+    _introText(w) {
+        const I = this.intro, keys = I && I.spec.texts && I.spec.texts[w.id];
+        if (!Array.isArray(keys) || !keys.length) return undefined;
+        const t = Date.now() - I.at;
+        let k = keys[0];
+        keys.forEach((q) => { if (q[0] <= t) k = q; });
+        if (k[1] === 'live') return undefined;
+        if (k[1] === 'test') return typeof w.test === 'string' ? w.test : undefined;
+        return String(k[1]);
+    }
+
+    /** Every layer the layout made: { c, ref, image, ids } (ids: the widgets on it). */
+    _introLayers() {
+        const out = [];
+        this.widgets.forEach((x) => {
+            if (!x.c || !x.ref) return;
+            let L = out.find((q) => q.c === x.c && q.ref === x.ref);
+            if (!L) { L = { c: x.c, ref: x.ref, image: !!IMAGE_TYPES[x.w.type], ids: [] }; out.push(L); }
+            L.ids.push(x.w.id);
+        });
+        return out;
+    }
+
+    /** Each tick while it plays: its end (or the car moving off), the image layers' opacity ("fade": "*" for every image
+     *  layer times the lowest curve of the widgets on it), and once the moves ("move": the renderer slides the layer in). */
+    _introTick(now) {
+        const I = this.intro;
+        if (!I) return;
+        if (now >= I.end || (!this.car.data().demo && this._introMoving())) { this._introStop(); return; }
+        if (!I.layers) I.layers = this._introLayers();
+        const t = now - I.at, fade = I.spec.fade || {}, num = (k) => Math.max(0, Math.min(1, Number(k[1]) || 0));
+        I.layers.forEach((L) => {
+            if (!L.image) return;            // effect layers keep theirs: the black backdrop stays black
+            let a = Array.isArray(fade['*']) ? this._introAt(fade['*'], t, num) : 1, own = 1;
+            L.ids.forEach((id) => { if (Array.isArray(fade[id])) own = Math.min(own, this._introAt(fade[id], t, num)); });
+            a = Math.round(a * own * 100) / 100;
+            if (a !== L.alpha && (L.alpha === undefined || Math.abs(a - L.alpha) >= 0.03 || a === 0 || a === 1)) {
+                L.alpha = a;
+                this._guard('intro fade', () => L.c.set(L.ref, { opacity: a }));
+            }
+        });
+        if (!I.started) {
+            I.started = true;
+            const mv = I.spec.move || {}, lead = Math.max(0, I.at - now);
+            Object.keys(mv).forEach((id) => {
+                const L = I.layers.find((q) => q.ids.indexOf(id) >= 0), m = mv[id];
+                if (!L || !Array.isArray(m.from)) return;
+                const s = Math.round(lead + (m.at || 0)), e = s + (m.ms || 1000), f = m.from[0] + ',' + m.from[1] + ',0';
+                this._guard('intro move', () => L.c.animate(L.ref, { anim: INTRO_ANIM, property: 'translate', keys: '0:' + f + ' ' + s + ':' + f + ' ' + e + ':0,0,0', loop: false, interp: 'linear' }));
+                L.moved = true;
+            });
+        }
+    }
+
+    /** The end (or the car moving off): every faded layer opaque again, every moved one at its place, the values live. */
+    _introStop() {
+        const I = this.intro;
+        this.intro = null;
+        if (this.testUntil > Date.now()) this.testUntil = 0;
+        if (!I || !I.layers) return;
+        I.layers.forEach((L) => this._guard('intro end', () => {
+            if (L.alpha !== undefined && L.alpha !== 1) L.c.set(L.ref, { opacity: 1 });
+            // a held zero move rather than a stop: a stopped animation may leave the layer where it was on the way
+            if (L.moved) L.c.animate(L.ref, { anim: INTRO_ANIM, property: 'translate', keys: '0:0,0,0', loop: false, interp: 'step' });
+        }));
+    }
+
     /** A readout over its warning limit ("warnOil" C, "warnCoolant" C, "warnBoost" bar; 0 = off): which sensor, else null. */
     _warning(w) {
+        if (this.intro) return null;         // the start animation's values are made up: no warning flashes for them
         const t = String(w.text || '');
         let id = null;
         if (t.indexOf('{{slot:') >= 0 && w.slot) id = (this.slotSensor(this.activeName, w.slot, this.layoutSlots) || {}).id;
@@ -1403,6 +1543,13 @@ class HudApp {
     }
 
     _raw(name) {
+        // the start animation's value, if it sets one (rpm: already in rpmF); its "live" keys read on, past this
+        if (this.intro && name !== 'rpm' && !this.introLive) {
+            this.introLive = true;
+            let v;
+            try { v = this._introValue(name, () => this._raw(name)); } finally { this.introLive = false; }
+            if (v !== undefined) return v;
+        }
         if (name === 'boost') return this._boost();
         if (name === 'gLat' || name === 'gLong') {
             // the 150 ms average while samples come in; else the car's last reading, unless it is a bad one
@@ -1794,8 +1941,23 @@ class HudApp {
         // "selfTest": ms the layout starts with every segment lit and every text showing its "test" string, as an 80s
         // dash did at power-on (Vintage 2); the values take over by themselves once it ends
         // (not when the rebuild is the switch to or from the "withMap" layout: the dash is already on)
-        this.testUntil = !this.noSelfTestOnce && isNum(layout.selfTest) && layout.selfTest > 0 ? Date.now() + layout.selfTest : 0;
+        // "intro" (Zeiger addition): the start animation, the layout's own or hud/intros/<name>.json (the header's
+        // "Start animation"), in place of "selfTest" (its "test" ms are the self-test's). Neither with the setting
+        // "Start animation" off, nor (but in the demo drive, for the bench) while the car moves.
+        if (this.intro) this._introStop();
+        const fresh = !this.noSelfTestOnce && this.setting('startAnim') !== false;
         this.noSelfTestOnce = false;
+        const introSpec = fresh ? this._introSpec(name, layout) : null;
+        // once a theme per run of the app: when the car starts, or a theme first picked; not again at every change of
+        // drive mode (Change with SPORT / COMFORT / ECO PRO) at a standstill
+        if (introSpec && !this.introShown.has(name) && (this.car.data().demo || !this._introMoving())) {
+            this.introShown.add(name);
+            const at = Date.now() + (isNum(introSpec.lead) && introSpec.lead >= 0 ? introSpec.lead : INTRO_LEAD_MS);
+            this.intro = { spec: introSpec, at, end: at + introSpec.ms, layers: null, started: false };
+            if (introSpec.underlay) layout = this._introUnderlay(layout, introSpec.underlay);
+        }
+        this.testUntil = this.intro ? (isNum(introSpec.test) && introSpec.test > 0 ? this.intro.at + introSpec.test : 0)
+            : fresh && isNum(layout.selfTest) && layout.selfTest > 0 ? Date.now() + layout.selfTest : 0;
         // a layout with a window onto the Waze map: a fill with a hole while it shows, or one that says so ("wantsMap":
         // Map, whose window is cut into its picture)
         this.mapLayout = layout.wantsMap === true || layout.widgets.some((w) => w.holeWhen === 'mapUp');
@@ -2311,6 +2473,7 @@ class HudApp {
         const rpm = this._raw('rpm');
         const flashing = isNum(rpm) && rpm >= this.setting('redline') - 150;
         this.flash = flashing ? Math.floor(now / 62.5) % 2 === 0 : false;
+        this._guard('intro', () => this._introTick(now));
         this.widgets.forEach((x) => this._guard('widget ' + x.w.id, () => this._update(x, now, false)));
         this._failsafe(now, false);
     }
@@ -2367,7 +2530,8 @@ class HudApp {
     /** BMW-like tach: a 120 ms filter, and a readout that moves in 50 rpm steps, only by 40 rpm or more. */
     _smoothRpm(now) {
         const test = this._testRpm(now);
-        const raw = isNum(test) ? test : this.car.data().rpm;
+        const intro = this.intro ? this._introValue('rpm', () => this.car.data().rpm) : undefined;
+        const raw = isNum(intro) ? intro : isNum(test) ? test : this.car.data().rpm;
         const dt = this.lastTickT ? Math.min(500, now - this.lastTickT) : 0;
         this.lastTickT = now;
         if (!isNum(raw)) { this.rpmF = null; this.rpmShown = null; return; }
@@ -2378,6 +2542,10 @@ class HudApp {
     /** A needle's value now, in the units of its "table": speed km/h, rpm, fuel 0..1, oil / coolant C, or any _raw() name. */
     _needleValue(measure) {
         const d = this.car.data();
+        if (this.intro && (measure === 'speed' || measure === 'oil' || measure === 'coolant')) {
+            const v = this._introValue(measure, () => d[measure]);
+            if (v !== undefined) return v;
+        }
         if (measure === 'speed') return d.speed;
         if (measure === 'oil' || measure === 'coolant') return d[measure];
         return this._raw(measure);
@@ -2435,7 +2603,8 @@ class HudApp {
             else x.value = isNum(x.value) ? x.value + (raw - x.value) * (1 - Math.exp(-dt / 120)) : raw;
             v = x.value;
         }
-        if (this.testUntil > now) v = Number.MAX_VALUE;      // the power-on self-test lights every segment
+        // the power-on self-test lights every segment (but those the start animation moves itself)
+        if (this.testUntil > now && !this._introScripted(w.measure)) v = Number.MAX_VALUE;
         let n = 0;
         if (isNum(v)) while (n < segs.length && n < steps.length && v >= steps[n]) n++;
         if (!force && n === x.lit) return;
@@ -2467,11 +2636,14 @@ class HudApp {
             x.last = s; x.lastPaint = now;
             x.c.uniform(x.ref, 'u_text', this._atlasCodes(x, s), { type: 'vec4' });
         } else if (w.type === 'text') {
-            if (!force && now - x.lastPaint < (w.rate || TEXT_MS)) return;
+            if (!force && now - x.lastPaint < (this.intro ? INTRO_TEXT_MS : (w.rate || TEXT_MS))) return;
             let s = this._resolve(w.text);
             if (isNum(w.zeros) && /^\d+$/.test(s)) s = s.padStart(w.zeros, '0');
-            // the power-on self-test (a layout's "selfTest" ms): the text's "test" string ("888") instead of its value
-            if (this.testUntil > now && typeof w.test === 'string') s = w.test;
+            // the start animation's text, else the power-on self-test (a layout's "selfTest" ms, or the start
+            // animation's "test"): the text's "test" string ("888") instead of its value
+            const intro = this.intro ? this._introText(w) : undefined;
+            if (intro !== undefined) s = intro;
+            else if (this.testUntil > now && typeof w.test === 'string') s = w.test;
             let role = w.color || 'fg';
             if (w.colorBy === 'verdict' && this.score.last) role = VERDICT[this.score.last.verdict] || role;
             if (w.near && this._nearMark(w.near[0]) === w.near[1]) role = w.nearColor || 'fg';

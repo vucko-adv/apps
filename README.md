@@ -95,6 +95,19 @@ If bimmer-lab's Cluster Themes is installed, remove it first, so the two apps do
 
 Installing apps that don't come from BMW on your head unit is done at your own risk and may affect your warranty.
 
+## Start animation
+
+When the car starts, the cluster's theme comes on with a short animation, about 2.5 s:
+
+- **VFD:** the tube strikes with two weak flashes, then everything lights at full (888, both bands full). The coolant block runs from C to H. The windows come on left to right, and the middle one says SYSTEM CHECK, then OK. Then everything settles to the car's values.
+- **Vintage Green, Amber and Cyan:** the rpm sweeps to the end and back, oil, water and fuel fill one after another, and the speed counts 000 to 888. The message line types BMW · SYSTEM CHECK letter by letter, then ALL OK. In Vintage Cyan, the TURBO lamp blinks twice and its bar goes up to 1.6 bar and back. ECON sweeps all green to the left, then all red to the right, and stops in the middle.
+- **Apex:** the rev band fills to the red and falls, and boost and braking fill and empty. The gear shows N.
+- **Apex Sport:** the same, and the band flashes white, yellow, then red, as at the shift point.
+- **Dark Moon, Mist, Underpass:** the picture comes up out of black (Dark Moon's scene rising into place, the photos drifting a little), then the readouts.
+- **Sunrise:** the mountains first as dark shapes, then the sky's glow behind them, then the readouts.
+
+Each theme plays it once after the car starts, or the first time you pick it, and only while the car stands still. It stops at once when the car moves off, and the real values show. The setting **Start animation** turns it off.
+
 ## Home-screen widget
 
 Zeiger has a widget for the iDrive home screen, like BMW's own Weather or News widgets. To place it, hold a finger on a home-screen tile and pick **Zeiger** from the list.

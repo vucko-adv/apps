@@ -33,7 +33,7 @@ A fluorescent display in the manner of the late-80s Japanese digital dashes, dra
 - **Middle:** the rpm band (207 dot columns, red from 7000) over a straight scale 0-8 with a red dashed end, and the drive mode in a green lamp on the left. Right of the scale is black, where BMW draws its gear box.
 - **Bottom:** three teal filter windows: SHIFT POSITION with the selector's letter and the gear number; the clock with OIL and OUT in dot matrix; RANGE.
 - **Self-test:** 2.5 s with everything lit at power-on. No roundel: the dashes it follows had none.
-- **Engine:** the coolant block and the orange pump are `segments` with `"one": true` (only the last segment reached is lit). The bloom is drawn into the fonts and pictures, so the colour theme's glow stays 0. The face is cut into 8 regions, each a z group of its own: 19 layers on 3 connections and 4.4 MiB of cluster-render's 16 MiB.
+- **Engine:** the coolant block and the orange pump are `segments` with `"one": true` (only the last segment reached is lit). The bloom is drawn into the fonts and pictures, so the colour theme's glow stays 0. The face is cut into 8 regions, each a z group of its own: 20 layers on 3 connections and 4.5 MiB of cluster-render's 16 MiB (with the start animation's hidden SYSTEM CHECK text).
 
 ## Apex and Apex Sport
 
@@ -88,6 +88,21 @@ While the car moves, if the speed signal is over a second old, the theme hides a
 
 The bench shows both (bench/README.md): the hang button (`POST /hang`) and `stall: ["speed"]` in manual signals.
 
+## Start animation
+
+`shared/hud.js` plays a theme's start animation ("intro") once per run of the app: when the car starts, or when the theme is first picked. The animations are written to `hud/intros/<layout>.json` by `cluster-design/intro/make_intros.js`, which also describes each theme's scenario.
+
+- **Not while moving:** it doesn't play while the car moves faster than 3 km/h, and it ends at once when the car moves off. The bench's demo drive plays it anyway.
+- **Timing:** it starts 0.5 s after the layout is made (photo themes 0.8-1.2 s, their big pictures still on the way to the cluster). Until then the layers show its first frame.
+- **Values:** keyframes for rpm, speed, fuel, oil, coolant, boost, braking or ECON, straight between keys. `live` is the car's own value; `shift` and `shift-250` are relative to the shift point.
+- **Texts:** a text per step, for typed-out lines and counters. `test` shows the widget's self-test string.
+- **Self-test:** for a stretch it can be on too (`"test"` ms).
+- **Layers:** a layer's opacity can follow a curve (`fade`), and the renderer can slide a layer into place (`move`).
+- **Black underlay:** the photo themes get a black underlay (an effect layer, no pixel memory), so a fading picture never shows BMW's own cluster through it. Sunrise's underlay ends at y 646: below it is BMW's own strip.
+- **Warnings:** no warning flashes during the animation, as its values are made up.
+- **Cluster-render features:** the opacity and moves use cluster-render layer opacity and animations. Seen on the bench, not yet on a car. Where the car ignores them, the values and texts still play.
+- **The setting:** **Start animation** turns it off, and with it the 2.5 s self-test of themes without an animation.
+
 ## Settings
 
 - **Change with SPORT / COMFORT / ECO PRO:** a theme per drive mode, or one theme always.
@@ -95,6 +110,7 @@ The bench shows both (bench/README.md): the hang button (`POST /hang`) and `stal
 - **Today's weather** (Dark Moon, Underpass, Mist, Sunrise): on by default.
 - **Home-screen widget:** Weather, Mist (default), Weather, Sunrise, or The cluster's theme.
 - **Units:** metric (km/h and °C are part of the drawing). **Clock:** 12 or 24 hours. **Time zone.** **Tank size.**
+- **Start animation:** the theme's start animation (above), on by default.
 - **Warnings:** oil and water values flash red over their limits.
 - **Calibration grid** and **Map calibration** help measure what BMW hides on your car's cluster.
 
