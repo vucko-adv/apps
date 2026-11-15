@@ -4,6 +4,11 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.29.1:** **Leave BMW's gear letter open** is gone again, and **Watch BMW's slots** shows more.
+  - **Car test of 0.29.0 (G20):** BMW's black gear box shows when a theme starts and goes at the first gear change, on every theme, the gear letter open or not; the switch made no difference.
+  - **The slot watch:** while it is on, BMW's cluster group shows only its switch and the watch: every slot now (0.29.0 showed the first four), and each change before with the slot and what it had before and after (0.29.0 showed only the times). The last 40 changes are kept.
+  - **Checked:** in the emulator (a made-up slot table, the changes listed right; the group's rows back with the watch off); not yet on a car.
+
 - **Zeiger 0.29.0:** **Leave BMW's gear letter open** (Settings, BMW's cluster; a test, off by default).
   - Every theme leaves BMW's drive mode and gear letter in its bottom strip see-through (x 1150-1470, y 660-720).
   - bimmer-lab found on a test car that BMW then leaves out its black gear box over the theme (their Cluster Themes 0.17.6, issue #5); on their car it went at the next gear change.

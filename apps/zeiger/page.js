@@ -58,9 +58,8 @@ const GROUPS = [
     { name: 'BMW\'s cluster', about: 'What BMW draws under and over the themes.', rows: [
         ['hideBoxes', 'Hide BMW\'s black boxes', 'test'],
         ['stripClear', 'Leave BMW\'s bottom strip clear', 'the theme only above it'],
-        ['gearWindow', 'Leave BMW\'s gear letter open', 'test: without its black gear box, as on bimmer-lab\'s test car'],
         ['calib', 'Calibration', 'a grid or the map frame on the cluster, to measure what BMW hides'],
-        ['slotWatch', 'Watch BMW\'s slots', 'test: what the cluster shows in each slot, every second'],
+        ['slotWatch', 'Watch BMW\'s slots', 'test: every slot now, and what changed when'],
     ] },
     { name: 'Warnings', about: 'Over its limit, the value flashes red on the cluster. Not during the start animation.', rows: [
         ['warnOil', 'Oil temperature', 'flashes from', 'OIL', '#ffb23e'],
@@ -88,8 +87,8 @@ const GROUPS = [
         ['demo', 'Demo data', 'made-up values while the car sends none'],
     ] },
 ];
-// the slot watch's lines on the page (BMW's cluster group)
-const WATCH_LINES = 6;
+// the slot watch (BMW's cluster group): while it is on, the group shows only its switch, the rest is the watch
+const WATCH_ROW = 64, WATCH_LH = 22;
 // the calibration layouts (hudLayout values), for the row in BMW's cluster
 const CALIB = [['', 'Off'], ['grid', 'Grid'], ['mapcal', 'Map frame']];
 const CREDITS = [
@@ -360,10 +359,14 @@ class Page {
         let y = py + 70;
         if (g.about) { cv.text(g.about, px + 32, py + 86, 19, C.dim, { font: M, literal: true }); y = py + 104; }
         const credits = g.name === 'About', watch = g.name === 'BMW\'s cluster' && this.get('slotWatch') === true;
-        const room = py + ph - 10 - y - (credits ? CREDITS.length * 28 + 24 : 0) - (watch ? WATCH_LINES * 24 + 18 : 0);
-        const rh = Math.min(84, Math.floor(room / g.rows.length));
-        g.rows.forEach((row, j) => this.row(cv, px + 32, y + j * rh, pw - 64, rh, row));
-        if (watch) this.watchLines(cv, px + 32, y + g.rows.length * rh + 18, pw - 64);
+        const rows = watch ? g.rows.filter((r) => r[0] === 'slotWatch') : g.rows;
+        const room = py + ph - 10 - y - (credits ? CREDITS.length * 28 + 24 : 0);
+        const rh = watch ? WATCH_ROW : Math.min(84, Math.floor(room / rows.length));
+        rows.forEach((row, j) => this.row(cv, px + 32, y + j * rh, pw - 64, rh, row));
+        if (watch) {
+            const wy = y + rh + 18;
+            this.watchLines(cv, px + 32, wy, pw - 64, Math.max(3, Math.floor((py + ph - 14 - wy - 18) / WATCH_LH)));
+        }
         if (credits) {
             const cy = y + g.rows.length * rh + 18;
             cv.fillRect(px + 32, cy - 8, pw - 64, 1, C.faint);
@@ -372,27 +375,40 @@ class Page {
     }
 
     /**
-     * The slot watch's lines: the KOMBI's slots now (each slot, its status, and each content in it, shown or parked),
-     * then the times of the changes before. On the car: switch it on, go through BMW's on-board computer with the
-     * stalk's button, and photograph the cluster and these lines at each step.
+     * The slot watch's lines (0.29.1): left, every one of the KOMBI's slots now (its status, and each content in it,
+     * shown or parked); right, the changes before, newest first, each slot that changed with what it had and what it
+     * had then. On the car: switch it on, start a theme in P (BMW's black gear box shows), shift to D (it goes), and
+     * photograph the cluster and these lines; the same with the parking brake or Auto Hold.
      */
-    watchLines(cv, x, y, w) {
-        const log = this.hud.slotLog || [], F = { font: M, literal: true };
+    watchLines(cv, x, y, w, lines) {
+        const log = this.hud.slotLog || [], F = { font: M, literal: true }, LH = WATCH_LH, n = lines - 1;
         cv.fillRect(x, y - 8, w, 1, C.faint);
-        const hm = (t) => { const d = new Date(t); return [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':'); };
+        const hm = (t) => { const d = new Date(t); return [d.getHours(), d.getMinutes(), d.getSeconds()].map((v) => String(v).padStart(2, '0')).join(':'); };
+        // one slot line: [slot, "[status]  content shown, content parked"]
         const short = (l) => {
             const m = /^slot (0x[0-9a-f]+) status (\d+):?(.*)$/i.exec(l);
-            if (!m) return l;
+            if (!m) return [l, ''];
             const rows = m[3].split(',').map((r) => /(0x[0-9a-f]+) class (\d+) map (\d+)/i.exec(r)).filter(Boolean)
                 .map((r) => r[1].replace(/^0x/, '') + ' ' + ({ 1: 'shown', 2: 'shown', 3: 'parked' }[r[3]] || 'off ' + r[3]));
-            return m[1] + ' [' + m[2] + ']  ' + (rows.join(', ') || 'empty');
+            return [m[1], '[' + m[2] + '] ' + (rows.join(', ') || 'empty')];
         };
+        const table = (e) => { const t = new Map(); e.lines.forEach((l) => { const [k, v] = short(l); t.set(k, v); }); return t; };
         if (!log.length) { cv.text('Waiting for cluster-render\'s slot table...', x, y + 18, 18, C.dim, F); return; }
-        const last = log[log.length - 1], now = last.lines.map(short);
+        // left: every slot now
+        const cw = Math.floor(w * 0.42), last = log[log.length - 1], now = [...table(last)];
         cv.text(hm(last.t) + '  now:', x, y + 18, 18, C.accSoft, F);
-        now.slice(0, WATCH_LINES - 2).forEach((l, i) => cv.text(fit(cv, l, 18, w - 20, M), x + 20, y + 42 + i * 24, 18, C.text, F));
-        const before = log.slice(0, -1).map((e) => hm(e.t)).reverse().slice(0, 6).join('  ·  ');
-        if (before) cv.text(fit(cv, 'changes before: ' + before, 16, w, M), x, y + 18 + (Math.min(now.length, WATCH_LINES - 2) + 1) * 24, 16, C.dim, F);
+        const fits = now.length > n ? n - 1 : n;
+        now.slice(0, fits).forEach(([k, v], i) => cv.text(fit(cv, k + ' ' + v, 17, cw - 16, M), x + 12, y + 18 + (i + 1) * LH, 17, C.text, F));
+        if (now.length > n) cv.text('+' + (now.length - fits) + ' more', x + 12, y + 18 + n * LH, 15, C.dim, F);
+        // right: the changes, newest first: the slot, what it had, what it has then
+        const rx = x + cw + 12, rw = w - cw - 12, out = [];
+        for (let k = log.length - 1; k > 0 && out.length < n; k--) {
+            const a = table(log[k - 1]), b = table(log[k]), keys = [...new Set([...a.keys(), ...b.keys()])];
+            keys.filter((s) => a.get(s) !== b.get(s)).forEach((s) => out.push(hm(log[k].t) + '  ' + s + ' ' + (a.get(s) || 'none') + '  >  ' + (b.get(s) || 'none')));
+        }
+        cv.text('changes (newest first):', rx, y + 18, 18, C.accSoft, F);
+        if (!out.length) cv.text('none yet', rx + 12, y + 18 + LH, 17, C.dim, F);
+        out.slice(0, n).forEach((l, i) => cv.text(fit(cv, l, 16, rw - 12, M), rx + 12, y + 18 + (i + 1) * LH, 16, C.text, F));
     }
 
     /** one setting: label and line under it on the left, a switch or - value + on the right */
