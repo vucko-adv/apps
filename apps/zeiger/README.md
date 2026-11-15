@@ -83,11 +83,12 @@ The bench shows both (bench/README.md): the hang button (`POST /hang`) and `stal
 `shared/hud.js` plays a theme's start animation ("intro") once per run of the app: when the car starts, or when the theme is first picked. The animations are written to `hud/intros/<layout>.json` by `cluster-design/intro/make_intros.js`, which also describes each theme's scenario.
 
 - **Not while moving:** it doesn't play while the car moves faster than 3 km/h, and it ends at once when the car moves off. The bench's demo drive plays it anyway.
-- **Timing:** it holds its first frame until cluster-render says every layer of the theme is shown on the display (its `layer` events), then starts 0.3 s later (the photo themes 0.4 s): big pictures take seconds through the renderer's upload budget, and at power-on BMW holds the display a while first. If some layers aren't shown 15 s after the layout was made, it plays anyway; if none are, it's dropped. The log says how long it waited (`start animation: ...`).
+- **Timing:** it holds its first frame until cluster-render says every layer of the theme is shown on the display (its `layer` events), then starts 0.3 s later (the photo themes too, since 0.25.1): big pictures take seconds through the renderer's upload budget, and at power-on BMW holds the display a while first. If some layers aren't shown 15 s after the layout was made, it plays anyway; if none are, it's dropped. The log says how long it waited (`start animation: ...`).
 - **Values:** keyframes for rpm, speed, fuel, oil, coolant, boost, braking or ECON, straight between keys. `live` is the car's own value; `shift` and `shift-250` are relative to the shift point.
 - **Texts:** a text per step, for typed-out lines and counters. `test` shows the widget's self-test string.
 - **Self-test:** for a stretch it can be on too (`"test"` ms).
 - **Layers:** a layer's opacity can follow a curve (`fade`), and the renderer can slide a layer into place (`move`).
+- **Dark Moon, Mist, Underpass:** since 0.25.1 only a soft fade up out of black: the picture over 1.4 s, eased in and out, the readouts 0.3 s after it. The picture no longer slides in (on the car the slide looked like shaking).
 - **Black underlay:** the photo themes get a black underlay (an effect layer, no pixel memory), so a fading picture never shows BMW's own cluster through it. An intro's `"underlay"` can be a rect, for a theme that leaves BMW's own strip showing.
 - **Warnings:** no warning flashes during the animation, as its values are made up.
 - **Cluster-render features:** the opacity and moves use cluster-render layer opacity and animations. Seen on the bench, not yet on a car. Where the car ignores them, the values and texts still play.

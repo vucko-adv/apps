@@ -4,6 +4,11 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.25.1:** the start animation of Dark Moon, Mist and Underpass is a soft fade now.
+  - The picture fades up out of black over 1.4 s (eased in and out), the readouts 0.3 s after it; 1.8 s in all.
+  - The picture no longer slides in from the side (or from below): on the car it looked like the picture shaking.
+  - **Checked:** the curves in the files; not yet on a car.
+
 - **Zeiger 0.25.0:** a new home-screen widget, **Engine**, now the default.
   - Oil, coolant and boost, each as a big value and a bar of segments: blue while the engine is cold, green when warm, red over the Warnings limits; boost in orange, with its peak of the last 5 s held.
   - On top, READY, or COLD and the shift point the cold-engine guard asks for.
