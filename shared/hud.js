@@ -343,11 +343,13 @@ const TYRE_CORNERS = ['FL', 'FR', 'RL', 'RR'];
 // the Roadster's speed dial: 0..160 mph or 0..240 km/h in 8 steps (labels {{dial:speed:<i>}})
 const DIAL_SPEED = { us: { max: 160, ticks: 8 }, metric: { max: 240, ticks: 8 } };
 // the HUD's place (the page's Position tab): settings that move / scale the layers already there, no rebuild
-const PLACE_KEYS = ['hudX', 'hudY', 'hudScale', 'stripClear'];
+const PLACE_KEYS = ['hudX', 'hudY', 'hudScale'];
 // "Leave BMW's bottom strip clear" (cluster, issues #5 / #1): BMW's own strip (range, clock, belt light, P) starts at
-// y 662. A theme drawn only above it is reported (#5, an M car) to stop BMW painting its black boxes over the theme.
-// cluster-render has no clip, so the switch squeezes every layer to 662 / 720 of its height about the panel's top.
+// y 662. Since Zeiger 0.32.0 the theme stays as it is and is cut there (it used to be squeezed to 662 / 720 of its
+// height): every image layer's pixels in the strip see-through as they are sent (_punch), a fill over it given the
+// strip as its hole (_cutLayout), and a widget that sits mostly in the strip left out. A change rebuilds the layout.
 const STRIP_TOP = 662;
+const STRIP_CUT = [0, STRIP_TOP, 1920, 720 - STRIP_TOP];
 // themes saved under an older name, or removed (Nov 14 2026: Sunrise, Map, Map Underpass, Vintage Amber): the setting
 // reads as the theme in its place now
 const RENAMED = { sunrise: 'dark_moon', sunrise_hills: 'mist', map: 'map_mist', map_underpass: 'map_mist', vintage_amber: 'vintage_green' };
@@ -718,10 +720,12 @@ class HudApp {
         const x1 = Math.max.apply(null, ls.map((l) => l.x + l.w)), y1 = Math.max.apply(null, ls.map((l) => l.y + l.h));
         return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
     }
-    /** The cluster's squeeze for "Leave BMW's bottom strip clear": 662 / 720 while it's on, else 1. */
-    _stripSy() {
-        if (this.target !== 'panel' || this.ownStrip || !this.ctx.settings.item('stripClear')) return 1;
-        return this.setting('stripClear') === true ? STRIP_TOP / TARGET_SIZES.panel[1] : 1;
+    /** The cluster's squeeze: none since 0.32.0 ("Leave BMW's bottom strip clear" cuts the theme, see STRIP_CUT). */
+    _stripSy() { return 1; }
+    /** The strip to leave clear, [x, y, w, h], while "Leave BMW's bottom strip clear" is on (and the layout covers it), else null. */
+    _stripCut() {
+        if (this.target !== 'panel' || this.ownStrip || !this.ctx.settings.item('stripClear')) return null;
+        return this.setting('stripClear') === true ? STRIP_CUT : null;
     }
     _scale() {
         if (!this.ctx.settings.item('hudScale')) return 1;
@@ -2123,6 +2127,9 @@ class HudApp {
         this.nightOn = this._nightDim() && !this.noDim;
         if (this.nightOn) this.theme = dimTheme(this.theme, NIGHT_DIM);
         this.log.info('layout "' + layout.name + '", theme ' + this.theme.name + (this.layoutTheme ? '' : ' (' + this.setting('hudTheme') + ')'));
+        // "Leave BMW's bottom strip clear": the theme cut at the strip (image pixels in _blit, fills and widgets here)
+        this.cut = this._stripCut();
+        if (this.cut) layout = this._cutLayout(layout, this.cut);
         const shown = layout.widgets.filter((w) => !(w.toggle && !this._toggleOn(w.toggle)) && !(w.themes && w.themes.indexOf(this.themeName) < 0));
         this._setNeeds(shown);
         // plan the layers first (a sheet's size is only known once every member is placed), then make them
@@ -2258,7 +2265,53 @@ class HudApp {
      * the whole widget) to its own layer, or into its sheet: the local buffer while the sheet is being
      * filled on create, else dirty rects translated by the sheet's offset.
      */
+    /**
+     * The layout with the strip g [x, y, w, h] left clear: a fill over it gets it as its see-through hole (no inset,
+     * square corners); one with a hole of its own (a map window) keeps that one above the strip, and the part beside
+     * the strip becomes fills of their own. A widget that sits mostly in the strip (a readout of the bottom row) is
+     * left out; the rest stay and their pixels in the strip are cut as they are sent (_punch).
+     */
+    _cutLayout(layout, g) {
+        const over = (w) => Math.max(0, Math.min(w.x + w.w, g[0] + g[2]) - Math.max(w.x, g[0])) * Math.max(0, Math.min(w.y + w.h, g[1] + g[3]) - Math.max(w.y, g[1]));
+        const widgets = [];
+        let dropped = 0;
+        layout.widgets.forEach((w) => {
+            const a = over(w);
+            if (!a) { widgets.push(w); return; }
+            if (w.type !== 'fill') { if (a > 0.5 * w.w * w.h) dropped++; else widgets.push(w); return; }
+            if (!Array.isArray(w.hole)) { widgets.push(Object.assign({}, w, { hole: g, holeWhen: true, holeInset: 0, holeRadius: 0 })); return; }
+            if (g[1] > w.y) widgets.push(Object.assign({}, w, { h: g[1] - w.y }));
+            const y = Math.max(w.y, g[1]), h = w.y + w.h - y;
+            if (g[0] > w.x) widgets.push(Object.assign({}, w, { id: w.id + '_cl', hole: undefined, holeWhen: undefined, y, h, w: g[0] - w.x }));
+            if (w.x + w.w > g[0] + g[2]) widgets.push(Object.assign({}, w, { id: w.id + '_cr', hole: undefined, holeWhen: undefined, x: g[0] + g[2], y, h, w: w.x + w.w - g[0] - g[2] }));
+        });
+        if (dropped) this.log.info('bottom strip clear: ' + dropped + ' widget(s) in the strip left out');
+        return Object.assign({}, layout, { widgets });
+    }
+
+    /** buf (rects of widget x's image, in order) with the cut strip's pixels see-through: a copy when it has any. */
+    _punch(x, rects, buf) {
+        const w = x.w, g = this.cut;
+        if (w.x >= g[0] + g[2] || w.x + w.w <= g[0] || w.y >= g[1] + g[3] || w.y + w.h <= g[1]) return buf;
+        // a "stretch" picture's image is smaller than the widget: its px per screen px
+        const p = w.stretch && w.type === 'picture' && !x.sheet ? pictures.get(w.picture) : null;
+        const iw = p ? p.w : w.w, ih = p ? p.h : w.h, kx = iw / w.w, ky = ih / w.h;
+        const rs = rects && rects.length ? rects : [{ x: 0, y: 0, w: iw, h: ih }];
+        let off = 0, out = null;
+        rs.forEach((r) => {
+            const x0 = Math.max(0, Math.floor((g[0] - w.x) * kx) - r.x), x1 = Math.min(r.w, Math.ceil((g[0] + g[2] - w.x) * kx) - r.x);
+            const y0 = Math.max(0, Math.floor((g[1] - w.y) * ky) - r.y), y1 = Math.min(r.h, Math.ceil((g[1] + g[3] - w.y) * ky) - r.y);
+            if (x1 > x0 && y1 > y0) {
+                if (!out) out = Buffer.from(buf);
+                for (let yy = y0; yy < y1; yy++) out.fill(0, off + (yy * r.w + x0) * 4, off + (yy * r.w + x1) * 4);
+            }
+            off += r.w * r.h * 4;
+        });
+        return out || buf;
+    }
+
     _blit(x, rects, buf) {
+        if (this.cut) buf = this._punch(x, rects, buf);
         const w = x.w, s = x.sheet;
         if (!s) { x.c.pixels(x.ref, rects, buf); return; }
         const rs = rects && rects.length ? rects : [{ x: 0, y: 0, w: w.w, h: w.h }];

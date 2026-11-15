@@ -5,10 +5,9 @@
  "copyright": "Copyright (c) 2026 vucko-adv. Zeiger theme artwork.",
  "packWaste": 1.5,
  "theme": "dark_moon",
- "ownStrip": true,
  "wantsWeather": true,
  "noNightDim": true,
- "_about": "Sunrise: a sunrise over mountains drawn in code (the first Sunrise theme, Zeiger 0.7-0.8; brought back by cluster-design/sunrise/strip_sunrise.js), ending above BMW's own bottom strip (\"ownStrip\": nothing below y 646 but a black band to 662, to 658 over the strip's drive mode and gear), so BMW shows its strip and leaves out its black boxes. The speed and km/h in the middle, the selector letter and the drive mode on the right, on the left the weather: an icon for the day, the outside temperature from the car, the day's weather in words and its high / low / chance of rain (shared/weather.js, Open-Meteo, through the Store's Internet uplink; setting \"weather\"); range with a fuel bar and the coolant temperature with its bar near the bottom. Barlow Medium (OFL); speed and selector in the Map theme's fonts. Widget reference: shared/hud.js header.",
+ "_about": "Sunrise: a sunrise over mountains drawn in code (the first Sunrise theme, Zeiger 0.7-0.8), over the whole panel (since 0.32.0; cluster-design/sunrise/full_sunrise.js). The speed and km/h in the middle, the selector letter and the drive mode on the right, on the left the weather: an icon for the day, the outside temperature from the car, the day's weather in words and its high / low / chance of rain (shared/weather.js, Open-Meteo, through the Store's Internet uplink; setting \"weather\"); range with a fuel bar and the coolant temperature with its bar near the bottom. Barlow Medium (OFL); speed and selector in the Map theme's fonts. Widget reference: shared/hud.js header.",
  "widgets": [
   {
    "id": "sky",
@@ -20,7 +19,7 @@
    "x": 0,
    "y": 0,
    "w": 1920,
-   "h": 646
+   "h": 720
   },
   {
    "id": "land",
@@ -32,43 +31,7 @@
    "x": 0,
    "y": 430,
    "w": 1920,
-   "h": 216
-  },
-  {
-   "id": "band_l",
-   "type": "fill",
-   "color": "bg",
-   "fixed": true,
-   "class": "content",
-   "z": 0,
-   "x": 0,
-   "y": 646,
-   "w": 1196,
-   "h": 16
-  },
-  {
-   "id": "band_m",
-   "type": "fill",
-   "color": "bg",
-   "fixed": true,
-   "class": "content",
-   "z": 0,
-   "x": 1196,
-   "y": 646,
-   "w": 228,
-   "h": 12
-  },
-  {
-   "id": "band_r",
-   "type": "fill",
-   "color": "bg",
-   "fixed": true,
-   "class": "content",
-   "z": 0,
-   "x": 1424,
-   "y": 646,
-   "w": 496,
-   "h": 16
+   "h": 290
   },
   {
    "id": "fuel_still",
@@ -78,7 +41,7 @@
    "class": "content",
    "z": 2,
    "x": 134,
-   "y": 576,
+   "y": 612,
    "w": 196,
    "h": 40
   },
@@ -90,7 +53,7 @@
    "class": "content",
    "z": 2,
    "x": 1620,
-   "y": 576,
+   "y": 612,
    "w": 190,
    "h": 40
   },
@@ -103,7 +66,7 @@
    "class": "content",
    "z": 3,
    "x": 175,
-   "y": 604,
+   "y": 640,
    "w": 150,
    "h": 8,
    "segs": [
@@ -470,7 +433,7 @@
    "class": "content",
    "z": 3,
    "x": 1655,
-   "y": 604,
+   "y": 640,
    "w": 150,
    "h": 8,
    "segs": [
@@ -959,7 +922,7 @@
    "color": "fg",
    "align": "left",
    "x": 175,
-   "y": 566,
+   "y": 602,
    "w": 200,
    "h": 38
   },
@@ -974,7 +937,7 @@
    "color": "fg",
    "align": "right",
    "x": 1685,
-   "y": 566,
+   "y": 602,
    "w": 120,
    "h": 38
   }

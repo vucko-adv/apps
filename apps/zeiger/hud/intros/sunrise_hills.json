@@ -1,15 +1,10 @@
 {
  "author": "vucko-adv",
  "copyright": "Copyright (c) 2026 vucko-adv. Zeiger theme artwork.",
- "_about": "sunrise_hills: a soft fade up out of black, the readouts a moment after the picture (the underlay ends above BMW's strip)",
+ "_about": "sunrise_hills: a soft fade up out of black, the readouts a moment after the picture",
  "ms": 1800,
  "lead": 300,
- "underlay": [
-  0,
-  0,
-  1920,
-  646
- ],
+ "underlay": true,
  "fade": {
   "sky": [
    [

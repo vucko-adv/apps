@@ -110,7 +110,7 @@ The bench shows both (bench/README.md): the hang button (`POST /hang`) and `stal
 - **About (0.31.0):** the credits, and on the right the author's card: a photo (`hud/pictures/author_photo.json`, baked by `cluster-design/author/bake.html`) and the Instagram, @vucko.adv / instagram.com/vucko.adv.
 - **Settings:** groups on the left, each with what it is set to now; the open group's rows on the right, a switch or `- value +`. The groups:
   - **Cluster:** start animation, today's weather, the phone's map in Map Mist, theme position (px to the right, 0 by default since 0.30.1; Vintage Green and Cyan carry their own -12 in the layout, `"shiftX"`, so at 0 every theme sits where it should). **Night colours** left in 0.31.1: every Zeiger theme's face is a picture (`"noNightDim"`), so it changed nothing.
-  - **BMW's cluster:** hide BMW's black boxes (test), leave BMW's bottom strip clear.
+  - **BMW's cluster:** hide BMW's black boxes (test), leave BMW's bottom strip clear (the theme cut above it, not squeezed, since 0.32.0).
   - **Warnings:** oil and coolant temperature and boost; over its limit, the value flashes red on the cluster.
   - **Rev range:** engine (petrol or diesel), where the red and the yellow zones start, the shift point before the red, shift flash, cold-engine rev guard.
 
@@ -142,9 +142,13 @@ With **Cold-engine rev guard** on (the default), the rev bars of Vintage Green, 
 - **A small one at the right edge** (about x 1840-1900, y 230-270): seen on a G20 over the Sunrise theme's sky. Zeiger's themes are black or nearly black there.
 - **BMW's own bottom strip showing** under a theme doesn't take them away on a G20.
 
-### Sunrise (back in 0.29.0, a test)
+### Sunrise (back in 0.29.0)
 
-`sunrise_hills`, as it was in 0.21.0: it ends above BMW's own bottom strip (`"ownStrip": true`: nothing below y 646 but a black band to 662), so BMW shows its strip with the drive mode and the gear letter, the other way to keep BMW's black gear box away. Its files came back from the history before 0.22.0; its start animation is the soft fade (`cluster-design/intro/make_intros.js`).
+`sunrise_hills`. In 0.29.0-0.31.1 it ended above BMW's own bottom strip (`"ownStrip"`), so BMW showed its strip. Since 0.32.0 it covers the whole panel again, as the first Sunrise did (0.8.2, `cluster-design/sunrise/full_sunrise.js`): the hills and trees to the bottom edge, the range and coolant where they were. BMW's strip shows only with **Leave BMW's bottom strip clear** on. Its start animation is the soft fade over the whole panel (`cluster-design/intro/make_intros.js`).
+
+### Leave BMW's bottom strip clear (0.32.0: cut, not squeezed)
+
+With the switch on, BMW's own strip (from y 662) shows under the theme. Up to 0.31.1 every layer was squeezed to 662 / 720 of its height, so the whole theme moved up and got flatter. Since 0.32.0 the theme stays exactly as it is and is only cut at the strip (`STRIP_CUT` in shared/hud.js): every image layer's pixels in the strip are made see-through as they are sent (`_punch`), a fill over it gets the strip as its hole (`_cutLayout`), and a readout that sits mostly in the strip is left out. Turning it on or off rebuilds the layout.
 
 ### When BMW's gear box shows (car test, Nov 15 2026)
 
