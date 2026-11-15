@@ -550,6 +550,7 @@ class HudApp {
         this.boostSrcs = new Set();      // the boost sources logged so far
         this.boostDme = null; this.boostDmeAt = 0;    // bar, from the engine unit (fallback)
         this.needsBoost = false;         // a shown widget uses boost (the engine unit is only asked then)
+        this.widgetBoost = false;        // the home-screen widget shows boost (Zeiger widget.js, Engine)
         this.intakeDme = null; this.intakeDmeAt = 0;  // C, intake air from the engine unit (config.dme.intake)
         this.needsIntake = false;        // a shown widget uses the intake temperature
         this.hvSoc = null; this.hvSocAt = 0;  // %, a plug-in hybrid's battery charge (HV_SOC)
@@ -934,7 +935,8 @@ class HudApp {
         } catch (e) { this.log.info('engine unit boost off: ' + (e && e.message || e)); return; }
         this.dmeTimer = setInterval(() => this._guard('engine unit boost', () => {
             const now = Date.now();
-            const wantBoost = hasBoost && this.needsBoost && !this._fesBoostLive(now);
+            // boost: for a widget of the theme shown, or for the home-screen widget (Zeiger's Engine: widgetBoost)
+            const wantBoost = hasBoost && (this.needsBoost || this.widgetBoost) && !this._fesBoostLive(now);
             const wantIntake = hasIntake && this.needsIntake && now - intakeAsk >= 2000;   // a temperature: every 2 s is plenty
             const wantHv = this.needsHv && now - hvAsk >= (hvMiss >= 3 ? HV_RETRY_MS : HV_EVERY_MS);
             const wantFuel = this.needsFuel && now - fuelAsk >= (fuelMiss >= 3 ? FUEL_RETRY_MS : FUEL_EVERY_MS);

@@ -4,6 +4,12 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.25.0:** a new home-screen widget, **Engine**, now the default.
+  - Oil, coolant and boost, each as a big value and a bar of segments: blue while the engine is cold, green when warm, red over the Warnings limits; boost in orange, with its peak of the last 5 s held.
+  - On top, READY, or COLD and the shift point the cold-engine guard asks for.
+  - Every widget is brighter (on the car they looked faded).
+  - **Checked:** drawn for cold, warm and hot states on the computer; not yet on a car. Where the widget's window sits on a G20 is still to be measured from a photo.
+
 - **Zeiger 0.24.0:** a new page on the centre screen, written from scratch.
   - **Themes:** a gallery. One theme big in the middle, its neighbours beside it, a dot per theme under it. Looking through it changes nothing on the cluster; **Use this theme** (or **Use for COMFORT / SPORT / ECO PRO**) does. Under it, the drive modes and the theme of each.
   - **Settings:** seven groups (Cluster, BMW's cluster, Warnings, Shift point, Units and time, Home-screen widget, About), each showing what it is set to; the open group's rows on the right, with a switch or `- value +` for every setting. The warnings (Alerts before) are a group here now.

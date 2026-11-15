@@ -76,7 +76,7 @@ const GROUPS = [
         ['tankLitres', 'Fuel tank', 'for the fuel level, where the engine unit doesn\'t give it'],
     ] },
     { name: 'Home-screen widget', about: 'Hold a finger on an iDrive home-screen tile and pick Zeiger to place it.', rows: [
-        ['widgetShows', 'Shows', 'the weather, or the theme the cluster shows'],
+        ['widgetShows', 'Shows', 'oil, water and turbo; the weather; or the cluster\'s theme'],
     ] },
     { name: 'About', about: null, rows: [
         ['demo', 'Demo data', 'made-up values while the car sends none'],
@@ -177,6 +177,7 @@ class Page {
         if (k === 'tankLitres') return v + ' L';
         if (k === 'timeZone') return tz.name(v);
         if (k === 'nightDim') return v === 'off' ? 'Off' : 'Auto';
+        if (k === 'widgetShows') return { engine: 'Engine', mist: 'Weather, Mist', sunrise: 'Weather, Sunrise', theme: 'Cluster theme' }[v] || this.optLabel(k, v);
         if (it.type === 'bool') return v ? 'On' : 'Off';
         return this.optLabel(k, v);
     }

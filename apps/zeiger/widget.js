@@ -9,6 +9,9 @@
  *            themes' own fonts (s_mid, s_small, s_icon), white and the theme's grey.
  *   sunrise  the same in the first Sunrise theme's look (the sunrise over mountains, before Dark Moon:
  *            hud/pictures/sunrise_widget.json, baked by cluster-design/sunrise/widget_bg.html), the text on its sky.
+ *   engine   (the default since 0.25.0) oil, coolant and boost as bars with their values, the boost's peak of the last
+ *            seconds held, and whether the engine is warm yet (READY, or COLD with the shift point the cold-engine guard
+ *            asks for). Bars blue while cold, green when warm, red over the Warnings limits; boost in Zeiger orange.
  *   theme    the theme the cluster shows now: ZEIGER, that theme's picture (the one the page's gallery shows,
  *            hud/previews), its name and, while the theme changes with the drive mode, the mode.
  *
@@ -25,7 +28,12 @@ const text = require('./hud_text');
 const { Canvas } = require('./kit/canvas');
 
 const REDRAW_MS = 30000;
-const DIM = [150, 158, 170], FRAME = [58, 64, 74], WHITE = [242, 244, 247];
+// brighter than before 0.25.0 (150, 158, 170): on the car the HMI's widget frame made the grey look faded
+const DIM = [196, 203, 214], FRAME = [72, 80, 92], WHITE = [255, 255, 255];
+// Engine: the bars' colours and ranges (C, bar); how long the boost's peak is held; warm from this oil temperature
+const ENG = { cold: [89, 199, 255], warm: [61, 220, 132], hot: [255, 72, 64], boost: [255, 106, 31], track: [38, 42, 50] };
+const RANGE = { oil: [40, 150], coolant: [40, 130], boost: [0, 1.6] };
+const PEAK_MS = 5000, WARM_OIL = 80, WARM_COOLANT = 70;
 // the weather's looks: the background (hud/pictures) and the theme's colours (shared/hud_themes.js: fg, dim; rev.from
 // for the rain; bar.mid for OFFLINE); shadow: how dark the soft shadow under the text is
 const LOOKS = {
@@ -134,21 +142,24 @@ class ZeigerWidget {
         this._want();
     }
 
-    /** 'theme', or the weather's look: 'mist' or 'sunrise' (the setting) */
+    /** 'engine', 'theme', or the weather's look: 'mist' or 'sunrise' (the setting) */
     shows() {
-        let v = 'mist';
-        try { v = this.hud.setting('widgetShows'); } catch (e) { v = 'mist'; }
-        return v === 'theme' || LOOKS[v] ? v : 'mist';
+        let v = 'engine';
+        try { v = this.hud.setting('widgetShows'); } catch (e) { v = 'engine'; }
+        return v === 'theme' || v === 'engine' || LOOKS[v] ? v : 'engine';
     }
 
     // the weather is fetched while a widget is placed and shows it
     _want() {
         const wx = this.hud.wx, w = this.ctx.widget;
-        if (wx) wx.want(!!w && w.instances().length > 0 && this.shows() !== 'theme', 'widget');
+        const placed = !!w && w.instances().length > 0;
+        if (wx) wx.want(placed && !!LOOKS[this.shows()], 'widget');
+        this.hud.widgetBoost = placed && this.shows() === 'engine';
     }
 
     /** What the widget says now: { kind: 'theme', name ('off' or a layout), title, mode } or { kind: 'weather', ... } */
     state() {
+        if (this.shows() === 'engine') return this.engine();
         if (this.shows() !== 'theme') return this.weather(this.shows());
         const h = this.hud, name = h.activeName && h.activeName !== 'off' ? h.activeName : 'off';
         let title = '', mode = '';
@@ -157,6 +168,25 @@ class ZeigerWidget {
             if (h.setting('byMode') === true) { const m = h._token('modeShort'); mode = m ? m + ' · by drive mode' : 'by drive mode'; }
         } catch (e) { mode = ''; }
         return { kind: 'theme', name, title, mode };
+    }
+
+    /** The engine now: { kind: 'engine', us, oil, coolant (whole C), boost, peak (bar, to 0.05), cold, shift, warn } */
+    engine() {
+        const h = this.hud, d = (h.car && h.car.data()) || {}, now = Date.now(), num = (v) => typeof v === 'number' && isFinite(v);
+        let us = false, boost = null, sp = null;
+        try { us = h.setting('units') === 'us'; } catch (e) { us = false; }
+        try { boost = h._boost(); } catch (e) { boost = null; }
+        try { sp = h._shift(); } catch (e) { sp = null; }
+        if (num(boost) && (!this.peak || boost >= this.peak.v || now - this.peak.at > PEAK_MS)) this.peak = { v: boost, at: now };
+        const lim = (k) => { try { const v = h.setting(k); return num(v) && v > 0 ? v : 0; } catch (e) { return 0; } };
+        const r05 = (v) => (num(v) ? Math.round(v * 20) / 20 : null);
+        return {
+            kind: 'engine', us,
+            oil: num(d.oil) ? Math.round(d.oil) : null, coolant: num(d.coolant) ? Math.round(d.coolant) : null,
+            boost: r05(boost), peak: this.peak && now - this.peak.at <= PEAK_MS ? r05(this.peak.v) : null,
+            cold: num(d.oil) ? d.oil < WARM_OIL : null, shift: sp && sp.cold && num(sp.rpm) ? Math.round(sp.rpm / 50) * 50 : null,
+            warn: { oil: lim('warnOil'), coolant: lim('warnCoolant'), boost: lim('warnBoost') },
+        };
     }
 
     /** The weather to show: { kind: 'weather', look, city, us, now, days, net } (now: weather.js today() or null) */
@@ -175,7 +205,7 @@ class ZeigerWidget {
         if (!inst.big) return null;
         const last = this.sent[inst.spawnId];
         if (last && last.key === key && now - last.at < REDRAW_MS) return null;
-        if (this.key !== key) { this.cv = s.kind === 'weather' ? this.renderWeather(s) : this.render(s); this.key = key; }
+        if (this.key !== key) { this.cv = s.kind === 'weather' ? this.renderWeather(s) : s.kind === 'engine' ? this.renderEngine(s) : this.render(s); this.key = key; }
         this.sent[inst.spawnId] = { key, at: now };
         return this.cv;
     }
@@ -193,6 +223,12 @@ class ZeigerWidget {
     }
 
     _lines(s) {
+        if (s.kind === 'engine') {
+            const t = (v) => (v === null ? '--' : String(s.us ? Math.round(v * 9 / 5 + 32) : v)) + (s.us ? ' F' : ' C');
+            const b = (v) => (v === null ? '--' : s.us ? String(Math.round(v * 14.5)) + ' psi' : v.toFixed(2) + ' bar');
+            return ['Engine' + (s.cold === null ? '' : s.cold ? ' cold' : ' ready'), 'Oil ' + t(s.oil) + '  Water ' + t(s.coolant),
+                'Boost ' + b(s.boost) + (s.peak !== null && s.peak > (s.boost || 0) ? '  peak ' + b(s.peak) : ''), s.shift ? 'Shift by ' + s.shift + ' rpm' : ''];
+        }
         if (s.kind === 'theme') return ['Zeiger', s.name === 'off' ? 'Off, BMW\'s own cluster' : s.title, s.mode.replace(' · ', ', '), ''];
         const t = s.now, deg = (v) => this._deg(v, s.us), u = s.us ? ' F' : ' C';
         const cap = (w) => String(w || '').toLowerCase().replace(/^./, (c) => c.toUpperCase());
@@ -238,6 +274,47 @@ class ZeigerWidget {
         const ty = py + (pic ? pic.h : 100) + 30;
         cv.text(s.title, cx, ty, 22, WHITE, { font: 'bold', align: 'center', literal: true });
         if (s.mode) cv.text(s.mode, cx, ty + 22, 14, DIM, { align: 'center', literal: true });
+        return cv;
+    }
+
+    /* ---------------- Engine: oil, coolant, boost ---------------- */
+
+    /**
+     * The big widget's picture for the engine state s: the status line (ENGINE, then READY, or COLD and the shift
+     * point), then a row each for oil, coolant and boost: the name and the value, and a bar of segments under them.
+     * Big, white and in full colour: the HMI shows the widget smaller and paler than it is drawn.
+     */
+    renderEngine(s) {
+        const W = this.W, b = this.box, cv = new Canvas(W, this.H).clear([6, 7, 10, 255]);
+        const L = b.x + 6, R = b.x + b.w - 6, F = { font: 'zsb', literal: true };
+        const deg = (v) => (v === null ? '--' : String(s.us ? Math.round(v * 9 / 5 + 32) : v) + '°');
+        const bar = (v) => (v === null ? '--' : s.us ? String(Math.round(v * 14.5)) : v.toFixed(2));
+        // the status line
+        cv.text('ENGINE', L, b.y + 20, 16, DIM, Object.assign({ spacing: 3 }, F));
+        const st = s.cold === null ? ['NO DATA', DIM] : s.cold ? ['COLD' + (s.shift ? ' · SHIFT BY ' + s.shift : ''), ENG.cold] : ['READY', ENG.warm];
+        cv.text(st[0], R, b.y + 20, 16, st[1], Object.assign({ spacing: 2, align: 'right' }, F));
+        // the rows
+        const rows = [
+            ['OIL', s.oil, deg(s.oil), RANGE.oil, s.warn.oil, WARM_OIL],
+            ['WATER', s.coolant, deg(s.coolant), RANGE.coolant, s.warn.coolant, WARM_COOLANT],
+            ['BOOST', s.boost, bar(s.boost) + (s.us ? ' psi' : ' bar'), RANGE.boost, s.warn.boost, null],
+        ];
+        const top = b.y + 34, rh = Math.floor((b.y + b.h - top) / 3), SEG = 24, gap = 3, sw = (R - L - gap * (SEG - 1)) / SEG;
+        rows.forEach(([name, v, txt, rg, lim, warm], i) => {
+            const y = top + i * rh, boost = warm === null, over = !!lim && v !== null && v > lim;
+            const col = over ? ENG.hot : boost ? ENG.boost : v !== null && v < warm ? ENG.cold : ENG.warm;
+            cv.text(name, L, y + 26, 15, DIM, Object.assign({ spacing: 2.5 }, F));
+            cv.text(txt, R, y + 30, 30, v === null ? DIM : over ? ENG.hot : WHITE, Object.assign({ align: 'right' }, F));
+            const k = v === null ? 0 : Math.max(0, Math.min(1, (v - rg[0]) / (rg[1] - rg[0]))), lit = Math.round(k * SEG);
+            const by = y + 37, bh = Math.max(10, rh - 43);
+            for (let j = 0; j < SEG; j++) cv.roundRect(L + j * (sw + gap), by, sw, bh, 2, j < lit ? col : ENG.track);
+            // the warning limit as a red tick over the bar; the boost's held peak as a white segment
+            if (lim && lim > rg[0] && lim < rg[1]) cv.fillRect(Math.round(L + (lim - rg[0]) / (rg[1] - rg[0]) * SEG * (sw + gap)) - 2, by - 4, 2, bh + 8, ENG.hot);
+            if (boost && s.peak !== null && s.peak > (v || 0)) {
+                const pj = Math.min(SEG - 1, Math.max(0, Math.round((s.peak - rg[0]) / (rg[1] - rg[0]) * SEG) - 1));
+                cv.roundRect(L + pj * (sw + gap), by, sw, bh, 2, WHITE);
+            }
+        });
         return cv;
     }
 
