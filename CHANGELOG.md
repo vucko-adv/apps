@@ -4,6 +4,13 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 16 2026
 
+- **Zeiger 0.38.1:** fixes from a check of the whole app (every theme and the diesel versions on the bench, every page in the emulator, the home-screen widget, and a code review of 0.35-0.38).
+  - **The black curtain between themes (0.37.0) most likely never showed on the car:** its shader used `u_p`, a name the renderer keeps for itself, so the car refused it (the bench's WebGL took it). Renamed; the bench now refuses such shaders as the car does.
+  - **Holding the old theme:** its fail-safe stopped being renewed, so it would have vanished after 1.2 s if the new theme took longer to come; now it stays until the new one shows.
+  - **A renderer that refuses layers or pictures:** the fail-safe no longer switches off for it, no curtain or messages are sent to a layer that was never made, a compressed picture refused for room makes the theme again, and a refused one is let go.
+  - **The page:** Customise's left-block names are shorter ("Boost, brake", "Oil, water", ...) and the value steps its font down before it is cut short ("Boost and br..." before); the theme card's name sits on a darker strip (the picture's own bottom readouts showed through); Sunrise named under Today's weather; the credits say cluster-render client.
+  - **Bench:** the renderer's current limits (64 layers a connection, 96 in all, since cluster-render 0.4.2).
+
 - **Zeiger 0.38.0:** Peaks' photo goes to the cluster compressed (ETC2): the theme takes 2.3 MiB of the renderer's 16 MiB instead of 11.5, and a quarter of the upload, so it now changes to and from other themes without the black curtain. The look is nearly the same (46 dB; ridges and sky checked side by side). If the renderer can't take compressed pictures, the app sends it uncompressed as before. Checked on the bench (Peaks, its strip cut, theme position, start animation, the switches, the fallback); not yet on a car. The pixel watermark doesn't survive compression; Peaks' picture keeps its author fields.
 
 ## Nov 15 2026

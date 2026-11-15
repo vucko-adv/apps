@@ -909,28 +909,42 @@ class HudApp {
             this._statusSoon();
         });
         c.on('refused', (op, ref, reason) => {
+            // a layer cluster-render refused never was: what is sent to it later (set, uniform, animate, drop) is refused
+            // again with "no such layer", which says nothing new (0.38.1: no warnings, no fail-safe off for it)
+            const rk = ci + ':' + ref;
+            if (/no such (layer|asset)/.test(String(reason)) && this.refusedRefs && this.refusedRefs.has(rk)) return;
+            if (op === 'layer' || op === 'asset') {
+                if (!this.refusedRefs) this.refusedRefs = new Set();
+                this.refusedRefs.add(rk);
+                if (this.curtain && this.curtain.c === c && this.curtain.ref === ref) this.curtain = null;          // no curtain then
+                if (this.guideRef && this.guideC === c && this.guideRef === ref) this.guideRef = 0;
+            }
             // a cluster-render that refuses animations: the fail-safe off for this run, said once (not every renewal)
             if (op === 'animate') {
+                if (/no such layer/.test(String(reason))) return;      // a layer gone meanwhile: not a refusal of animations
                 if (!this.fsOff) this.log.warn('fail-safe: cluster-render refused its animation (' + reason + '): off until the app restarts');
                 this.fsOff = true;
                 return;
             }
-            const w = this._widgetOf(ci, ref);
+            let w = this._widgetOf(ci, ref);
+            if (!w && op === 'asset') this.widgets.forEach((x) => { if (!w && x.ci === ci && x.asset === ref) w = x.w.id; });   // a compressed picture's
             this.log.warn('refused ' + op + ' on ' + ref + tag + (w ? ' (' + w + ')' : '') + ': ' + reason);
+            const room = /pixel memory|too many layers|too many assets/.test(String(reason));
             if ((op === 'asset' && /etc2|format/.test(String(reason))) || /etc2/.test(String(reason))) {
-                // the refused asset was never made: nothing to drop later
-                if (op === 'asset') this.widgets.forEach((x) => { if (x.c === c && x.asset === ref) x.asset = 0; });
+                // the refused asset was never made on the service; the client lets its copy go (else it keeps the blocks
+                // and sends them again at every reconnect)
+                if (op === 'asset') this.widgets.forEach((x) => { if (x.c === c && x.asset === ref) { x.asset = 0; this._guard('asset drop', () => c.drop(ref)); } });
                 this._etcRefused(op + ': ' + reason);
             }
             if (!this.refused) this.refused = (w || op) + ': ' + reason;   // the first one, until the next rebuild
-            if (this.held && /pixel memory|too many layers/.test(String(reason))) {
+            if (this.held && room) {
                 this.noHold = true;
                 this.log.warn('hold: cluster-render had no room for both themes; the curtain from now on');
                 this._holdEnd('refused');
                 this._guard('curtain', () => this._curtainUp());
             }
             // a layer of this layout that found no room: the layout again a little later (not for the layout before's)
-            if (w && /pixel memory|too many layers/.test(String(reason))) this._refusedRetry();
+            if (w && room) this._refusedRetry();
             this._statusSoon();
         });
         c.on('budget', (capKb, maxKb, reason) => this.log.info('budget' + tag + ' ' + capKb + '/' + maxKb + ' kb/s (' + reason + ')'));
@@ -2008,7 +2022,7 @@ class HudApp {
         if (k) {
             k.at = now; k.fade = 0;
             if (k.alpha !== 1) { k.alpha = 1; c.uniform(k.ref, 'u_alpha', [1]); }
-            if (k.p !== 0) { k.p = 0; c.uniform(k.ref, 'u_p', [0]); }
+            if (k.p !== 0) { k.p = 0; c.uniform(k.ref, 'u_prog', [0]); }
             return;
         }
         const [w, h] = this.size;
@@ -2016,7 +2030,7 @@ class HudApp {
         if (!ref) { this.log.warn('curtain: layer refused'); return; }
         c.uniform(ref, 'u_size', [w, h]);
         c.uniform(ref, 'u_alpha', [1]);
-        c.uniform(ref, 'u_p', [0]);
+        c.uniform(ref, 'u_prog', [0]);
         c.uniform(ref, 'u_line', CURTAIN_LINE);
         this.curtain = { c, ref, at: now, fade: 0, alpha: 1, p: 0 };
     }
@@ -2028,7 +2042,7 @@ class HudApp {
             const refs = this._layerRefs();
             const shown = refs.filter((r) => { const st = this.layerStates.get(r.key); return st && st.state === 'shown'; }).length;
             const p = refs.length ? Math.round(shown / refs.length * 20) / 20 : 1;
-            if (p !== k.p) { k.p = p; k.c.uniform(k.ref, 'u_p', [p]); }
+            if (p !== k.p) { k.p = p; k.c.uniform(k.ref, 'u_prog', [p]); }
             if (refs.length && shown < refs.length && now - k.at < CURTAIN_MAX_MS) return;
             k.fade = now;
             this.log.info('curtain: ' + shown + ' of ' + refs.length + ' layers shown ' + (now - k.at) + ' ms after the change');
@@ -2126,7 +2140,9 @@ class HudApp {
                 x0 = Math.min(x0, w.x); y0 = Math.min(y0, w.y); x1 = Math.max(x1, w.x + w.w); y1 = Math.max(y1, w.y + w.h); more = true;
             });
             if (!more) return;
-            x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(W, x1); y1 = Math.min(H, y1);
+            // the growth kept within the target, the sheet's own box never cut (a member past the edge stays whole)
+            x0 = Math.min(s.x, Math.max(0, x0)); y0 = Math.min(s.y, Math.max(0, y0));
+            x1 = Math.max(s.x + s.w, Math.min(W, x1)); y1 = Math.max(s.y + s.h, Math.min(H, y1));
             s.x = x0; s.y = y0; s.w = x1 - x0; s.h = y1 - y0;
         });
     }
@@ -2170,7 +2186,7 @@ class HudApp {
         const oldPx = this.pixelBytes;
         // the layout shown until now: its layers are dropped before the new ones are made (cluster-render's pixel
         // memory), all but an image sheet the new layout has again, pixel for pixel (_keepable, _createSheet)
-        const old = { refs: this._layerRefs(), sheets: this.sheets, plan: this.plan || [], states: this.layerStates, own: [], cut: !!this.cut };
+        const old = { refs: this._layerRefs(), sheets: this.sheets, plan: this.plan || [], states: this.layerStates, own: [], cut: !!this.cut, placed: this.placed || [] };
         old.assets = [];
         this.widgets.forEach((x) => {
             if (!x.sheet && x.ref && x.c) old.own.push({ w: x.w, c: x.c, ci: x.ci, ref: x.ref });
@@ -2910,7 +2926,9 @@ class HudApp {
         this.fsAt = now;
         const st = this._stripSy(), sc = this._scale(), s = st !== 1 ? [1, st] : [sc, sc];
         const keys = hide ? '0:0,0,0' : '0:' + s[0] + ',' + s[1] + ',1 ' + FS_HOLD_MS + ':0,0,0';
-        this.placed.forEach((l) => this._guard('fail-safe', () => l.c.animate(l.ref, { anim: FS_ANIM, property: 'scale', keys, loop: false, interp: 'step' })));
+        // (a theme held while the next one comes, too: its fail-safe would take it away after FS_HOLD_MS)
+        const all = this.held ? this.placed.concat(this.held.old.placed || []) : this.placed;
+        all.forEach((l) => this._guard('fail-safe', () => l.c.animate(l.ref, { anim: FS_ANIM, property: 'scale', keys, loop: false, interp: 'step' })));
     }
     /** ms since the car last sent the speed while it was FS_MOVING_KMH or more and that is over FS_STALE_MS ago, else null */
     _speedAge() {

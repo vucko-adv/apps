@@ -51,7 +51,7 @@ const ABOUT = {
 const GROUPS = [
     { name: 'Cluster', about: 'How the themes show on the cluster.', rows: [
         ['startAnim', 'Start animation', 'when a theme first shows, never while moving'],
-        ['weather', 'Today\'s weather', 'Dark Moon, Underpass, Mist · needs the internet uplink'],
+        ['weather', 'Today\'s weather', 'Dark Moon, Sunrise, Underpass, Mist · needs the internet uplink'],
         ['mapInTheme', 'The phone\'s map in Map Mist', 'through waze-on-cluster'],
         ['shiftX', 'Theme position', 'to the right of BMW\'s own cluster'],
     ] },
@@ -102,7 +102,7 @@ const CREDITS = [
     'Zeiger by vucko-adv. Every theme is drawn by vucko-adv.',
     'Forked from bimmer-lab/apps (Cluster Themes), MIT.',
     'MGU App Kit by cauliflowermossgrape (MIT).',
-    'cluster-render by Robert Nisipeanu (MPL 2.0).',
+    'cluster-render client by Robert Nisipeanu (MPL 2.0).',
     'Fonts: Barlow, Michroma (SIL Open Font License). Details: NOTICE.',
 ];
 
@@ -351,7 +351,8 @@ class Page {
             if (cv.alpha) cv.alpha(fade);
         }
         this.picture(cv, this.at, 'hero', cx, cy, cw, ch);
-        cv.gradientRect(cx, cy + ch - 170, cw, 170, [[0, A('#000000', 0)], [0.5, A('#000000', 0.78)], [1, A('#000000', 0.94)]]);
+        // dark enough at the bottom that the picture's own bottom readouts don't show through the theme's name
+        cv.gradientRect(cx, cy + ch - 180, cw, 180, [[0, A('#000000', 0)], [0.35, A('#000000', 0.82)], [0.6, A('#000000', 0.95)], [1, A('#000000', 0.97)]]);
         cv.strokeRoundRect(cx, cy, cw, ch, 22, 1, A('#ffffff', 0.12));
         cv.text(this.name(this.at), cx + 30, cy + ch - 56, 46, C.text, { font: B, literal: true });
         cv.text(ABOUT[this.at] || '', cx + 30, cy + ch - 22, 21, C.soft, { font: M, literal: true });
@@ -549,7 +550,10 @@ class Page {
         cv.strokeRoundRect(sx, sy, sw, sh, sh / 2, 1, A('#ffffff', 0.12));
         cv.text('−', sx + 42, mid + 11, 34, C.text, { font: B, align: 'center', literal: true });
         cv.text('+', sx + sw - 42, mid + 11, 34, C.text, { font: B, align: 'center', literal: true });
-        cv.text(fit(cv, v, 26, sw - 170, B), sx + sw / 2, mid + 9, 26, v === 'Off' ? C.dim : C.acc, { font: B, align: 'center', literal: true });
+        // a long value steps the font down (to 20) before it is cut short
+        let fs = 26;
+        while (fs > 20 && cv.textWidth(v, fs, { font: B, literal: true }) > sw - 170) fs -= 2;
+        cv.text(fit(cv, v, fs, sw - 170, B), sx + sw / 2, mid + 9 - Math.round((26 - fs) / 3), fs, v === 'Off' ? C.dim : C.acc, { font: B, align: 'center', literal: true });
         cv.target(sx, sy, 84, sh, () => this.step(k, -1), 'dec:' + k, sh / 2);
         cv.target(sx + sw - 84, sy, 84, sh, () => this.step(k, 1), 'inc:' + k, sh / 2);
     }

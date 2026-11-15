@@ -42,10 +42,12 @@ const PORT = Number(process.env.BENCH_PORT) || 8078;
 // BENCH_LAYER_CAP: the car seems to draw only an app's first 8 layers (photos, Nov 5 2026).
 // 0 = unlimited. Layers past the cap get state 'waiting' and are not drawn. POST /cap sets it live.
 let layerCap = Math.max(0, Number(process.env.BENCH_LAYER_CAP) || 0);
-// The service's other two limits, always on (CompositorLimits): 32 layers across every connection, and 16 MiB of
+// The service's other limits, always on (CompositorLimits): since cluster-render 0.4.2 (Nov 7 2026) 64 layers a client
+// connection and 96 across every connection (BENCH_TOTAL_LAYERS / BENCH_CLIENT_LAYERS: 32 / 0 model an older one), and 16 MiB of
 // pixel memory for every image together, each image counted twice (Compositor::add_image), refused with the
 // service's own words "the service's pixel memory is full". BENCH_PIXEL_MIB overrides the 16 (0 = unlimited).
-const TOTAL_LAYERS = 32;
+const TOTAL_LAYERS = Number(process.env.BENCH_TOTAL_LAYERS) || 96;
+const CLIENT_LAYERS = process.env.BENCH_CLIENT_LAYERS === undefined ? 64 : Number(process.env.BENCH_CLIENT_LAYERS) || 0;   // 0: none
 const PIXEL_BYTES = (process.env.BENCH_PIXEL_MIB === undefined ? 16 : Math.max(0, Number(process.env.BENCH_PIXEL_MIB) || 0)) * 1024 * 1024;
 // the service's accounting: an image or asset costs its bytes twice (compositor.cpp: the pixels and a rectangle scratch)
 // an ETC2 asset counts its blocks once (l.cost), as cluster-render does
@@ -216,6 +218,7 @@ const renderServer = net.createServer((sock) => {
                 if (m.z !== undefined && (m.z < -1000 || m.z > 1000)) return refuse('layer', m.ref, 'z out of -1000..1000');
                 const [tw, th] = TARGETS[m.target];
                 if (layerCount() >= TOTAL_LAYERS) return refuse('layer', m.ref, 'too many layers');
+                if (CLIENT_LAYERS) { let mine = 0; layers.forEach((o) => { if (o.conn === conn && o.kind !== 'asset') mine++; }); if (mine >= CLIENT_LAYERS) return refuse('layer', m.ref, 'too many layers'); }
                 if (m.kind === 'image' && PIXEL_BYTES && m.iw > 0 && m.ih > 0 && pixelBytes() + m.iw * m.ih * 8 > PIXEL_BYTES) {
                     return refuse('layer', m.ref, "the service's pixel memory is full");
                 }
@@ -247,6 +250,10 @@ const renderServer = net.createServer((sock) => {
                     nl.image = Buffer.alloc(m.iw * m.ih * 4);
                 } else if (m.kind === 'effect') {
                     if (!m.fs) return refuse('layer', m.ref, 'effect without fs');
+                    // the renderer fills u_mvp, u_mv, u_m, u_v, u_p itself as mat4s (PROTOCOL.md "Shaders"): declared as
+                    // anything else, RAMSES refuses the effect on the car, though WebGL here would take it (Zeiger 0.38.1)
+                    const reserved = /uniform\s+(?:(?:lowp|mediump|highp)\s+)?(\w+)\s+(u_mvp|u_mv|u_m|u_v|u_p)\s*;/.exec(m.fs);
+                    if (reserved && reserved[1] !== 'mat4') return refuse('layer', m.ref, 'effect did not compile: ' + reserved[2] + ' is the renderer\'s mat4, declared ' + reserved[1]);
                     nl.fs = m.fs; nl.time = !!m.time; nl.binds = {};
                 } else {
                     log('warn', 'layer ' + m.ref + ': kind ' + m.kind + ' is not drawn by the bench');

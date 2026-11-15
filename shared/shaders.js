@@ -303,13 +303,13 @@ void main() {
 
 const CURTAIN = `// The curtain between two themes (Zeiger 0.37.0), a cluster-render "effect" layer (GLSL ES 1.00): black at
 // u_alpha over the whole panel, and a thin line in the middle that fills from the left as the new theme's layers come
-// (u_p 0..1), so the wait reads as loading, not as a fault. u_size the layer in px, u_line the line's middle (x, y) and
+// (u_prog 0..1; not u_p: cluster-render fills u_mvp, u_mv, u_m, u_v and u_p itself, as mat4s), so the wait reads as loading, not as a fault. u_size the layer in px, u_line the line's middle (x, y) and
 // its width and height in px.
 precision mediump float;
 varying vec2 v_uv;
 uniform vec2 u_size;
 uniform float u_alpha;
-uniform float u_p;
+uniform float u_prog;
 uniform vec4 u_line;
 
 void main() {
@@ -318,7 +318,7 @@ void main() {
     vec2 d = abs(p - u_line.xy) - u_line.zw * 0.5;
     if (d.x <= 0.0 && d.y <= 0.0) {
         float t = (p.x - (u_line.x - u_line.z * 0.5)) / u_line.z;
-        col = t <= u_p ? vec3(0.78) : vec3(0.14);
+        col = t <= u_prog ? vec3(0.78) : vec3(0.14);
     }
     gl_FragColor = vec4(col, u_alpha);
 }
