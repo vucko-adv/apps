@@ -4,6 +4,8 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.31.1:** the **Night colours** setting is gone. It dimmed only what the app draws itself (text, bars) after sunset, and every Zeiger theme's face is a picture, so all of them were marked to skip it (`"noNightDim"`) and it changed nothing. The car dims the cluster at night itself.
+
 - **Zeiger 0.31.0:** the author in About and on GitHub.
   - **About** (Settings) shows the author's card beside the credits: vucko-adv's photo, @vucko.adv and instagram.com/vucko.adv.
   - **README:** an Author section with the same photo and the Instagram link.

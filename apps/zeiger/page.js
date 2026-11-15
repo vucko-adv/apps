@@ -53,7 +53,6 @@ const GROUPS = [
         ['weather', 'Today\'s weather', 'Dark Moon, Underpass, Mist · needs the internet uplink'],
         ['mapInTheme', 'The phone\'s map in Map Mist', 'through waze-on-cluster'],
         ['shiftX', 'Theme position', 'to the right of BMW\'s own cluster'],
-        ['nightDim', 'Night colours', 'dimmer colours after sunset'],
     ] },
     { name: 'BMW\'s cluster', about: 'What BMW draws under and over the themes.', rows: [
         ['hideBoxes', 'Hide BMW\'s black boxes', 'test'],
@@ -235,7 +234,6 @@ class Page {
         if (k === 'shiftBefore') return v ? num(v) + ' rpm' : 'At the redline';
         if (k === 'tankLitres') return v + ' L';
         if (k === 'timeZone') return tz.name(v);
-        if (k === 'nightDim') return v === 'off' ? 'Off' : 'Auto';
         if (k === 'widgetShows') return { engine: 'Engine', mist: 'Weather, Mist', sunrise: 'Weather, Sunrise', theme: 'Cluster theme' }[v] || this.optLabel(k, v);
         if (it.type === 'bool') return v ? 'On' : 'Off';
         return this.optLabel(k, v);
