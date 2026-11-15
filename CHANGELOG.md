@@ -4,6 +4,10 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.31.0:** the author in About and on GitHub.
+  - **About** (Settings) shows the author's card beside the credits: vucko-adv's photo, @vucko.adv and instagram.com/vucko.adv.
+  - **README:** an Author section with the same photo and the Instagram link.
+
 - **Zeiger 0.30.1:** **Theme position** is 0 by default (it was -12, which only suited Vintage).
   - Vintage Green and Vintage Cyan (and their diesel versions) carry their own -12 px in the layout (`"shiftX"`), added to the setting, so at 0 every theme sits where it should.
   - A car that already has -12 saved keeps it: set **Theme position** to 0 once (Settings, Cluster).

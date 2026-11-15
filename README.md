@@ -46,6 +46,14 @@ Installing apps that don't come from BMW on your head unit is done at your own r
 
 Settings, the start animation, the home-screen widget and black boxes on the cluster: [apps/zeiger/README.md](apps/zeiger/README.md).
 
+## Author
+
+<img src="docs/images/vucko-adv.jpg" width="96" align="left" alt="vucko-adv">
+
+Zeiger and every theme in it are drawn by **vucko-adv**.<br>
+Instagram: [@vucko.adv](https://instagram.com/vucko.adv)
+<br clear="left">
+
 ## Credits
 
 Zeiger is a fork of [bimmer-lab/apps](https://github.com/bimmer-lab/apps) (Cluster Themes), MIT. It uses cauliflowermossgrape's MGU App Kit and Robert Nisipeanu's cluster-render. Details in [apps/zeiger/NOTICE](apps/zeiger/NOTICE).

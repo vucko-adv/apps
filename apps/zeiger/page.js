@@ -94,9 +94,14 @@ const CALIB = [['', 'Off'], ['grid', 'Grid'], ['mapcal', 'Map frame']];
 const CREDITS = [
     'Zeiger by vucko-adv. Every theme is drawn by vucko-adv.',
     'Forked from bimmer-lab/apps (Cluster Themes), MIT.',
-    'MGU App Kit by cauliflowermossgrape (MIT); cluster-render by Robert Nisipeanu (MPL 2.0).',
+    'MGU App Kit by cauliflowermossgrape (MIT).',
+    'cluster-render by Robert Nisipeanu (MPL 2.0).',
     'Fonts: Barlow, Michroma (SIL Open Font License). Details: NOTICE.',
 ];
+
+// the author's card in About (0.31.0): the photo (hud/pictures/author_photo.json, a 128 px circle, baked by
+// cluster-design/author/bake.html) and the Instagram
+const AUTHOR = { handle: '@vucko.adv', link: 'instagram.com/vucko.adv' };
 
 /* ---------- theme pictures (hud/previews/<layout>.json: big, small, hero) ---------- */
 const IMG = 0x5a500000;              // our image ids ('ZP' + n), clear of the kit's own
@@ -118,6 +123,18 @@ function pic(name, size) {
     pics[k] = d ? { id: IMG + nextImg++, w: d.w, h: d.h } : null;
     if (d) rec.setImage(pics[k].id, d.w, d.h, d.px);
     return pics[k];
+}
+let authorPic;
+/** the author's photo as an image { id, w, h }, or null */
+function authorPhoto() {
+    if (authorPic !== undefined) return authorPic;
+    authorPic = null;
+    try {
+        const p = data.json('pictures/author_photo.json');
+        const px = zlib.inflateSync(Buffer.from(p.z, 'base64'));
+        if (px.length === p.w * p.h * 4) { authorPic = { id: IMG + 0xfff0, w: p.w, h: p.h }; rec.setImage(authorPic.id, p.w, p.h, px); }
+    } catch (e) { authorPic = null; }
+    return authorPic;
 }
 // the big card's picture: 'hero' (1152 x 432) where there is one, else 'big'. Since 0.30.0 HERO_SLOTS of them are kept
 // (each its own image, so the renderer keeps its copy too) and the neighbours are sent ahead (gallery()): a swipe shows
@@ -393,7 +410,7 @@ class Page {
         if (g.about) { cv.text(g.about, px + 32, py + 86, 19, C.dim, { font: M, literal: true }); y = py + 104; }
         const credits = g.name === 'About', watch = g.name === 'BMW\'s cluster' && this.get('slotWatch') === true;
         const rows = watch ? g.rows.filter((r) => r[0] === 'slotWatch') : g.rows;
-        const room = py + ph - 10 - y - (credits ? CREDITS.length * 28 + 24 : 0);
+        const room = py + ph - 10 - y - (credits ? Math.max(CREDITS.length * 26 + 24, 196) : 0);
         const rh = watch ? WATCH_ROW : Math.min(84, Math.floor(room / rows.length));
         rows.forEach((row, j) => this.row(cv, px + 32, y + j * rh, pw - 64, rh, row));
         if (watch) {
@@ -403,7 +420,14 @@ class Page {
         if (credits) {
             const cy = y + g.rows.length * rh + 18;
             cv.fillRect(px + 32, cy - 8, pw - 64, 1, C.faint);
-            CREDITS.forEach((s, j) => cv.text(s, px + 32, cy + 22 + j * 28, 18, j ? C.dim : C.soft, { font: M, literal: true }));
+            CREDITS.forEach((s, j) => cv.text(s, px + 32, cy + 22 + j * 26, 18, j ? C.dim : C.soft, { font: M, literal: true }));
+            // the author's card on the right: the photo in a ring, the Instagram under it
+            const cw = 280, cx = px + pw - 32 - cw / 2, ph0 = 104, ay = cy + 6, ap = authorPhoto();
+            cv.circle(cx, ay + ph0 / 2, ph0 / 2 + 3, C.acc);
+            if (ap) cv.image(ap.id, cx - ph0 / 2, ay, ph0, ph0);
+            else cv.circle(cx, ay + ph0 / 2, ph0 / 2, C.glass);
+            cv.text(AUTHOR.handle, cx, ay + ph0 + 32, 23, C.text, { font: B, align: 'center', literal: true });
+            cv.text(AUTHOR.link, cx, ay + ph0 + 56, 17, C.accSoft, { font: M, align: 'center', literal: true });
         }
     }
 
