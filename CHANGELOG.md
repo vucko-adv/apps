@@ -8,6 +8,7 @@ Newest first. Dates are when the build was pushed.
   - Every theme leaves BMW's drive mode and gear letter in its bottom strip see-through (x 1150-1470, y 660-720).
   - bimmer-lab found on a test car that BMW then leaves out its black gear box over the theme (their Cluster Themes 0.17.6, issue #5); on their car it went at the next gear change.
   - **Checked:** on the bench (Vintage Green, Mist, Apex Sport: the window open, the rest of the theme as it was); not yet on a car.
+  - **Sunrise is back, for a test** (`sunrise_hills`, as it was in 0.21.0): hills at sunrise with today's weather, ending above BMW's own bottom strip, so BMW shows its strip. Its start animation is now the soft fade of Mist and the others (the sky no longer slides).
 
 - **Zeiger 0.28.0:** a test for BMW's gear box.
   - **Watch BMW's slots** (Settings, BMW's cluster): the KOMBI's slot table from cluster-render every second while on, the slots now and the last changes on the page, every change in the log.

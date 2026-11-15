@@ -134,6 +134,10 @@ With **Cold-engine rev guard** on (the default), the rev bars of Vintage Green, 
 - **A small one at the right edge** (about x 1840-1900, y 230-270): seen on a G20 over the Sunrise theme's sky. Zeiger's themes are black or nearly black there.
 - **BMW's own bottom strip showing** under a theme doesn't take them away on a G20.
 
+### Sunrise (back in 0.29.0, a test)
+
+`sunrise_hills`, as it was in 0.21.0: it ends above BMW's own bottom strip (`"ownStrip": true`: nothing below y 646 but a black band to 662), so BMW shows its strip with the drive mode and the gear letter, the other way to keep BMW's black gear box away. Its files came back from the history before 0.22.0; its start animation is the soft fade (`cluster-design/intro/make_intros.js`).
+
 ### Leave BMW's gear letter open (0.29.0, a test)
 
 bimmer-lab's Cluster Themes found on a test car (0.17.6, Nov 14 2026, their issue #5): BMW draws its black gear box over a theme that covers the gear letter in BMW's bottom strip, and leaves it out once that spot is open (on their car from the next gear change). **Leave BMW's gear letter open** (Settings, BMW's cluster) leaves the same spot see-through in every theme: x 1150-1470, y 660-720, BMW's drive mode and gear letter (`GEAR_WINDOW` in shared/hud.js). Every image layer's pixels are cut there as they are sent (`_punch`), and a fill over it gets it as its hole (`_gearWindow`). Off by default; with "Leave BMW's bottom strip clear" on it does nothing (the strip is open anyway).
