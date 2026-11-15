@@ -68,7 +68,7 @@ const GROUPS = [
         ['redline', 'Redline', 'where the shift light ends'],
         ['shiftBefore', 'Shift point', 'before the redline'],
         ['shiftFlash', 'Shift flash', 'Apex Sport: white, yellow, then red'],
-        ['coldGuard', 'Cold-engine rev guard', 'an earlier shift point while the engine is cold'],
+        ['coldGuard', 'Cold-engine rev guard', 'the red zone from 3500 rpm, back to the redline as the oil warms'],
     ] },
     { name: 'Units and time', about: 'km/h and °C are drawn into the themes: keep the units metric.', rows: [
         ['units', 'Units', 'speed, temperatures, pressure'],

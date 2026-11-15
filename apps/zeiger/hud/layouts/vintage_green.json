@@ -2181,7 +2181,8 @@
     7940,
     7967
    ],
-   "conn": 2
+   "conn": 2,
+   "zone": true
   },
   {
    "id": "boost_bar",

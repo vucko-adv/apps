@@ -142,6 +142,11 @@
  *             name). Unlit segments are see-through, so the face under it shows them dark. Only the segments that
  *             changed are sent (bimmer-lab-apps fork addition, Vintage theme). "one": true (Zeiger addition, VFD's
  *             coolant block and low-fuel pump) lights only the last segment reached, a marker riding along the scale.
+ *             "zone": true (Zeiger addition, 0.27.0; rpm bars): the cold-engine red zone. While the cold guard holds
+ *             (ShiftScore.coldRed: from 3500 rpm with the oil at 30 °C, back to the redline at 80 °C) the segments
+ *             from there up to the bar's own first red segment are drawn red: lit ones in that red ("hot", else the
+ *             first red segment's own colour, else [255, 64, 48]), unlit ones in it at "dim" (0.3) opacity over the
+ *             face. The bar's own red segments (found in its picture: red over 2.2x green and blue; orange is not red) keep theirs.
  *             Measures "econEco" / "econLoad" (Zeiger addition, Vintage Cyan's ECON bar): the engine load (torquePct)
  *             under / over ECON_MID as 0..1, the green half filling left while driving economically (coasting fills
  *             it) and the red half right under load; 0 while standing still
@@ -2233,7 +2238,7 @@ class HudApp {
             if (!(w.stretch && w.type === 'picture' && !sheet) && (p.w !== w.w || p.h !== w.h)) { this.log.warn('widget "' + w.id + '": picture "' + w.picture + '" is ' + p.w + 'x' + p.h + ', the widget ' + w.w + 'x' + w.h); return; }
             if (w.type === 'segments') {
                 // starts with nothing lit; _update lights what the value says
-                x.pic = p; x.lit = 0; x.value = null; x.t = 0;
+                x.pic = p; x.lit = 0; x.value = null; x.t = 0; x.zoneSt = null; x.zoneInfo = null;
                 this._blit(x, null, Buffer.alloc(w.w * w.h * 4, 0));
             } else this._blit(x, null, w.pixelShift ? shiftPixels(p.rgba, w.w, w.h, w.pixelShift) : p.rgba);
             if (w.type === 'needle') {
@@ -2639,6 +2644,7 @@ class HudApp {
     _updateSegments(x, now, force) {
         const w = x.w, segs = w.segs, steps = w.steps, p = x.pic;
         if (!p || !Array.isArray(segs) || !Array.isArray(steps)) return;
+        if (w.zone && w.one !== true) { this._updateZone(x, now, force); return; }
         let v;
         if (w.measure === 'rpm') v = this.rpmF;
         else {
@@ -2667,6 +2673,69 @@ class HudApp {
             rects.push({ x: sx, y: sy, w: sw, h: sh });
             parts.push(b);
         }
+        if (rects.length) this._blit(x, rects, Buffer.concat(parts));
+    }
+
+    /** Where the red zone starts now (rpm): lower than the redline while the oil is cold (ShiftScore.coldRed). */
+    _coldRed() {
+        if (this.intro || this.testUntil > Date.now()) return Infinity;      // the start animation's values are made up
+        const red = this.score.coldRed(this.car.data().oil);
+        return isNum(red) && red < this.setting('redline') ? red : Infinity;
+    }
+
+    /** A "zone" bar's first red segment and its colour, from the picture (once). */
+    _zoneInfo(x) {
+        if (x.zoneInfo) return x.zoneInfo;
+        const w = x.w, p = x.pic, segs = w.segs;
+        let first = segs.length, col = null;
+        for (let i = 0; i < segs.length; i++) {
+            const [sx, sy, sw, sh] = segs[i];
+            let r = 0, g = 0, b = 0, n = 0;
+            for (let yy = 0; yy < sh; yy++) for (let xx = 0; xx < sw; xx++) {
+                const o = ((sy + yy) * w.w + sx + xx) * 4;
+                if (p.rgba[o + 3] < 128) continue;
+                r += p.rgba[o]; g += p.rgba[o + 1]; b += p.rgba[o + 2]; n++;
+            }
+            if (n && r > 2.2 * g && r > 2.2 * b) { first = i; col = [Math.round(r / n), Math.round(g / n), Math.round(b / n)]; break; }
+        }
+        const hot = Array.isArray(w.hot) ? w.hot : col || [255, 64, 48];
+        x.zoneInfo = { first, hot, dim: isNum(w.dim) ? w.dim : 0.3 };
+        return x.zoneInfo;
+    }
+
+    /**
+     * A "zone" rpm bar: as _updateSegments, each segment 0 (unlit), 1 (lit), 2 (unlit in the cold red zone) or 3 (lit
+     * in it); only the segments whose state changed are sent. In the zone the picture's pixels are drawn in the red,
+     * as bright as they were (the dots and their glow keep their shape).
+     */
+    _updateZone(x, now, force) {
+        const w = x.w, segs = w.segs, steps = w.steps, p = x.pic, z = this._zoneInfo(x);
+        const v = this.testUntil > now ? Number.MAX_VALUE : this.rpmF;
+        let n = 0;
+        if (isNum(v)) while (n < segs.length && n < steps.length && v >= steps[n]) n++;
+        const from = this._coldRed();
+        const st = segs.map((s, i) => (i < n ? 1 : 0) + (i < z.first && i < steps.length && steps[i] >= from ? 2 : 0));
+        const old = x.zoneSt || [];
+        const rects = [], parts = [];
+        st.forEach((s, i) => {
+            if (!force && old[i] === s) return;
+            const [sx, sy, sw, sh] = segs[i];
+            const b = Buffer.alloc(sw * sh * 4, 0);
+            if (s) for (let r = 0; r < sh; r++) {
+                const o = ((sy + r) * w.w + sx) * 4;
+                if (s === 1) { p.rgba.copy(b, r * sw * 4, o, o + sw * 4); continue; }
+                for (let c = 0; c < sw; c++) {
+                    const k = o + c * 4, d = (r * sw + c) * 4, a = p.rgba[k + 3];
+                    if (!a) continue;
+                    const lum = Math.max(p.rgba[k], p.rgba[k + 1], p.rgba[k + 2]) / 255;
+                    b[d] = Math.round(z.hot[0] * lum); b[d + 1] = Math.round(z.hot[1] * lum); b[d + 2] = Math.round(z.hot[2] * lum);
+                    b[d + 3] = s === 3 ? a : Math.round(a * z.dim);
+                }
+            }
+            rects.push({ x: sx, y: sy, w: sw, h: sh });
+            parts.push(b);
+        });
+        x.zoneSt = st; x.lit = n;
         if (rects.length) this._blit(x, rects, Buffer.concat(parts));
     }
 

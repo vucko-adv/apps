@@ -5,8 +5,10 @@
  * cauliflowermossgrape), with the petrol defaults this car needs:
  *
  *  - shift point = redline - "shiftBefore" (never below 2500 rpm)
- *  - cold guard ("coldGuard" on): until the oil reaches 80 °C the shift point is pulled down to
- *    4500 rpm at 30 °C oil and climbs with the oil temperature, in 50 rpm steps
+ *  - cold guard ("coldGuard" on; Zeiger's since 0.27.0): until the oil reaches 80 °C the red zone starts lower,
+ *    at 3500 rpm with the oil at 30 °C or colder, and climbs straight with the oil temperature to the redline at
+ *    80 °C, in 100 rpm steps (coldRed); the shift point is "shiftBefore" under it (never below 2500), in 50 rpm
+ *    steps. (Before 0.27.0: the shift point only, 4500 rpm at 30 °C.)
  *  - every upshift (gear number +1; or, with no gear signal, rpm falling over 18 % within 0.4 s
  *    while moving) is scored on the highest rpm in the 0.6 s before it:
  *    LIMITER (within 60 rpm of the redline), EARLY (over 250 under the shift point),
@@ -16,10 +18,12 @@
  *
  *   const score = new ShiftScore(car, () => ({ redline, shiftBefore, coldGuard }), log)
  *   score.shiftPoint(oil) -> { rpm, cold }
+ *   score.coldRed(oil) -> where the red zone starts now (rpm): under the redline only while the guard holds
  *   score.last -> { at, from, to, rpm, target, verdict } or null; score.peak, score.limiterHits
  */
 const WARM_OIL = 80;           // °C
-const COLD_LIMIT = 4500;       // rpm at 30 °C oil (Redline's petrol default)
+const COLD_OIL = 30;           // °C: at or under it the red zone starts at COLD_RED
+const COLD_RED = 3500;         // rpm (Zeiger 0.27.0; Redline's petrol default shift point was 4500)
 const PEAK_HOLD_MS = 15000;
 const isNum = (v) => typeof v === 'number' && isFinite(v);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -41,13 +45,21 @@ class ShiftScore {
 
     _normal() { const o = this.opts(); return Math.max(2500, o.redline - o.shiftBefore); }
 
-    /** The shift point right now: lowered while the oil is cold (cold guard on). */
+    /** Where the red zone starts right now: the redline, or lower while the oil is cold (cold guard on). */
+    coldRed(oil) {
+        const red = this.opts().redline;
+        if (!this.opts().coldGuard || !isNum(oil) || oil >= WARM_OIL) return red;
+        const cold = Math.min(COLD_RED, red);
+        const f = clamp((oil - COLD_OIL) / (WARM_OIL - COLD_OIL), 0, 1);
+        return Math.round((cold + (red - cold) * f) / 100) * 100;
+    }
+
+    /** The shift point right now: "shiftBefore" under the red zone's start, lowered while the oil is cold. */
     shiftPoint(oil) {
         const n = this._normal();
-        if (!this.opts().coldGuard || !isNum(oil) || oil >= WARM_OIL) return { rpm: n, cold: false };
-        const cold = Math.min(COLD_LIMIT, n);
-        const f = clamp((oil - 30) / (WARM_OIL - 30), 0, 1);
-        return { rpm: Math.round((cold + (n - cold) * f) / 50) * 50, cold: true };
+        const red = this.coldRed(oil);
+        if (red >= this.opts().redline) return { rpm: n, cold: false };
+        return { rpm: Math.min(n, Math.max(2500, Math.round((red - this.opts().shiftBefore) / 50) * 50)), cold: true, red };
     }
 
     verdict(rpm, target, cold) {
