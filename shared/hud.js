@@ -2069,7 +2069,9 @@ class HudApp {
         // picture with "followsShift" (a scene whose middle has to stay under the readouts: Dark Moon's sun over the
         // speed, Map's window round the map) moves its pixels instead, the edge column repeated into the gap
         // A widget with "fixed": true stays where the panel has it (Sunrise's black band over BMW's strip, which doesn't move).
-        const shiftX = this.target === 'panel' && this.ctx.settings.item('shiftX') ? Number(this.setting('shiftX')) || 0 : 0;
+        // A layout's own "shiftX" (Zeiger 0.30.1: Vintage's -12) is added, so the setting's 0 is every theme where it belongs.
+        const ownShift = this.target === 'panel' && isNum(layout.shiftX) ? layout.shiftX : 0;
+        const shiftX = ownShift + (this.target === 'panel' && this.ctx.settings.item('shiftX') ? Number(this.setting('shiftX')) || 0 : 0);
         // A full-width fill's map window with "holeFollowsShift" moves too (Vintage Map: the window between its readouts;
         // waze-on-cluster's map stays put, so the window must stay inside the map's own rect)
         if (shiftX) {

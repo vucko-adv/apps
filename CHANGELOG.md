@@ -4,6 +4,10 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.30.1:** **Theme position** is 0 by default (it was -12, which only suited Vintage).
+  - Vintage Green and Vintage Cyan (and their diesel versions) carry their own -12 px in the layout (`"shiftX"`), added to the setting, so at 0 every theme sits where it should.
+  - A car that already has -12 saved keeps it: set **Theme position** to 0 once (Settings, Cluster).
+
 - **Zeiger 0.30.0:** a cleaner theme change, the gallery's taps, Apex's zones, and a sharp widget.
   - **Changing themes:** a black curtain covers the cluster while the new theme's layers arrive, then fades, so BMW's own cluster no longer shows in between.
   - **Gallery:** a tap left or right of the big card no longer lights half the page orange. A tap on the big card puts that theme on the cluster, and the card lights up with ON THE CLUSTER. The last 4 big pictures are kept and the neighbours' sent ahead, so swiping waits less.

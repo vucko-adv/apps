@@ -4,6 +4,7 @@
  "author": "vucko-adv",
  "copyright": "Copyright (c) 2026 vucko-adv. Zeiger theme artwork.",
  "packWaste": 2,
+ "shiftX": -12,
  "theme": "vintage_green",
  "noNightDim": true,
  "selfTest": 2500,
