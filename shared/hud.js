@@ -334,6 +334,10 @@ const TYRE_CORNERS = ['FL', 'FR', 'RL', 'RR'];
 const DIAL_SPEED = { us: { max: 160, ticks: 8 }, metric: { max: 240, ticks: 8 } };
 // the HUD's place (the page's Position tab): settings that move / scale the layers already there, no rebuild
 const PLACE_KEYS = ['hudX', 'hudY', 'hudScale', 'stripClear'];
+// "Leave BMW's gear letter open" (Zeiger 0.29.0, setting "gearWindow"): the part of BMW's bottom strip with its drive
+// mode and gear letter, left see-through by every layer. bimmer-lab's Cluster Themes 0.17.6 (Nov 14 2026, tested on a
+// car): BMW draws its black gear box over a theme that covers its gear letter, and leaves it out with this open.
+const GEAR_WINDOW = [1150, 660, 320, 60];
 // "Leave BMW's bottom strip clear" (cluster, issues #5 / #1): BMW's own strip (range, clock, belt light, P) starts at
 // y 662. A theme drawn only above it is reported (#5, an M car) to stop BMW painting its black boxes over the theme.
 // cluster-render has no clip, so the switch squeezes every layer to 662 / 720 of its height about the panel's top.
@@ -2073,6 +2077,9 @@ class HudApp {
         this.nightOn = this._nightDim() && !this.noDim;
         if (this.nightOn) this.theme = dimTheme(this.theme, NIGHT_DIM);
         this.log.info('layout "' + layout.name + '", theme ' + this.theme.name + (this.layoutTheme ? '' : ' (' + this.setting('hudTheme') + ')'));
+        // the gear window: every image layer's pixels cut there (_blit), every fill given a hole there (_gearWindow)
+        this.gearWin = this.target === 'panel' && this.setting('gearWindow') === true && this.setting('stripClear') !== true ? GEAR_WINDOW : null;
+        if (this.gearWin) layout = this._gearWindow(layout, this.gearWin);
         const shown = layout.widgets.filter((w) => !(w.toggle && !this._toggleOn(w.toggle)) && !(w.themes && w.themes.indexOf(this.themeName) < 0));
         this._setNeeds(shown);
         // plan the layers first (a sheet's size is only known once every member is placed), then make them
@@ -2208,7 +2215,48 @@ class HudApp {
      * the whole widget) to its own layer, or into its sheet: the local buffer while the sheet is being
      * filled on create, else dirty rects translated by the sheet's offset.
      */
+    /**
+     * The gear window's fills: a fill over it gets it as its see-through hole (no inset, square corners); one with a
+     * hole of its own (a map window) keeps that one above the window, and the strip beside the window becomes two
+     * fills of their own.
+     */
+    _gearWindow(layout, g) {
+        const over = (w) => w.x < g[0] + g[2] && w.x + w.w > g[0] && w.y < g[1] + g[3] && w.y + w.h > g[1];
+        const widgets = [];
+        layout.widgets.forEach((w) => {
+            if (w.type !== 'fill' || !over(w)) { widgets.push(w); return; }
+            if (!Array.isArray(w.hole)) { widgets.push(Object.assign({}, w, { hole: g, holeWhen: true, holeInset: 0, holeRadius: 0 })); return; }
+            if (g[1] > w.y) widgets.push(Object.assign({}, w, { h: g[1] - w.y }));
+            const y = Math.max(w.y, g[1]), h = w.y + w.h - y;
+            if (g[0] > w.x) widgets.push(Object.assign({}, w, { id: w.id + '_gl', hole: undefined, holeWhen: undefined, y, h, w: g[0] - w.x }));
+            if (w.x + w.w > g[0] + g[2]) widgets.push(Object.assign({}, w, { id: w.id + '_gr', hole: undefined, holeWhen: undefined, x: g[0] + g[2], y, h, w: w.x + w.w - g[0] - g[2] }));
+        });
+        return Object.assign({}, layout, { widgets });
+    }
+
+    /** buf (rects of widget x's image, in order) with the gear window's pixels see-through: a copy when it has any. */
+    _punch(x, rects, buf) {
+        const w = x.w, g = this.gearWin;
+        if (w.x >= g[0] + g[2] || w.x + w.w <= g[0] || w.y >= g[1] + g[3] || w.y + w.h <= g[1]) return buf;
+        // a "stretch" picture's image is smaller than the widget: its px per screen px
+        const p = w.stretch && w.type === 'picture' && !x.sheet ? pictures.get(w.picture) : null;
+        const iw = p ? p.w : w.w, ih = p ? p.h : w.h, kx = iw / w.w, ky = ih / w.h;
+        const rs = rects && rects.length ? rects : [{ x: 0, y: 0, w: iw, h: ih }];
+        let off = 0, out = null;
+        rs.forEach((r) => {
+            const x0 = Math.max(0, Math.floor((g[0] - w.x) * kx) - r.x), x1 = Math.min(r.w, Math.ceil((g[0] + g[2] - w.x) * kx) - r.x);
+            const y0 = Math.max(0, Math.floor((g[1] - w.y) * ky) - r.y), y1 = Math.min(r.h, Math.ceil((g[1] + g[3] - w.y) * ky) - r.y);
+            if (x1 > x0 && y1 > y0) {
+                if (!out) out = Buffer.from(buf);
+                for (let yy = y0; yy < y1; yy++) out.fill(0, off + (yy * r.w + x0) * 4, off + (yy * r.w + x1) * 4);
+            }
+            off += r.w * r.h * 4;
+        });
+        return out || buf;
+    }
+
     _blit(x, rects, buf) {
+        if (this.gearWin) buf = this._punch(x, rects, buf);
         const w = x.w, s = x.sheet;
         if (!s) { x.c.pixels(x.ref, rects, buf); return; }
         const rs = rects && rects.length ? rects : [{ x: 0, y: 0, w: w.w, h: w.h }];

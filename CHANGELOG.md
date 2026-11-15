@@ -4,6 +4,11 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.29.0:** **Leave BMW's gear letter open** (Settings, BMW's cluster; a test, off by default).
+  - Every theme leaves BMW's drive mode and gear letter in its bottom strip see-through (x 1150-1470, y 660-720).
+  - bimmer-lab found on a test car that BMW then leaves out its black gear box over the theme (their Cluster Themes 0.17.6, issue #5); on their car it went at the next gear change.
+  - **Checked:** on the bench (Vintage Green, Mist, Apex Sport: the window open, the rest of the theme as it was); not yet on a car.
+
 - **Zeiger 0.28.0:** a test for BMW's gear box.
   - **Watch BMW's slots** (Settings, BMW's cluster): the KOMBI's slot table from cluster-render every second while on, the slots now and the last changes on the page, every change in the log.
   - To find out whether the on-board computer's views (the song, the consumption), with which the KOMBI moves the gear down and drops its box, are the head unit's content in a slot that cluster-render could hold with an empty scene. Nothing on the cluster changes.

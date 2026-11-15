@@ -134,6 +134,10 @@ With **Cold-engine rev guard** on (the default), the rev bars of Vintage Green, 
 - **A small one at the right edge** (about x 1840-1900, y 230-270): seen on a G20 over the Sunrise theme's sky. Zeiger's themes are black or nearly black there.
 - **BMW's own bottom strip showing** under a theme doesn't take them away on a G20.
 
+### Leave BMW's gear letter open (0.29.0, a test)
+
+bimmer-lab's Cluster Themes found on a test car (0.17.6, Nov 14 2026, their issue #5): BMW draws its black gear box over a theme that covers the gear letter in BMW's bottom strip, and leaves it out once that spot is open (on their car from the next gear change). **Leave BMW's gear letter open** (Settings, BMW's cluster) leaves the same spot see-through in every theme: x 1150-1470, y 660-720, BMW's drive mode and gear letter (`GEAR_WINDOW` in shared/hud.js). Every image layer's pixels are cut there as they are sent (`_punch`), and a fill over it gets it as its hole (`_gearWindow`). Off by default; with "Leave BMW's bottom strip clear" on it does nothing (the strip is open anyway).
+
 ### The gear box, and the slot watch (0.28.0, a test)
 
 BMW's KOMBI draws its gear box (about x 1406-1597, y 342-419) over every theme. With one of the on-board computer's views picked (the song, the consumption, through the stalk's button) it moves the gear down into the bottom line and the box goes. The KOMBI shows the head unit's content in numbered slots (cluster-render's README, "Arbitration": 0x100 the map, 0x203 our panel, 0x103 / 0x105 the guidance box, 0x323 the HUD) and lays itself out round what they show. If such a view is the head unit's content in a slot of its own, cluster-render could hold that slot with an empty scene of ours, as it already does for the guidance box (its "guide hold", `guide_slots`): the KOMBI would lay itself out as for the view, the gear down and no box, with nothing of BMW's to see. If the view is the KOMBI's own drawing, no slot changes and that way is closed.
