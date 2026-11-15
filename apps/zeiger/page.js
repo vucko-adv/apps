@@ -58,6 +58,7 @@ const GROUPS = [
         ['hideBoxes', 'Hide BMW\'s black boxes', 'test'],
         ['stripClear', 'Leave BMW\'s bottom strip clear', 'the theme only above it'],
         ['calib', 'Calibration', 'a grid or the map frame on the cluster, to measure what BMW hides'],
+        ['slotWatch', 'Watch BMW\'s slots', 'test: what the cluster shows in each slot, every second'],
     ] },
     { name: 'Warnings', about: 'Over its limit, the value flashes red on the cluster. Not during the start animation.', rows: [
         ['warnOil', 'Oil temperature', 'flashes from', 'OIL', '#ffb23e'],
@@ -85,6 +86,8 @@ const GROUPS = [
         ['demo', 'Demo data', 'made-up values while the car sends none'],
     ] },
 ];
+// the slot watch's lines on the page (BMW's cluster group)
+const WATCH_LINES = 6;
 // the calibration layouts (hudLayout values), for the row in BMW's cluster
 const CALIB = [['', 'Off'], ['grid', 'Grid'], ['mapcal', 'Map frame']];
 const CREDITS = [
@@ -354,15 +357,40 @@ class Page {
         cv.text(g.name, px + 32, py + 52, 38, C.text, { font: B, literal: true });
         let y = py + 70;
         if (g.about) { cv.text(g.about, px + 32, py + 86, 19, C.dim, { font: M, literal: true }); y = py + 104; }
-        const credits = g.name === 'About';
-        const room = py + ph - 10 - y - (credits ? CREDITS.length * 28 + 24 : 0);
+        const credits = g.name === 'About', watch = g.name === 'BMW\'s cluster' && this.get('slotWatch') === true;
+        const room = py + ph - 10 - y - (credits ? CREDITS.length * 28 + 24 : 0) - (watch ? WATCH_LINES * 24 + 18 : 0);
         const rh = Math.min(84, Math.floor(room / g.rows.length));
         g.rows.forEach((row, j) => this.row(cv, px + 32, y + j * rh, pw - 64, rh, row));
+        if (watch) this.watchLines(cv, px + 32, y + g.rows.length * rh + 18, pw - 64);
         if (credits) {
             const cy = y + g.rows.length * rh + 18;
             cv.fillRect(px + 32, cy - 8, pw - 64, 1, C.faint);
             CREDITS.forEach((s, j) => cv.text(s, px + 32, cy + 22 + j * 28, 18, j ? C.dim : C.soft, { font: M, literal: true }));
         }
+    }
+
+    /**
+     * The slot watch's lines: the KOMBI's slots now (each slot, its status, and each content in it, shown or parked),
+     * then the times of the changes before. On the car: switch it on, go through BMW's on-board computer with the
+     * stalk's button, and photograph the cluster and these lines at each step.
+     */
+    watchLines(cv, x, y, w) {
+        const log = this.hud.slotLog || [], F = { font: M, literal: true };
+        cv.fillRect(x, y - 8, w, 1, C.faint);
+        const hm = (t) => { const d = new Date(t); return [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':'); };
+        const short = (l) => {
+            const m = /^slot (0x[0-9a-f]+) status (\d+):?(.*)$/i.exec(l);
+            if (!m) return l;
+            const rows = m[3].split(',').map((r) => /(0x[0-9a-f]+) class (\d+) map (\d+)/i.exec(r)).filter(Boolean)
+                .map((r) => r[1].replace(/^0x/, '') + ' ' + ({ 1: 'shown', 2: 'shown', 3: 'parked' }[r[3]] || 'off ' + r[3]));
+            return m[1] + ' [' + m[2] + ']  ' + (rows.join(', ') || 'empty');
+        };
+        if (!log.length) { cv.text('Waiting for cluster-render\'s slot table...', x, y + 18, 18, C.dim, F); return; }
+        const last = log[log.length - 1], now = last.lines.map(short);
+        cv.text(hm(last.t) + '  now:', x, y + 18, 18, C.accSoft, F);
+        now.slice(0, WATCH_LINES - 2).forEach((l, i) => cv.text(fit(cv, l, 18, w - 20, M), x + 20, y + 42 + i * 24, 18, C.text, F));
+        const before = log.slice(0, -1).map((e) => hm(e.t)).reverse().slice(0, 6).join('  ·  ');
+        if (before) cv.text(fit(cv, 'changes before: ' + before, 16, w, M), x, y + 18 + (Math.min(now.length, WATCH_LINES - 2) + 1) * 24, 16, C.dim, F);
     }
 
     /** one setting: label and line under it on the left, a switch or - value + on the right */

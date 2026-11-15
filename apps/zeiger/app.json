@@ -2,7 +2,7 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Cyan (an 80s LCD dash with TURBO and ECON bars), VFD (a late-80s fluorescent dash, mint on black with teal windows), Apex and Apex Sport (a racing cluster with boost and braking bars), Dark Moon (a sunrise seen from orbit, the speed under the sun, today's weather), Underpass and Mist (photos, with Dark Moon's readouts), and Map Mist (the phone's map in the middle of the Mist photo)",
-  "version": "0.27.0",
+  "version": "0.28.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -702,6 +702,12 @@
       "label": "Hide BMW's black boxes (test)",
       "type": "bool",
       "default": true
+    },
+    {
+      "key": "slotWatch",
+      "label": "Watch BMW's slots (test: cluster-render's slot table every second, on the page)",
+      "type": "bool",
+      "default": false
     },
     {
       "key": "warnOil",

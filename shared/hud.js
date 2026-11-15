@@ -362,7 +362,7 @@ function shiftPixels(rgba, w, h, dx) {
     return out;
 }
 // settings that only change what a text shows (the next tick paints it), no rebuild
-const LIVE_KEYS = ['warnOil', 'warnCoolant', 'warnBoost', 'badge', 'badgeBMW', 'gFlipLat', 'gFlipLong', 'gRange', 'gTrail'];
+const LIVE_KEYS = ['slotWatch', 'warnOil', 'warnCoolant', 'warnBoost', 'badge', 'badgeBMW', 'gFlipLat', 'gFlipLong', 'gRange', 'gTrail'];
 // g (after cauliflowermossgrape's G-Force, MIT, idea only): a sample over G_BAD is a bad reading, not a corner;
 // the rest are averaged over G_AVG_MS so kerbs and potholes don't throw the dot about
 const G_BAD = 3;
@@ -592,6 +592,8 @@ class HudApp {
         this.flash = false;
         this.problem = null;             // why nothing shows (a bad layout), for the status line
         this.statusListeners = [];
+        this.slotTable = null;      // the KOMBI's slot table in cluster-render's last status (its "slot 0x..." lines)
+        this.slotLog = [];          // its changes, newest last: { t, lines } (the slot watch, setting "slotWatch")
         this.lastStatus = null;
 
         this.slotsFile = path.join(ctx.dataDir || '.', 'slots.json');
@@ -895,6 +897,16 @@ class HudApp {
         });
         c.on('budget', (capKb, maxKb, reason) => this.log.info('budget' + tag + ' ' + capKb + '/' + maxKb + ' kb/s (' + reason + ')'));
         c.on('status', (text) => {
+            // the slot watch (Zeiger 0.28.0, setting "slotWatch"): asked every second, so only the changes are logged
+            const slots = String(text).split('\n').filter((l) => /^slot 0x/.test(l)).join('\n');
+            if (ci === 0 && slots !== this.slotTable) {
+                this.slotTable = slots;
+                this.slotLog.push({ t: Date.now(), lines: slots ? slots.split('\n') : [] });
+                if (this.slotLog.length > 12) this.slotLog.shift();
+                this.log.info('slot table: ' + (slots.replace(/\n/g, ' | ') || 'none'));
+                this.statusListeners.forEach((fn) => { try { fn(this.lastStatus); } catch (e) { this.log.warn('status listener: ' + e); } });
+            }
+            if (this.setting('slotWatch') === true && this.slotWatchQuiet) return;
             this.log.info('cluster-render status: ' + text);
             // the slots' line on the page's Settings tab (the black boxes, above)
             if (this.target === 'panel') {
@@ -928,6 +940,13 @@ class HudApp {
             if (this.client.ready) this.client.status();      // the scene ids (scenesApart) can change: guard, update
         }), 60000);
         this.statusTimer = setInterval(() => this._guard('status', () => this._status()), 5000);
+        // the slot watch: cluster-render's status every second while it is on (the full text logged once a minute)
+        this.watchTimer = setInterval(() => this._guard('slot watch', () => {
+            if (this.setting('slotWatch') !== true || !this.client.ready) return;
+            this.slotWatchN = (this.slotWatchN || 0) + 1;
+            this.slotWatchQuiet = this.slotWatchN % 60 !== 0;
+            this.client.status();
+        }), 1000);
         if (this.target === 'hud') this.claimTimer = setInterval(() => this._guard('hud claim', () => this._hudClaim()), CLAIM_MS);
         this._status();
         this._startDme();
@@ -1007,6 +1026,7 @@ class HudApp {
         clearInterval(this.tickTimer);
         clearInterval(this.themeTimer);
         clearInterval(this.statusTimer);
+        clearInterval(this.watchTimer);
         clearInterval(this.dmeTimer);
         clearInterval(this.claimTimer);
         clearTimeout(this.statusAskT);

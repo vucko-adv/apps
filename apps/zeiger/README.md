@@ -134,6 +134,12 @@ With **Cold-engine rev guard** on (the default), the rev bars of Vintage Green, 
 - **A small one at the right edge** (about x 1840-1900, y 230-270): seen on a G20 over the Sunrise theme's sky. Zeiger's themes are black or nearly black there.
 - **BMW's own bottom strip showing** under a theme doesn't take them away on a G20.
 
+### The gear box, and the slot watch (0.28.0, a test)
+
+BMW's KOMBI draws its gear box (about x 1406-1597, y 342-419) over every theme. With one of the on-board computer's views picked (the song, the consumption, through the stalk's button) it moves the gear down into the bottom line and the box goes. The KOMBI shows the head unit's content in numbered slots (cluster-render's README, "Arbitration": 0x100 the map, 0x203 our panel, 0x103 / 0x105 the guidance box, 0x323 the HUD) and lays itself out round what they show. If such a view is the head unit's content in a slot of its own, cluster-render could hold that slot with an empty scene of ours, as it already does for the guidance box (its "guide hold", `guide_slots`): the KOMBI would lay itself out as for the view, the gear down and no box, with nothing of BMW's to see. If the view is the KOMBI's own drawing, no slot changes and that way is closed.
+
+**Watch BMW's slots** (Settings, BMW's cluster) finds out: while it is on, the app asks cluster-render for its status every second, keeps the changes of the KOMBI's slot table (its `slot 0x...` lines) and shows the slots now and the times of the last changes under the group's rows (`0x105 [2]  1000310 shown, 1000314 parked`: the slot, its status, each content in it, shown or parked). The changes are also in the app's log (`slot table: ...`).
+
 ## Boost
 
 Boost (Apex's and Apex Sport's bar and readout, Vintage Green's and Cyan's TURBO bar) comes from two places:

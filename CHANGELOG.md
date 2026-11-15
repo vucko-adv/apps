@@ -4,6 +4,11 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.28.0:** a test for BMW's gear box.
+  - **Watch BMW's slots** (Settings, BMW's cluster): the KOMBI's slot table from cluster-render every second while on, the slots now and the last changes on the page, every change in the log.
+  - To find out whether the on-board computer's views (the song, the consumption), with which the KOMBI moves the gear down and drops its box, are the head unit's content in a slot that cluster-render could hold with an empty scene. Nothing on the cluster changes.
+  - **Checked:** on the page in the emulator (no cluster-render there); not yet on a car.
+
 - **Zeiger 0.27.0:** the rev range: BMW's yellow and red zones, a diesel version, and zones that move with the oil temperature.
   - **Settings, Rev range:** Engine (Petrol: scale to 8000, yellow from 6000, red from 6500; Diesel: scale to 6000, yellow from 4500, red from 5000), and Red zone from / Yellow zone from to set them by hand. They replace "Redline" (7000).
   - Every rpm bar is coloured by these zones, whatever its picture has.
