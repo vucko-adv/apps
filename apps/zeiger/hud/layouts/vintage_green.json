@@ -7,7 +7,7 @@
  "theme": "vintage_green",
  "noNightDim": true,
  "selfTest": 2500,
- "_about": "Vintage Green: Vintage's LCD from 1985 in cream readouts on dark green windows: the rpm as a dot-matrix band (ghost dots unlit, orange from 5200, red from 6750) over a tick scale with dot-matrix numbers; the slanted seven-segment speed over ghost 8s, an amber TURBO lamp over a boost bar (0-1.6 bar, rising segments) to its left and the ECON bar to its right (green filling left while driving economically, red filling right under load: hud.js econEco / econLoad); oil / water / fuel bars, P R N D S M and the gear; three dot-matrix strips along the bottom (the outside temperature; the range and average speed; the clock); the roundel in the theme's colours; scanlines, and a 2.5 s self-test at power-on. Made by cluster-design/vintage2/build.html?v=green. km/h and °C are drawn into the face: pick metric units. Widget reference: shared/hud.js header.",
+ "_about": "Vintage Green: Vintage's LCD from 1985 in cream readouts on dark green windows: the rpm as a dot-matrix band (ghost dots unlit, orange from 6000, red from 6500; the app colours it by the Rev range settings) over a tick scale with dot-matrix numbers; the slanted seven-segment speed over ghost 8s, an amber TURBO lamp over a boost bar (0-1.6 bar, rising segments) to its left and the ECON bar to its right (green filling left while driving economically, red filling right under load: hud.js econEco / econLoad); oil / water / fuel bars, P R N D S M and the gear; three dot-matrix strips along the bottom (the outside temperature; the range and average speed; the clock); the roundel in the theme's colours; scanlines, and a 2.5 s self-test at power-on. Made by cluster-design/vintage2/build.html?v=green. km/h and °C are drawn into the face: pick metric units. Widget reference: shared/hud.js header.",
  "widgets": [
   {
    "id": "bg",
@@ -169,6 +169,7 @@
    "own": false,
    "picture": "vintage_green_rpm",
    "measure": "rpm",
+   "zone": true,
    "class": "content",
    "z": 20,
    "x": 109,
@@ -2181,8 +2182,7 @@
     7940,
     7967
    ],
-   "conn": 2,
-   "zone": true
+   "conn": 2
   },
   {
    "id": "boost_bar",
