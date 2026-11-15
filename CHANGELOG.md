@@ -4,6 +4,14 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.37.0:** smoother changes.
+  - **Changing themes:** the old theme stays on the cluster until the new one is there, when the two fit in the renderer's memory together (Apex, Apex Sport, Vintage, VFD, Sunrise with each other). The photo themes (Peaks, Dark Moon, Mist, Underpass) still change under the black curtain, which now has a thin loading line in the middle.
+  - **Customise:** a pick no longer flashes BMW's own cluster: the theme keeps its layers and only the part that changed is sent again.
+  - **Apex Sport:** its shift flash was a 9th layer on its first connection (never drawn on the car, and the curtain always waited its full 4 s); it has a connection of its own now.
+  - **BMW's black boxes:** the see-through layer that holds BMW's guidance-box slot was a 9th layer on Apex's second connection; it is on the curtain's connection now. Whether that keeps the gear box away is not known yet.
+  - **The page:** a swipe slides the next theme in from that side and fades it up; the neighbours' pictures are sent ahead sooner.
+  - **Checked:** the bench (holding Apex and Sunrise, the curtain for Peaks, the fallback when the renderer refuses, Customise picks keeping every layer) and the emulator (the slide). Not yet on a car.
+
 - **Zeiger 0.36.0:** Apex's and Apex Sport's left block is now one pick, **Left block** (CUSTOMISE on their card), in pairs: boost and braking, oil and water, intake air and boost, accelerating and braking g, torque and power. Or the **tyres**: a car from above with each tyre's pressure beside its wheel; a tyre under the new **Warnings, Tyre pressure** setting (2.0 bar by default) turns orange. Checked on the bench (the tyres with a low pair, the g pair, at 8 layers); not yet on a car.
 
 - **Zeiger 0.35.0:** Apex's and Apex Sport's two bars can be customised (CUSTOMISE on their card): **Upper bar** and **Lower bar** each show boost, braking, oil, coolant, intake air, torque %, power %, or nothing. Their labels are now text, so they change with the pick. Checked on the bench (oil on the upper bar, the lower one empty, the M badge); not yet on a car.

@@ -313,8 +313,17 @@ const STATUS_ASK_MS = 2000;      // after a rebuild: ask cluster-render for its 
 const LAYER_BUDGET = 8;          // cluster-render's limit per client connection (CompositorLimits.per_client; confirmed on the car Nov 5 2026)
 // the curtain (Zeiger 0.30.0): while the theme changes, a black fill over the whole panel on a connection no layout
 // uses, so BMW's own cluster doesn't show between the old theme's layers going and the new one's arriving; it fades
-// once every new layer is shown (CURTAIN_MAX_MS at most). An effect layer: no pixel memory.
-const CURTAIN_CONN = 3, CURTAIN_Z = 90, CURTAIN_MAX_MS = 4000, CURTAIN_FADE_MS = 350;
+// once every new layer is shown (CURTAIN_MAX_MS at most). An effect layer: no pixel memory. Since 0.37.0 a thin line in
+// its middle fills as the new layers show (shaders.js CURTAIN): on the car the new pictures take a few seconds through
+// cluster-render's upload budget (2000-5500 KB/s), and a plain black panel for that long looked like a fault. It also
+// goes up when the same theme is made again and a layer of it has to go (a setting that moves something).
+// Holding the old theme (Zeiger 0.37.0, the user's idea): when the old theme and the new one fit in cluster-render's
+// pixel memory together (HOLD_PX_FRAC of it) and its layer limits (64 a connection, 96 in all since cluster-render
+// 0.4.2), the new theme's layers are made above the old ones (z + HOLD_Z) while the old stay, and the old go once every
+// new layer is shown (HOLD_MAX_MS at most); then the new ones go back to their own z. No black between themes. Else
+// (the photo themes are big), or after cluster-render refused a layer once this run, the curtain as before.
+const HOLD_Z = 200, HOLD_MAX_MS = 5000, HOLD_PX_FRAC = 0.96, HOLD_CONN_LAYERS = 64, HOLD_ALL_LAYERS = 90;
+const CURTAIN_CONN = 3, CURTAIN_Z = 90, CURTAIN_MAX_MS = 4000, CURTAIN_FADE_MS = 350, CURTAIN_LINE = [960, 360, 240, 3];
 const MAX_CONN = 4;              // connections a layout may ask for ("conn"): 32 layers service-wide / 8 per connection
 const PIXEL_BYTES = 16 * 1024 * 1024;   // cluster-render's pixel memory for every app's images together (CompositorLimits.pixel_bytes)
 const SHEET_AREA_FRAC = 4;       // the first sheet size limit: 1/4 of the target area (see the header)
@@ -908,6 +917,12 @@ class HudApp {
             const w = this._widgetOf(ci, ref);
             this.log.warn('refused ' + op + ' on ' + ref + tag + (w ? ' (' + w + ')' : '') + ': ' + reason);
             if (!this.refused) this.refused = (w || op) + ': ' + reason;   // the first one, until the next rebuild
+            if (this.held && /pixel memory|too many layers/.test(String(reason))) {
+                this.noHold = true;
+                this.log.warn('hold: cluster-render had no room for both themes; the curtain from now on');
+                this._holdEnd('refused');
+                this._guard('curtain', () => this._curtainUp());
+            }
             // a layer of this layout that found no room: the layout again a little later (not for the layout before's)
             if (w && /pixel memory|too many layers/.test(String(reason))) this._refusedRetry();
             this._statusSoon();
@@ -1201,10 +1216,11 @@ class HudApp {
      * shown and the guide hold comes on. on false drops it.
      */
     _guideHold(on) {
-        // on a connection of its own (the theme may use all 8 layers of the first)
+        // on the curtain's connection, which no layout uses (0.37.0; before, on the second: Apex fills it with 8 layers,
+        // so the hold was a 9th, never drawn, and BMW's boxes showed on Apex)
         if (this.guideRef) { const g = this.guideC, r = this.guideRef; this._guard('guide hold', () => g.drop(r)); this.guideRef = 0; }
         if (!on || this.target !== 'panel' || this.setting('hideBoxes') === false || !this.client.ready) return;
-        const c = this.guideC = this._clientAt(1);
+        const c = this.guideC = this._clientAt(CURTAIN_CONN);
         const ref = c.image({ target: 'map', klass: 'ambient', z: 0, x: 0, y: 0, w: 16, h: 16, iw: 16, ih: 16, contend: 1 });
         if (!ref) { this.log.warn('guide hold: the map layer was refused'); return; }
         this.guideRef = ref;
@@ -1939,6 +1955,44 @@ class HudApp {
         this._status();
     }
 
+    /** Whether the old theme can stay up while the new one is made (HOLD_* above): pixel memory and layer counts. */
+    _canHold(old, plan, oldPx) {
+        if (this.noHold || this.target !== 'panel' || !old.refs.length || this.curtain) return false;
+        let px = 0;
+        plan.forEach((e) => {
+            if (e.kind === 'sheet') px += e.w * e.h * 8;
+            else if (IMAGE_TYPES[e.w.type]) { const sp = e.w.stretch && pictures.get(e.w.picture); px += (sp ? sp.w * sp.h : e.w.w * e.w.h) * 8; }
+        });
+        if ((oldPx || 0) + px + this._atlasBytes() > PIXEL_BYTES * HOLD_PX_FRAC) return false;
+        const per = {};
+        old.refs.forEach((r) => { per[r.ci] = (per[r.ci] || 0) + 1; });
+        this._connCounts(plan).forEach((k, ci) => { per[ci] = (per[ci] || 0) + k; });
+        const all = Object.keys(per).reduce((a, k) => a + per[k], 0) + 2;     // + the guide hold, the curtain's room
+        return all <= HOLD_ALL_LAYERS && Object.keys(per).every((k) => per[k] <= HOLD_CONN_LAYERS);
+    }
+
+    /** While the old theme is held: once every new layer is shown (or HOLD_MAX_MS), the old go. */
+    _holdTick(now) {
+        const h = this.held, refs = this._layerRefs();
+        const shown = refs.filter((r) => { const st = this.layerStates.get(r.key); return st && st.state === 'shown'; }).length;
+        if (refs.length && shown < refs.length && now - h.at < HOLD_MAX_MS) return;
+        this._holdEnd(shown + ' of ' + refs.length + ' new layers shown ' + (now - h.at) + ' ms after the change');
+    }
+
+    /** The held old theme goes, and the new one's layers back to their own z. */
+    _holdEnd(why) {
+        const h = this.held;
+        if (!h) return;
+        this.held = null;
+        this._dropOld(h.old, null);
+        if (this.zLift) {
+            this.zLift = 0;
+            this.sheets.forEach((s) => { if (s.ref) this._guard('hold z', () => s.c.set(s.ref, { z: s.z })); });
+            this.widgets.forEach((x) => { if (!x.sheet && x.ref && x.c) this._guard('hold z', () => x.c.set(x.ref, { z: x.w.z || 0 })); });
+        }
+        this.log.info('hold over: ' + why);
+    }
+
     /** The curtain (CURTAIN_* above) up, or held up again while one is still there. */
     _curtainUp() {
         if (this.target !== 'panel') return;
@@ -1947,17 +2001,18 @@ class HudApp {
         const k = this.curtain;
         if (k) {
             k.at = now; k.fade = 0;
-            if (k.alpha !== 1) { k.alpha = 1; c.uniform(k.ref, 'u_color', [0, 0, 0, 1]); }
+            if (k.alpha !== 1) { k.alpha = 1; c.uniform(k.ref, 'u_alpha', [1]); }
+            if (k.p !== 0) { k.p = 0; c.uniform(k.ref, 'u_p', [0]); }
             return;
         }
         const [w, h] = this.size;
-        const ref = c.effect({ fs: shaders.fill, target: this.target, klass: 'content', z: CURTAIN_Z, x: 0, y: 0, w, h });
+        const ref = c.effect({ fs: shaders.curtain, target: this.target, klass: 'content', z: CURTAIN_Z, x: 0, y: 0, w, h });
         if (!ref) { this.log.warn('curtain: layer refused'); return; }
         c.uniform(ref, 'u_size', [w, h]);
-        c.uniform(ref, 'u_color', [0, 0, 0, 1]);
-        c.uniform(ref, 'u_hole', [0, 0, 0, 0]);
-        c.uniform(ref, 'u_holeR', [0]);
-        this.curtain = { c, ref, at: now, fade: 0, alpha: 1 };
+        c.uniform(ref, 'u_alpha', [1]);
+        c.uniform(ref, 'u_p', [0]);
+        c.uniform(ref, 'u_line', CURTAIN_LINE);
+        this.curtain = { c, ref, at: now, fade: 0, alpha: 1, p: 0 };
     }
 
     /** Each tick while the curtain is up: it fades once every layer of the new layout is shown (or none, or too long). */
@@ -1966,19 +2021,21 @@ class HudApp {
         if (!k.fade) {
             const refs = this._layerRefs();
             const shown = refs.filter((r) => { const st = this.layerStates.get(r.key); return st && st.state === 'shown'; }).length;
+            const p = refs.length ? Math.round(shown / refs.length * 20) / 20 : 1;
+            if (p !== k.p) { k.p = p; k.c.uniform(k.ref, 'u_p', [p]); }
             if (refs.length && shown < refs.length && now - k.at < CURTAIN_MAX_MS) return;
             k.fade = now;
             this.log.info('curtain: ' + shown + ' of ' + refs.length + ' layers shown ' + (now - k.at) + ' ms after the change');
         }
         const a = Math.round(Math.max(0, 1 - (now - k.fade) / CURTAIN_FADE_MS) * 20) / 20;
         if (a <= 0) { this._guard('curtain drop', () => k.c.drop(k.ref)); this.curtain = null; return; }
-        if (a !== k.alpha) { k.alpha = a; k.c.uniform(k.ref, 'u_color', [0, 0, 0, a]); }
+        if (a !== k.alpha) { k.alpha = a; k.c.uniform(k.ref, 'u_alpha', [a]); }
     }
 
     /** Drops the layers of the layout before (old: _rebuildInner's), all but the sheets in keep (a Map, or null). */
     _dropOld(old, keep) {
         const stay = {};
-        if (keep) keep.forEach((s) => { stay[s.ci + ':' + s.ref] = true; });
+        if (keep) keep.forEach((s) => { stay[s.ci + ':' + s.ref] = true; });     // sheets and own layers that stay
         old.refs.forEach((r) => { if (!stay[r.key]) r.c.drop(r.ref); });
         this.oldPending = null;
     }
@@ -1992,6 +2049,62 @@ class HudApp {
      * map takes most of the link to the cluster. None after a refusal (noKeepOnce).
      */
     _keepable(old, plan) {
+        this.noKeepOwnOnce = !!this.noKeepOnce;      // after a refusal: nothing kept, own layers neither
+        return this._keepableSheets(old, plan);
+    }
+
+    /**
+     * A layer of its own (a still picture, a fill) that the new layout has again, the very same (_ownKey): key -> the
+     * old one, kept when it is the only layer of its (connection, class, z) group in both plans, as for sheets. Apex's
+     * glow (the whole background) then stays through a Customise pick instead of going and coming back.
+     */
+    _keepableOwn(old, plan) {
+        const keep = new Map();
+        if (this.noKeepOwnOnce) { this.noKeepOwnOnce = false; return keep; }
+        const grp = (e) => e.conn + '|' + e.klass + '|' + e.z;
+        const tally = (list) => { const n = {}; list.forEach((e) => { n[grp(e)] = (n[grp(e)] || 0) + 1; }); return n; };
+        const was = tally(old.plan), now = tally(plan), wanted = {};
+        plan.forEach((e) => { if (e.kind === 'layer' && now[grp(e)] === 1) { const k = this._ownKey(e.w, e.conn, !!this.cut); if (k) wanted[k] = true; } });
+        old.own.forEach((o) => {
+            const k = this._ownKey(o.w, o.ci, old.cut), g = o.ci + '|' + (o.w.class || 'content') + '|' + (o.w.z || 0);
+            if (!k || was[g] !== 1 || !wanted[k] || keep.has(k)) return;
+            keep.set(k, { c: o.c, ci: o.ci, ref: o.ref, state: old.states.get(o.ci + ':' + o.ref) || null });
+        });
+        return keep;
+    }
+
+    /** What makes an own layer the same layer: a still picture (its pixels), a fill or a band flash (their uniforms are
+     *  all sent again in _create); else null. */
+    _ownKey(w, conn, cut) {
+        if (w.type !== 'picture' && w.type !== 'fill' && w.type !== 'bandflash') return null;
+        return [conn, w.class || 'content', w.z || 0, w.x, w.y, w.w, w.h, w.type, w.picture || '', w.stretch ? 1 : 0, w.pixelShift || 0, cut ? 1 : 0].join('|');
+    }
+
+    /**
+     * Each sheet that is the only one of its (connection, class, z) group grows to take in that group's widgets that
+     * are toggled off now (the other Customise picks; layouts.js "toggle"), so its box is the same whichever pick is on
+     * and a pick keeps the layer (_createSheet sends the pixels that changed). Within the target.
+     */
+    _steadySheets(plan, off) {
+        if (!off.length) return;
+        const grp = (k, z, conn) => conn + '|' + k + '|' + z, n = {};
+        plan.forEach((e) => { const g = grp(e.klass, e.z, e.conn); n[g] = (n[g] || 0) + 1; });
+        const [W, H] = this.size;
+        plan.forEach((s) => {
+            if (s.kind !== 'sheet' || n[grp(s.klass, s.z, s.conn)] !== 1) return;
+            let x0 = s.x, y0 = s.y, x1 = s.x + s.w, y1 = s.y + s.h, more = false;
+            off.forEach((w) => {
+                if (!IMAGE_TYPES[w.type] || w.own === true || (OWN_TYPES[w.type] && !(w.own === false && PACKABLE[w.type]))) return;
+                if ((w.class || 'content') !== s.klass || (w.z || 0) !== s.z || this._connOf(w) !== s.conn) return;
+                x0 = Math.min(x0, w.x); y0 = Math.min(y0, w.y); x1 = Math.max(x1, w.x + w.w); y1 = Math.max(y1, w.y + w.h); more = true;
+            });
+            if (!more) return;
+            x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(W, x1); y1 = Math.min(H, y1);
+            s.x = x0; s.y = y0; s.w = x1 - x0; s.h = y1 - y0;
+        });
+    }
+
+    _keepableSheets(old, plan) {
         const keep = new Map();
         if (this.noKeepOnce) { this.noKeepOnce = false; return keep; }
         const grp = (e) => e.conn + '|' + e.klass + '|' + e.z;
@@ -2025,10 +2138,13 @@ class HudApp {
 
     _rebuildInner() {
         if (!this.client.ready) return; // the 'ready' handler calls us again
+        if (this.held) this._holdEnd('another change');
         this._guideHold(false);
+        const oldPx = this.pixelBytes;
         // the layout shown until now: its layers are dropped before the new ones are made (cluster-render's pixel
         // memory), all but an image sheet the new layout has again, pixel for pixel (_keepable, _createSheet)
-        const old = { refs: this._layerRefs(), sheets: this.sheets, plan: this.plan || [], states: this.layerStates };
+        const old = { refs: this._layerRefs(), sheets: this.sheets, plan: this.plan || [], states: this.layerStates, own: [], cut: !!this.cut };
+        this.widgets.forEach((x) => { if (!x.sheet && x.ref && x.c) old.own.push({ w: x.w, c: x.c, ci: x.ci, ref: x.ref }); });
         this.oldPending = old;
         if (!this.retrying) this.retries = 0;
         this.retrying = false;
@@ -2043,7 +2159,9 @@ class HudApp {
         clearTimeout(this.statusAskT); this.statusAskT = null;
         this.car.setRedline(this.setting('redline'));
         const name = this._layoutName(), before = this.activeName;
-        if (before && before !== name) this._guard('curtain', () => this._curtainUp());
+        const change = !!(before && before !== name);
+        // a change to "off" or to a layout that can't be made: the curtain as before (made or not below)
+        if (change && name === 'off') this._guard('curtain', () => this._curtainUp());
         this.activeName = name;
         this.mapLayout = false;
         this.mapAlways = false;
@@ -2061,6 +2179,7 @@ class HudApp {
         try { layout = this.layouts.load(name); } catch (e) {
             this.problem = e.message;
             this.log.warn('layout "' + name + '" unusable (' + e.message + '); showing nothing');
+            if (change) this._guard('curtain', () => this._curtainUp());
             this._dropOld(old, null);
             this._wazeWant();
             return;
@@ -2157,8 +2276,28 @@ class HudApp {
             waste = waste * 2 > 64 ? Infinity : waste * 2;
             plan = this._plan(shown, maxPx, waste);
         }
-        this.keep = this._keepable(old, plan);
-        this._dropOld(old, this.keep);
+        // the sheets' boxes the same whatever the Customise picks (0.37.0), so a pick keeps every layer (_steadySheets)
+        this._steadySheets(plan, layout.widgets.filter((w) => w.toggle && !this._toggleOn(w.toggle) && !(w.themes && w.themes.indexOf(this.themeName) < 0)));
+        // another theme: the old one held until the new one shows, if both fit; else the curtain over the change
+        const hold = change && this._canHold(old, plan, oldPx);
+        if (change && !hold) this._guard('curtain', () => this._curtainUp());
+        this.keep = hold ? new Map() : this._keepable(old, plan);
+        this.keepOwn = hold ? new Map() : this._keepableOwn(old, plan);
+        this.zLift = hold ? HOLD_Z : 0;
+        // the same theme again (a setting): a layer that goes without one in its place would show BMW's own cluster
+        // through the gap until the new one comes, so the curtain covers it
+        if (before === name && old.refs.length) {
+            const stay = {};
+            this.keep.forEach((s) => { stay[s.ci + ':' + s.ref] = true; });
+            this.keepOwn.forEach((o) => { stay[o.ci + ':' + o.ref] = true; });
+            const going = old.refs.filter((r) => !stay[r.key]).length;
+            if (going) { this.log.info('same theme again: ' + going + ' layer(s) go, the curtain over the change'); this._guard('curtain', () => this._curtainUp()); }
+        }
+        if (hold) {
+            this.held = { old, at: Date.now() };
+            this.oldPending = null;
+            this.log.info('holding "' + before + '" until "' + name + '" shows (' + old.refs.length + ' old layers, ' + mib(oldPx) + ' with the old)');
+        } else this._dropOld(old, Array.from(this.keep.values()).concat(Array.from(this.keepOwn.values())));
         this.kept = 0; this.keptBytes = 0;
         let effects = 0, own = 0, sheets = 0, bytes = 0, px = 0;
         plan.forEach((e) => {
@@ -2170,6 +2309,8 @@ class HudApp {
         });
         this.keep.forEach((s) => s.c.drop(s.ref));      // one the new layout didn't take after all
         this.keep = null;
+        this.keepOwn.forEach((o) => o.c.drop(o.ref));
+        this.keepOwn = null;
         this.plan = plan;
         pictures.keepOnly(shown.filter((w) => w.picture).map((w) => w.picture));   // only this layout's stay decoded
         bytes -= this.keptBytes;
@@ -2246,14 +2387,19 @@ class HudApp {
         s.buf = null;                    // from here on _blit sends dirty rects
         const k = sheetKey(s), was = this.keep ? this.keep.get(k) : null;
         let ref = 0;
+        let diff = null;
         if (was) {
             this.keep.delete(k);
             const l = was.c === c && c.layers ? c.layers.get(was.ref) : null;
-            if (l && l.image && l.image.length === buf.length && l.image.equals(buf)) ref = was.ref;
-            else was.c.drop(was.ref);    // the same place, other pixels: dropped before the new one is made
+            if (l && l.image && l.image.length === buf.length) {
+                // the same place: the layer stays; other pixels (a Customise pick) go up as the one rect that changed
+                // (0.37.0; before, the layer was dropped and made again, and BMW's own cluster showed in the gap)
+                ref = was.ref;
+                diff = changes(l.image, buf, s.w, s.h);
+            } else was.c.drop(was.ref);
         }
         const kept = ref !== 0;
-        if (!kept) ref = c.image({ target: this.target, klass: s.klass, z: s.z, x: s.x, y: s.y, w: s.w, h: s.h, iw: s.w, ih: s.h });
+        if (!kept) ref = c.image({ target: this.target, klass: s.klass, z: s.z + (this.zLift || 0), x: s.x, y: s.y, w: s.w, h: s.h, iw: s.w, ih: s.h });
         if (!ref) {
             this.log.warn('sheet ' + s.klass + '/' + s.z + ' at ' + s.x + ',' + s.y + ' ' + s.w + 'x' + s.h + ': layer refused');
             s.members.forEach((w) => { const x = this.widgets.get(w.id); if (x && x.sheet === s) this.widgets.delete(w.id); });
@@ -2265,8 +2411,9 @@ class HudApp {
         this.placed.push(s.placed);
         this.sheets.push(s);
         if (kept) {
-            this.kept++; this.keptBytes += buf.length;
+            this.kept++; this.keptBytes += buf.length - (diff ? diff.px.length : 0);
             if (was.keptState) this.layerStates.set(s.ci + ':' + ref, was.keptState);
+            if (diff) c.pixels(ref, [diff.rect], diff.px);
         } else c.pixels(ref, null, buf);
     }
 
@@ -2361,14 +2508,19 @@ class HudApp {
 
     /** A widget: on its own layer (sheet null: an effect, or an image widget with "own": true), or a member of a sheet. */
     _create(w, sheet) {
-        let ref, c;
+        let ref, c, keptOwn = false;
         if (sheet) { ref = sheet.ref; c = sheet.c; }
         else {
             c = this._clientAt(this._connOf(w));
-            const base = { target: this.target, klass: w.class || 'content', z: w.z || 0, x: w.x, y: w.y, w: w.w, h: w.h };
+            const base = { target: this.target, klass: w.class || 'content', z: (w.z || 0) + (this.zLift || 0), x: w.x, y: w.y, w: w.w, h: w.h };
             // a stretched picture: its own image size, drawn over the widget's rect
             const sp = w.type === 'picture' && w.stretch ? pictures.get(w.picture) : null;
-            if (IMAGE_TYPES[w.type]) ref = c.image(Object.assign({ iw: sp ? sp.w : w.w, ih: sp ? sp.h : w.h }, base));
+            // the layout before had this very layer (_keepableOwn): it stays, a picture's pixels with it
+            const ok = this.keepOwn ? this._ownKey(w, this._connOf(w), !!this.cut) : null, was = ok ? this.keepOwn.get(ok) : null;
+            if (was && was.c === c) {
+                this.keepOwn.delete(ok); ref = was.ref; keptOwn = true;
+                if (was.state) this.layerStates.set(was.ci + ':' + ref, was.state);
+            } else if (IMAGE_TYPES[w.type]) ref = c.image(Object.assign({ iw: sp ? sp.w : w.w, ih: sp ? sp.h : w.h }, base));
             else ref = c.effect(Object.assign({ fs: w.type === 'swatch' ? calibration.SWATCH : shaders[w.type] }, base));
             if (!ref) { this.log.warn('widget "' + w.id + '": layer refused'); return; }
             this.placed.push({ c, ref, x: w.x, y: w.y, w: w.w, h: w.h });
@@ -2397,7 +2549,7 @@ class HudApp {
                 // starts with nothing lit; _update lights what the value says
                 x.pic = p; x.lit = 0; x.value = null; x.t = 0; x.zoneSt = null; x.zoneInfo = null;
                 this._blit(x, null, Buffer.alloc(w.w * w.h * 4, 0));
-            } else this._blit(x, null, w.pixelShift ? shiftPixels(p.rgba, w.w, w.h, w.pixelShift) : p.rgba);
+            } else if (!keptOwn) this._blit(x, null, w.pixelShift ? shiftPixels(p.rgba, w.w, w.h, w.pixelShift) : p.rgba);
             if (w.type === 'needle') {
                 // the pivot, in px from the layer's top-left (the layout's, else the picture's own); the turn follows in _update
                 const pv = Array.isArray(w.pivot) ? w.pivot : [p.px, p.py];
@@ -2683,6 +2835,7 @@ class HudApp {
         this.flash = flashing ? Math.floor(now / 62.5) % 2 === 0 : false;
         this._guard('intro', () => this._introTick(now));
         if (this.curtain) this._guard('curtain', () => this._curtainTick(now));
+        if (this.held) this._guard('hold', () => this._holdTick(now));
         this.widgets.forEach((x) => this._guard('widget ' + x.w.id, () => this._update(x, now, false)));
         this._failsafe(now, false);
     }

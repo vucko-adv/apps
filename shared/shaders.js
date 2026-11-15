@@ -281,6 +281,29 @@ void main() {
 }
 `;
 
+const CURTAIN = `// The curtain between two themes (Zeiger 0.37.0), a cluster-render "effect" layer (GLSL ES 1.00): black at
+// u_alpha over the whole panel, and a thin line in the middle that fills from the left as the new theme's layers come
+// (u_p 0..1), so the wait reads as loading, not as a fault. u_size the layer in px, u_line the line's middle (x, y) and
+// its width and height in px.
+precision mediump float;
+varying vec2 v_uv;
+uniform vec2 u_size;
+uniform float u_alpha;
+uniform float u_p;
+uniform vec4 u_line;
+
+void main() {
+    vec2 p = vec2(v_uv.x * u_size.x, v_uv.y * u_size.y);
+    vec3 col = vec3(0.0);
+    vec2 d = abs(p - u_line.xy) - u_line.zw * 0.5;
+    if (d.x <= 0.0 && d.y <= 0.0) {
+        float t = (p.x - (u_line.x - u_line.z * 0.5)) / u_line.z;
+        col = t <= u_p ? vec3(0.78) : vec3(0.14);
+    }
+    gl_FragColor = vec4(col, u_alpha);
+}
+`;
+
 const BOX = `// Framed box for a cluster-render "effect" layer (GLSL ES 1.00), the race-dash readout box: a rounded
 // frame u_border px wide in u_line, filled u_fill, with a header strip u_headH px tall in u_head across the
 // top (0 = none). Colours rgba, straight alpha. u_size, u_border, u_headH, u_radius in px.
@@ -1332,4 +1355,4 @@ void main() {
 }
 `;
 
-module.exports = { bandflash: BANDFLASH, shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, dial: DIAL, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES };
+module.exports = { curtain: CURTAIN, bandflash: BANDFLASH, shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, dial: DIAL, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES };

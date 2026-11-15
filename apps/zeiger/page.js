@@ -147,6 +147,10 @@ function authorPhoto() {
 // (each its own image, so the renderer keeps its copy too) and the neighbours are sent ahead (gallery()): a swipe shows
 // a picture already there, without decoding and sending 2 MB first. The one used longest ago gives up its slot.
 const HERO_IDS = 0x5a5f0000, HERO_SLOTS = 4;
+// a swipe (or a tap beside the card) slides the next card in from that side and fades it up (0.37.0), so the finger
+// sees at once that it did something; its neighbours' pictures are sent ahead PRELOAD_MS after it lands, and the one
+// after next in the swipe's direction too
+const SLIDE_MS = 260, SLIDE_PX = 170, PRELOAD_MS = 300;
 const heroes = [], noHero = new Set();
 function hero(name) {
     if (name === 'off' || noHero.has(name)) return null;
@@ -310,12 +314,17 @@ class Page {
             const back = this.prev[key];
             this.at = looks.indexOf(cur) >= 0 ? cur : looks.indexOf(back) >= 0 ? back : looks[0]; this.atFor = key;
         }
-        const i = looks.indexOf(this.at), go = (d) => () => { this.at = looks[(i + d + looks.length) % looks.length]; this.kick(); };
+        const i = looks.indexOf(this.at), go = (d) => () => {
+            this.at = looks[(i + d + looks.length) % looks.length];
+            this.slide = { d, to: this.at, t: Date.now() };
+            this.kick();
+        };
         this.goBy = (d) => go(d)();
         // landed on a theme: its neighbours' big pictures sent ahead a moment later (drawn off the page, 1 px)
-        if (this.atWas !== this.at) { this.atWas = this.at; this.atSince = Date.now(); setTimeout(() => this.kick(), 700); }
+        if (this.atWas !== this.at) { this.atWas = this.at; this.atSince = Date.now(); setTimeout(() => this.kick(), PRELOAD_MS + 50); }
         // the big card and its neighbours
-        const ch = Math.min(440, bottom - 48 - 104), cw = Math.round(ch * 8 / 3), cx = (W - cw) / 2, cy = 48;
+        const ch = Math.min(440, bottom - 48 - 104), cw = Math.round(ch * 8 / 3), cy = 48;
+        let cx = (W - cw) / 2;
         const sh = Math.round(ch * 0.8), sw = Math.round(sh * 8 / 3), sy = cy + (ch - sh) / 2;
         const side = (v, x, d) => {
             cv.clip(L, sy, R - L, sh);
@@ -325,8 +334,21 @@ class Page {
         };
         side(looks[(i - 1 + looks.length) % looks.length], cx - 24 - sw, -1);
         side(looks[(i + 1) % looks.length], cx + cw + 24, 1);
-        if (Date.now() - this.atSince >= 650) {
-            [looks[(i - 1 + looks.length) % looks.length], looks[(i + 1) % looks.length]].forEach((v) => { const h = hero(v); if (h) cv.image(h.id, -8, -8, 1, 1); });
+        if (Date.now() - this.atSince >= PRELOAD_MS) {
+            const ahead = this.slide && this.slide.to === this.at ? [looks[(i + 2 * this.slide.d + 2 * looks.length) % looks.length]] : [];
+            [looks[(i - 1 + looks.length) % looks.length], looks[(i + 1) % looks.length]].concat(ahead).forEach((v) => { const h = hero(v); if (h) cv.image(h.id, -8, -8, 1, 1); });
+        }
+        // the slide: the card comes in from the side it was swiped from, easing out, and fades up
+        const sp = this.slide && this.slide.to === this.at ? (Date.now() - this.slide.t) / SLIDE_MS : 1;
+        const cx0 = cx;
+        let fade = 1;
+        if (sp < 1) {
+            const k = 1 - Math.pow(1 - Math.max(0, sp), 3);
+            cx += Math.round(this.slide.d * (1 - k) * SLIDE_PX);
+            fade = 0.3 + 0.7 * k;
+            setTimeout(() => this.kick(), 16);
+            cv.clip(L, cy - 4, R - L, ch + 8);
+            if (cv.alpha) cv.alpha(fade);
         }
         this.picture(cv, this.at, 'hero', cx, cy, cw, ch);
         cv.gradientRect(cx, cy + ch - 170, cw, 170, [[0, A('#000000', 0)], [0.5, A('#000000', 0.78)], [1, A('#000000', 0.94)]]);
@@ -365,6 +387,8 @@ class Page {
             cv.text(s, bx + bw / 2, by + 34, 23, '#ffffff', { font: B, align: 'center', literal: true });
             cv.target(bx, by, bw, 52, () => this.use(this.at), 'use', 26);
         }
+        if (fade < 1) { if (cv.alpha) cv.alpha(1); cv.noclip(); }
+        cx = cx0;
         // plain arrows at the screen's edges; the taps are the whole left and right half (added last: the buttons win)
         arrow(cv, L + 26, cy + ch / 2, -1); arrow(cv, R - 26, cy + ch / 2, 1);
         // a dot per theme
