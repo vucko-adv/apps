@@ -90,8 +90,8 @@ const GROUPS = [
 // Customise (Zeiger 0.34.0): the themes whose places can show other things, the setting prefix and the rows (the
 // setting key's ending, label, the line under it); the layouts show a widget for its pick ("toggle": "<key>=<value>")
 const CUSTOM = {
-    apex: { key: 'apex', rows: [['Mid', 'Bottom middle', 'where the clock is'], ['Big', 'Big number', 'in the middle']] },
-    apex_sport: { key: 'apexSport', rows: [['Mid', 'Bottom middle', 'where the clock is'], ['Big', 'Big number', 'in the middle']] },
+    apex: { key: 'apex', rows: [['Big', 'Big number', 'in the middle'], ['Top', 'Upper bar', 'left of the speed'], ['Low', 'Lower bar', 'under it'], ['Mid', 'Bottom middle', 'where the clock is']] },
+    apex_sport: { key: 'apexSport', rows: [['Big', 'Big number', 'in the middle'], ['Top', 'Upper bar', 'left of the speed'], ['Low', 'Lower bar', 'under it'], ['Mid', 'Bottom middle', 'where the clock is']] },
 };
 // the slot watch (BMW's cluster group): while it is on, the group shows only its switch, the rest is the watch
 const WATCH_ROW = 64, WATCH_LH = 22;

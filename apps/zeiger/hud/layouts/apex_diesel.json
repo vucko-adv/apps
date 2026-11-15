@@ -60,37 +60,37 @@
   {
    "id": "face4",
    "type": "picture",
-   "picture": "apex_face4",
+   "picture": "apex_diesel_face4",
    "own": false,
    "class": "content",
    "z": 4,
-   "x": 342,
-   "y": 327,
-   "w": 290,
-   "h": 124
-  },
-  {
-   "id": "face5",
-   "type": "picture",
-   "picture": "apex_face5",
-   "own": false,
-   "class": "content",
-   "z": 5,
    "x": 1198,
    "y": 461,
    "w": 289,
    "h": 2
   },
   {
+   "id": "face5",
+   "type": "picture",
+   "picture": "apex_diesel_face5",
+   "own": false,
+   "class": "content",
+   "z": 5,
+   "x": 294,
+   "y": 497,
+   "w": 906,
+   "h": 62
+  },
+  {
    "id": "face6",
    "type": "picture",
-   "picture": "apex_face6",
+   "picture": "apex_diesel_face6",
    "own": false,
    "class": "content",
    "z": 6,
-   "x": 294,
+   "x": 1200,
    "y": 497,
-   "w": 1332,
+   "w": 426,
    "h": 62
   },
   {
@@ -3223,13 +3223,45 @@
    ]
   },
   {
-   "id": "boost_bar",
+   "id": "top_track16",
+   "type": "picture",
+   "picture": "apex_top_track16",
+   "own": false,
+   "toggle": [
+    "!apexTop=none",
+    "!apexTop=brake"
+   ],
+   "class": "content",
+   "z": 11,
+   "conn": 1,
+   "x": 334,
+   "y": 343,
+   "w": 304,
+   "h": 28
+  },
+  {
+   "id": "top_track12",
+   "type": "picture",
+   "picture": "apex_top_track12",
+   "own": false,
+   "toggle": "apexTop=brake",
+   "class": "content",
+   "z": 11,
+   "conn": 1,
+   "x": 334,
+   "y": 343,
+   "w": 304,
+   "h": 28
+  },
+  {
+   "id": "top_boost_bar",
    "type": "segments",
    "own": false,
-   "picture": "apex_boost",
+   "picture": "apex_top_boost",
    "measure": "boost",
+   "toggle": "apexTop=boost",
    "class": "content",
-   "z": 12,
+   "z": 13,
    "conn": 1,
    "x": 334,
    "y": 343,
@@ -3353,13 +3385,934 @@
    ]
   },
   {
-   "id": "brake_bar",
+   "id": "top_brake_bar",
    "type": "segments",
    "own": false,
-   "picture": "apex_brake",
+   "picture": "apex_top_brake",
    "measure": "brakeG",
+   "toggle": "apexTop=brake",
    "class": "content",
-   "z": 12,
+   "z": 13,
+   "conn": 1,
+   "x": 334,
+   "y": 343,
+   "w": 304,
+   "h": 28,
+   "segs": [
+    [
+     0,
+     0,
+     32,
+     28
+    ],
+    [
+     32,
+     0,
+     24,
+     28
+    ],
+    [
+     56,
+     0,
+     24,
+     28
+    ],
+    [
+     80,
+     0,
+     24,
+     28
+    ],
+    [
+     104,
+     0,
+     24,
+     28
+    ],
+    [
+     128,
+     0,
+     24,
+     28
+    ],
+    [
+     152,
+     0,
+     24,
+     28
+    ],
+    [
+     176,
+     0,
+     24,
+     28
+    ],
+    [
+     200,
+     0,
+     24,
+     28
+    ],
+    [
+     224,
+     0,
+     24,
+     28
+    ],
+    [
+     248,
+     0,
+     24,
+     28
+    ],
+    [
+     272,
+     0,
+     32,
+     28
+    ]
+   ],
+   "steps": [
+    0.05,
+    0.15,
+    0.25,
+    0.35,
+    0.45,
+    0.55,
+    0.65,
+    0.75,
+    0.85,
+    0.95,
+    1.05,
+    1.15
+   ]
+  },
+  {
+   "id": "top_oil_bar",
+   "type": "segments",
+   "own": false,
+   "picture": "apex_top_oil",
+   "measure": "oil",
+   "toggle": "apexTop=oil",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "x": 334,
+   "y": 343,
+   "w": 304,
+   "h": 28,
+   "segs": [
+    [
+     0,
+     0,
+     26,
+     28
+    ],
+    [
+     26,
+     0,
+     18,
+     28
+    ],
+    [
+     44,
+     0,
+     18,
+     28
+    ],
+    [
+     62,
+     0,
+     18,
+     28
+    ],
+    [
+     80,
+     0,
+     18,
+     28
+    ],
+    [
+     98,
+     0,
+     18,
+     28
+    ],
+    [
+     116,
+     0,
+     18,
+     28
+    ],
+    [
+     134,
+     0,
+     18,
+     28
+    ],
+    [
+     152,
+     0,
+     18,
+     28
+    ],
+    [
+     170,
+     0,
+     18,
+     28
+    ],
+    [
+     188,
+     0,
+     18,
+     28
+    ],
+    [
+     206,
+     0,
+     18,
+     28
+    ],
+    [
+     224,
+     0,
+     18,
+     28
+    ],
+    [
+     242,
+     0,
+     18,
+     28
+    ],
+    [
+     260,
+     0,
+     18,
+     28
+    ],
+    [
+     278,
+     0,
+     26,
+     28
+    ]
+   ],
+   "steps": [
+    43.438,
+    50.313,
+    57.188,
+    64.063,
+    70.938,
+    77.813,
+    84.688,
+    91.563,
+    98.438,
+    105.313,
+    112.188,
+    119.063,
+    125.938,
+    132.813,
+    139.688,
+    146.563
+   ]
+  },
+  {
+   "id": "top_coolant_bar",
+   "type": "segments",
+   "own": false,
+   "picture": "apex_top_coolant",
+   "measure": "coolant",
+   "toggle": "apexTop=coolant",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "x": 334,
+   "y": 343,
+   "w": 304,
+   "h": 28,
+   "segs": [
+    [
+     0,
+     0,
+     26,
+     28
+    ],
+    [
+     26,
+     0,
+     18,
+     28
+    ],
+    [
+     44,
+     0,
+     18,
+     28
+    ],
+    [
+     62,
+     0,
+     18,
+     28
+    ],
+    [
+     80,
+     0,
+     18,
+     28
+    ],
+    [
+     98,
+     0,
+     18,
+     28
+    ],
+    [
+     116,
+     0,
+     18,
+     28
+    ],
+    [
+     134,
+     0,
+     18,
+     28
+    ],
+    [
+     152,
+     0,
+     18,
+     28
+    ],
+    [
+     170,
+     0,
+     18,
+     28
+    ],
+    [
+     188,
+     0,
+     18,
+     28
+    ],
+    [
+     206,
+     0,
+     18,
+     28
+    ],
+    [
+     224,
+     0,
+     18,
+     28
+    ],
+    [
+     242,
+     0,
+     18,
+     28
+    ],
+    [
+     260,
+     0,
+     18,
+     28
+    ],
+    [
+     278,
+     0,
+     26,
+     28
+    ]
+   ],
+   "steps": [
+    42.813,
+    48.438,
+    54.063,
+    59.688,
+    65.313,
+    70.938,
+    76.563,
+    82.188,
+    87.813,
+    93.438,
+    99.063,
+    104.688,
+    110.313,
+    115.938,
+    121.563,
+    127.188
+   ]
+  },
+  {
+   "id": "top_intake_bar",
+   "type": "segments",
+   "own": false,
+   "picture": "apex_top_intake",
+   "measure": "intake",
+   "toggle": "apexTop=intake",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "x": 334,
+   "y": 343,
+   "w": 304,
+   "h": 28,
+   "segs": [
+    [
+     0,
+     0,
+     26,
+     28
+    ],
+    [
+     26,
+     0,
+     18,
+     28
+    ],
+    [
+     44,
+     0,
+     18,
+     28
+    ],
+    [
+     62,
+     0,
+     18,
+     28
+    ],
+    [
+     80,
+     0,
+     18,
+     28
+    ],
+    [
+     98,
+     0,
+     18,
+     28
+    ],
+    [
+     116,
+     0,
+     18,
+     28
+    ],
+    [
+     134,
+     0,
+     18,
+     28
+    ],
+    [
+     152,
+     0,
+     18,
+     28
+    ],
+    [
+     170,
+     0,
+     18,
+     28
+    ],
+    [
+     188,
+     0,
+     18,
+     28
+    ],
+    [
+     206,
+     0,
+     18,
+     28
+    ],
+    [
+     224,
+     0,
+     18,
+     28
+    ],
+    [
+     242,
+     0,
+     18,
+     28
+    ],
+    [
+     260,
+     0,
+     18,
+     28
+    ],
+    [
+     278,
+     0,
+     26,
+     28
+    ]
+   ],
+   "steps": [
+    2.5,
+    7.5,
+    12.5,
+    17.5,
+    22.5,
+    27.5,
+    32.5,
+    37.5,
+    42.5,
+    47.5,
+    52.5,
+    57.5,
+    62.5,
+    67.5,
+    72.5,
+    77.5
+   ]
+  },
+  {
+   "id": "top_torque_bar",
+   "type": "segments",
+   "own": false,
+   "picture": "apex_top_torque",
+   "measure": "torquePct",
+   "toggle": "apexTop=torque",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "x": 334,
+   "y": 343,
+   "w": 304,
+   "h": 28,
+   "segs": [
+    [
+     0,
+     0,
+     26,
+     28
+    ],
+    [
+     26,
+     0,
+     18,
+     28
+    ],
+    [
+     44,
+     0,
+     18,
+     28
+    ],
+    [
+     62,
+     0,
+     18,
+     28
+    ],
+    [
+     80,
+     0,
+     18,
+     28
+    ],
+    [
+     98,
+     0,
+     18,
+     28
+    ],
+    [
+     116,
+     0,
+     18,
+     28
+    ],
+    [
+     134,
+     0,
+     18,
+     28
+    ],
+    [
+     152,
+     0,
+     18,
+     28
+    ],
+    [
+     170,
+     0,
+     18,
+     28
+    ],
+    [
+     188,
+     0,
+     18,
+     28
+    ],
+    [
+     206,
+     0,
+     18,
+     28
+    ],
+    [
+     224,
+     0,
+     18,
+     28
+    ],
+    [
+     242,
+     0,
+     18,
+     28
+    ],
+    [
+     260,
+     0,
+     18,
+     28
+    ],
+    [
+     278,
+     0,
+     26,
+     28
+    ]
+   ],
+   "steps": [
+    3.125,
+    9.375,
+    15.625,
+    21.875,
+    28.125,
+    34.375,
+    40.625,
+    46.875,
+    53.125,
+    59.375,
+    65.625,
+    71.875,
+    78.125,
+    84.375,
+    90.625,
+    96.875
+   ]
+  },
+  {
+   "id": "top_power_bar",
+   "type": "segments",
+   "own": false,
+   "picture": "apex_top_power",
+   "measure": "powerPct",
+   "toggle": "apexTop=power",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "x": 334,
+   "y": 343,
+   "w": 304,
+   "h": 28,
+   "segs": [
+    [
+     0,
+     0,
+     26,
+     28
+    ],
+    [
+     26,
+     0,
+     18,
+     28
+    ],
+    [
+     44,
+     0,
+     18,
+     28
+    ],
+    [
+     62,
+     0,
+     18,
+     28
+    ],
+    [
+     80,
+     0,
+     18,
+     28
+    ],
+    [
+     98,
+     0,
+     18,
+     28
+    ],
+    [
+     116,
+     0,
+     18,
+     28
+    ],
+    [
+     134,
+     0,
+     18,
+     28
+    ],
+    [
+     152,
+     0,
+     18,
+     28
+    ],
+    [
+     170,
+     0,
+     18,
+     28
+    ],
+    [
+     188,
+     0,
+     18,
+     28
+    ],
+    [
+     206,
+     0,
+     18,
+     28
+    ],
+    [
+     224,
+     0,
+     18,
+     28
+    ],
+    [
+     242,
+     0,
+     18,
+     28
+    ],
+    [
+     260,
+     0,
+     18,
+     28
+    ],
+    [
+     278,
+     0,
+     26,
+     28
+    ]
+   ],
+   "steps": [
+    3.125,
+    9.375,
+    15.625,
+    21.875,
+    28.125,
+    34.375,
+    40.625,
+    46.875,
+    53.125,
+    59.375,
+    65.625,
+    71.875,
+    78.125,
+    84.375,
+    90.625,
+    96.875
+   ]
+  },
+  {
+   "id": "low_track16",
+   "type": "picture",
+   "picture": "apex_low_track16",
+   "own": false,
+   "toggle": [
+    "!apexLow=none",
+    "!apexLow=brake"
+   ],
+   "class": "content",
+   "z": 11,
+   "conn": 1,
+   "x": 334,
+   "y": 431,
+   "w": 304,
+   "h": 28
+  },
+  {
+   "id": "low_track12",
+   "type": "picture",
+   "picture": "apex_low_track12",
+   "own": false,
+   "toggle": "apexLow=brake",
+   "class": "content",
+   "z": 11,
+   "conn": 1,
+   "x": 334,
+   "y": 431,
+   "w": 304,
+   "h": 28
+  },
+  {
+   "id": "low_boost_bar",
+   "type": "segments",
+   "own": false,
+   "picture": "apex_low_boost",
+   "measure": "boost",
+   "toggle": "apexLow=boost",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "x": 334,
+   "y": 431,
+   "w": 304,
+   "h": 28,
+   "segs": [
+    [
+     0,
+     0,
+     26,
+     28
+    ],
+    [
+     26,
+     0,
+     18,
+     28
+    ],
+    [
+     44,
+     0,
+     18,
+     28
+    ],
+    [
+     62,
+     0,
+     18,
+     28
+    ],
+    [
+     80,
+     0,
+     18,
+     28
+    ],
+    [
+     98,
+     0,
+     18,
+     28
+    ],
+    [
+     116,
+     0,
+     18,
+     28
+    ],
+    [
+     134,
+     0,
+     18,
+     28
+    ],
+    [
+     152,
+     0,
+     18,
+     28
+    ],
+    [
+     170,
+     0,
+     18,
+     28
+    ],
+    [
+     188,
+     0,
+     18,
+     28
+    ],
+    [
+     206,
+     0,
+     18,
+     28
+    ],
+    [
+     224,
+     0,
+     18,
+     28
+    ],
+    [
+     242,
+     0,
+     18,
+     28
+    ],
+    [
+     260,
+     0,
+     18,
+     28
+    ],
+    [
+     278,
+     0,
+     26,
+     28
+    ]
+   ],
+   "steps": [
+    0.05,
+    0.15,
+    0.25,
+    0.35,
+    0.45,
+    0.55,
+    0.65,
+    0.75,
+    0.85,
+    0.95,
+    1.05,
+    1.15,
+    1.25,
+    1.35,
+    1.45,
+    1.55
+   ]
+  },
+  {
+   "id": "low_brake_bar",
+   "type": "segments",
+   "own": false,
+   "picture": "apex_low_brake",
+   "measure": "brakeG",
+   "toggle": "apexLow=brake",
+   "class": "content",
+   "z": 13,
    "conn": 1,
    "x": 334,
    "y": 431,
@@ -3455,13 +4408,668 @@
    ]
   },
   {
+   "id": "low_oil_bar",
+   "type": "segments",
+   "own": false,
+   "picture": "apex_low_oil",
+   "measure": "oil",
+   "toggle": "apexLow=oil",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "x": 334,
+   "y": 431,
+   "w": 304,
+   "h": 28,
+   "segs": [
+    [
+     0,
+     0,
+     26,
+     28
+    ],
+    [
+     26,
+     0,
+     18,
+     28
+    ],
+    [
+     44,
+     0,
+     18,
+     28
+    ],
+    [
+     62,
+     0,
+     18,
+     28
+    ],
+    [
+     80,
+     0,
+     18,
+     28
+    ],
+    [
+     98,
+     0,
+     18,
+     28
+    ],
+    [
+     116,
+     0,
+     18,
+     28
+    ],
+    [
+     134,
+     0,
+     18,
+     28
+    ],
+    [
+     152,
+     0,
+     18,
+     28
+    ],
+    [
+     170,
+     0,
+     18,
+     28
+    ],
+    [
+     188,
+     0,
+     18,
+     28
+    ],
+    [
+     206,
+     0,
+     18,
+     28
+    ],
+    [
+     224,
+     0,
+     18,
+     28
+    ],
+    [
+     242,
+     0,
+     18,
+     28
+    ],
+    [
+     260,
+     0,
+     18,
+     28
+    ],
+    [
+     278,
+     0,
+     26,
+     28
+    ]
+   ],
+   "steps": [
+    43.438,
+    50.313,
+    57.188,
+    64.063,
+    70.938,
+    77.813,
+    84.688,
+    91.563,
+    98.438,
+    105.313,
+    112.188,
+    119.063,
+    125.938,
+    132.813,
+    139.688,
+    146.563
+   ]
+  },
+  {
+   "id": "low_coolant_bar",
+   "type": "segments",
+   "own": false,
+   "picture": "apex_low_coolant",
+   "measure": "coolant",
+   "toggle": "apexLow=coolant",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "x": 334,
+   "y": 431,
+   "w": 304,
+   "h": 28,
+   "segs": [
+    [
+     0,
+     0,
+     26,
+     28
+    ],
+    [
+     26,
+     0,
+     18,
+     28
+    ],
+    [
+     44,
+     0,
+     18,
+     28
+    ],
+    [
+     62,
+     0,
+     18,
+     28
+    ],
+    [
+     80,
+     0,
+     18,
+     28
+    ],
+    [
+     98,
+     0,
+     18,
+     28
+    ],
+    [
+     116,
+     0,
+     18,
+     28
+    ],
+    [
+     134,
+     0,
+     18,
+     28
+    ],
+    [
+     152,
+     0,
+     18,
+     28
+    ],
+    [
+     170,
+     0,
+     18,
+     28
+    ],
+    [
+     188,
+     0,
+     18,
+     28
+    ],
+    [
+     206,
+     0,
+     18,
+     28
+    ],
+    [
+     224,
+     0,
+     18,
+     28
+    ],
+    [
+     242,
+     0,
+     18,
+     28
+    ],
+    [
+     260,
+     0,
+     18,
+     28
+    ],
+    [
+     278,
+     0,
+     26,
+     28
+    ]
+   ],
+   "steps": [
+    42.813,
+    48.438,
+    54.063,
+    59.688,
+    65.313,
+    70.938,
+    76.563,
+    82.188,
+    87.813,
+    93.438,
+    99.063,
+    104.688,
+    110.313,
+    115.938,
+    121.563,
+    127.188
+   ]
+  },
+  {
+   "id": "low_intake_bar",
+   "type": "segments",
+   "own": false,
+   "picture": "apex_low_intake",
+   "measure": "intake",
+   "toggle": "apexLow=intake",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "x": 334,
+   "y": 431,
+   "w": 304,
+   "h": 28,
+   "segs": [
+    [
+     0,
+     0,
+     26,
+     28
+    ],
+    [
+     26,
+     0,
+     18,
+     28
+    ],
+    [
+     44,
+     0,
+     18,
+     28
+    ],
+    [
+     62,
+     0,
+     18,
+     28
+    ],
+    [
+     80,
+     0,
+     18,
+     28
+    ],
+    [
+     98,
+     0,
+     18,
+     28
+    ],
+    [
+     116,
+     0,
+     18,
+     28
+    ],
+    [
+     134,
+     0,
+     18,
+     28
+    ],
+    [
+     152,
+     0,
+     18,
+     28
+    ],
+    [
+     170,
+     0,
+     18,
+     28
+    ],
+    [
+     188,
+     0,
+     18,
+     28
+    ],
+    [
+     206,
+     0,
+     18,
+     28
+    ],
+    [
+     224,
+     0,
+     18,
+     28
+    ],
+    [
+     242,
+     0,
+     18,
+     28
+    ],
+    [
+     260,
+     0,
+     18,
+     28
+    ],
+    [
+     278,
+     0,
+     26,
+     28
+    ]
+   ],
+   "steps": [
+    2.5,
+    7.5,
+    12.5,
+    17.5,
+    22.5,
+    27.5,
+    32.5,
+    37.5,
+    42.5,
+    47.5,
+    52.5,
+    57.5,
+    62.5,
+    67.5,
+    72.5,
+    77.5
+   ]
+  },
+  {
+   "id": "low_torque_bar",
+   "type": "segments",
+   "own": false,
+   "picture": "apex_low_torque",
+   "measure": "torquePct",
+   "toggle": "apexLow=torque",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "x": 334,
+   "y": 431,
+   "w": 304,
+   "h": 28,
+   "segs": [
+    [
+     0,
+     0,
+     26,
+     28
+    ],
+    [
+     26,
+     0,
+     18,
+     28
+    ],
+    [
+     44,
+     0,
+     18,
+     28
+    ],
+    [
+     62,
+     0,
+     18,
+     28
+    ],
+    [
+     80,
+     0,
+     18,
+     28
+    ],
+    [
+     98,
+     0,
+     18,
+     28
+    ],
+    [
+     116,
+     0,
+     18,
+     28
+    ],
+    [
+     134,
+     0,
+     18,
+     28
+    ],
+    [
+     152,
+     0,
+     18,
+     28
+    ],
+    [
+     170,
+     0,
+     18,
+     28
+    ],
+    [
+     188,
+     0,
+     18,
+     28
+    ],
+    [
+     206,
+     0,
+     18,
+     28
+    ],
+    [
+     224,
+     0,
+     18,
+     28
+    ],
+    [
+     242,
+     0,
+     18,
+     28
+    ],
+    [
+     260,
+     0,
+     18,
+     28
+    ],
+    [
+     278,
+     0,
+     26,
+     28
+    ]
+   ],
+   "steps": [
+    3.125,
+    9.375,
+    15.625,
+    21.875,
+    28.125,
+    34.375,
+    40.625,
+    46.875,
+    53.125,
+    59.375,
+    65.625,
+    71.875,
+    78.125,
+    84.375,
+    90.625,
+    96.875
+   ]
+  },
+  {
+   "id": "low_power_bar",
+   "type": "segments",
+   "own": false,
+   "picture": "apex_low_power",
+   "measure": "powerPct",
+   "toggle": "apexLow=power",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "x": 334,
+   "y": 431,
+   "w": 304,
+   "h": 28,
+   "segs": [
+    [
+     0,
+     0,
+     26,
+     28
+    ],
+    [
+     26,
+     0,
+     18,
+     28
+    ],
+    [
+     44,
+     0,
+     18,
+     28
+    ],
+    [
+     62,
+     0,
+     18,
+     28
+    ],
+    [
+     80,
+     0,
+     18,
+     28
+    ],
+    [
+     98,
+     0,
+     18,
+     28
+    ],
+    [
+     116,
+     0,
+     18,
+     28
+    ],
+    [
+     134,
+     0,
+     18,
+     28
+    ],
+    [
+     152,
+     0,
+     18,
+     28
+    ],
+    [
+     170,
+     0,
+     18,
+     28
+    ],
+    [
+     188,
+     0,
+     18,
+     28
+    ],
+    [
+     206,
+     0,
+     18,
+     28
+    ],
+    [
+     224,
+     0,
+     18,
+     28
+    ],
+    [
+     242,
+     0,
+     18,
+     28
+    ],
+    [
+     260,
+     0,
+     18,
+     28
+    ],
+    [
+     278,
+     0,
+     26,
+     28
+    ]
+   ],
+   "steps": [
+    3.125,
+    9.375,
+    15.625,
+    21.875,
+    28.125,
+    34.375,
+    40.625,
+    46.875,
+    53.125,
+    59.375,
+    65.625,
+    71.875,
+    78.125,
+    84.375,
+    90.625,
+    96.875
+   ]
+  },
+  {
    "id": "coolant_bar",
    "type": "segments",
    "own": false,
    "picture": "apex_coolant",
    "measure": "coolant",
    "class": "content",
-   "z": 13,
+   "z": 14,
    "conn": 1,
    "x": 190,
    "y": 620,
@@ -4529,7 +6137,7 @@
    "picture": "apex_fuel",
    "measure": "fuel",
    "class": "content",
-   "z": 13,
+   "z": 14,
    "conn": 1,
    "x": 1430,
    "y": 620,
@@ -5594,7 +7202,7 @@
    "id": "speed",
    "type": "text",
    "class": "content",
-   "z": 11,
+   "z": 12,
    "conn": 1,
    "text": "{{speed}}",
    "font": "apex_speed",
@@ -5610,7 +7218,7 @@
    "id": "unit",
    "type": "text",
    "class": "content",
-   "z": 11,
+   "z": 12,
    "conn": 1,
    "text": "{{u:speedLc}}",
    "font": "apex_kmh",
@@ -5626,7 +7234,7 @@
    "id": "rpm_big",
    "type": "text",
    "class": "content",
-   "z": 11,
+   "z": 12,
    "conn": 1,
    "text": "{{rpm}}",
    "font": "apex_speed",
@@ -5642,7 +7250,7 @@
    "id": "rpm_unit",
    "type": "text",
    "class": "content",
-   "z": 11,
+   "z": 12,
    "conn": 1,
    "text": "rpm",
    "font": "apex_kmh",
@@ -5658,7 +7266,7 @@
    "id": "gear",
    "type": "text",
    "class": "content",
-   "z": 11,
+   "z": 12,
    "conn": 1,
    "text": "{{gearnum}}",
    "font": "apex_gear",
@@ -5673,7 +7281,7 @@
    "id": "sel_P",
    "type": "text",
    "class": "content",
-   "z": 11,
+   "z": 12,
    "conn": 1,
    "text": "{{is:stage:P}}",
    "font": "apex_sel_on",
@@ -5688,7 +7296,7 @@
    "id": "sel_off_P",
    "type": "text",
    "class": "content",
-   "z": 14,
+   "z": 15,
    "conn": 1,
    "text": "{{isnt:stage:P}}",
    "font": "apex_sel_off",
@@ -5703,7 +7311,7 @@
    "id": "sel_R",
    "type": "text",
    "class": "content",
-   "z": 11,
+   "z": 12,
    "conn": 1,
    "text": "{{is:stage:R}}",
    "font": "apex_sel_on",
@@ -5718,7 +7326,7 @@
    "id": "sel_off_R",
    "type": "text",
    "class": "content",
-   "z": 14,
+   "z": 15,
    "conn": 1,
    "text": "{{isnt:stage:R}}",
    "font": "apex_sel_off",
@@ -5733,7 +7341,7 @@
    "id": "sel_N",
    "type": "text",
    "class": "content",
-   "z": 11,
+   "z": 12,
    "conn": 1,
    "text": "{{is:stage:N}}",
    "font": "apex_sel_on",
@@ -5748,7 +7356,7 @@
    "id": "sel_off_N",
    "type": "text",
    "class": "content",
-   "z": 14,
+   "z": 15,
    "conn": 1,
    "text": "{{isnt:stage:N}}",
    "font": "apex_sel_off",
@@ -5763,7 +7371,7 @@
    "id": "sel_D",
    "type": "text",
    "class": "content",
-   "z": 11,
+   "z": 12,
    "conn": 1,
    "text": "{{is:stage:D}}{{is:stage:S}}",
    "font": "apex_sel_on",
@@ -5778,7 +7386,7 @@
    "id": "sel_off_D",
    "type": "text",
    "class": "content",
-   "z": 14,
+   "z": 15,
    "conn": 1,
    "text": "{{isnt:stage:D:S}}",
    "font": "apex_sel_off",
@@ -5793,7 +7401,7 @@
    "id": "sel_M",
    "type": "text",
    "class": "content",
-   "z": 11,
+   "z": 12,
    "conn": 1,
    "text": "{{is:stage:M}}",
    "font": "apex_sel_on",
@@ -5808,7 +7416,7 @@
    "id": "sel_off_M",
    "type": "text",
    "class": "content",
-   "z": 14,
+   "z": 15,
    "conn": 1,
    "text": "{{isnt:stage:M}}",
    "font": "apex_sel_off",
@@ -5820,10 +7428,26 @@
    "h": 23
   },
   {
-   "id": "boost",
+   "id": "top_boost_label",
    "type": "text",
    "class": "content",
-   "z": 12,
+   "z": 13,
+   "conn": 1,
+   "text": "BOOST",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 342,
+   "y": 324,
+   "w": 82,
+   "h": 17,
+   "toggle": "apexTop=boost"
+  },
+  {
+   "id": "top_boost_val",
+   "type": "text",
+   "class": "content",
+   "z": 13,
    "conn": 1,
    "text": "{{boost}}",
    "font": "apex_val",
@@ -5832,28 +7456,382 @@
    "x": 484,
    "y": 313,
    "w": 114,
-   "h": 29
+   "h": 29,
+   "toggle": "apexTop=boost"
   },
   {
-   "id": "boost_unit",
+   "id": "top_boost_unit",
    "type": "text",
    "class": "content",
-   "z": 12,
+   "z": 13,
    "conn": 1,
    "text": "{{u:pressure}}",
    "font": "apex_unit",
    "color": "dim",
    "align": "right",
    "x": 599,
-   "y": 320,
-   "w": 34,
-   "h": 23
+   "y": 317,
+   "w": 35,
+   "h": 26,
+   "toggle": "apexTop=boost"
   },
   {
-   "id": "brake",
+   "id": "top_brake_label",
    "type": "text",
    "class": "content",
-   "z": 12,
+   "z": 13,
+   "conn": 1,
+   "text": "BRAKE",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 342,
+   "y": 324,
+   "w": 80,
+   "h": 17,
+   "toggle": "apexTop=brake"
+  },
+  {
+   "id": "top_brake_val",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{brakeG}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 517,
+   "y": 313,
+   "w": 99,
+   "h": 29,
+   "toggle": "apexTop=brake"
+  },
+  {
+   "id": "top_brake_unit",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "g",
+   "font": "apex_unit",
+   "color": "dim",
+   "align": "right",
+   "x": 617,
+   "y": 317,
+   "w": 17,
+   "h": 26,
+   "toggle": "apexTop=brake"
+  },
+  {
+   "id": "top_oil_label",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "OIL",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 342,
+   "y": 324,
+   "w": 38,
+   "h": 17,
+   "toggle": "apexTop=oil"
+  },
+  {
+   "id": "top_oil_val",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{oil}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 515,
+   "y": 313,
+   "w": 92,
+   "h": 29,
+   "toggle": "apexTop=oil"
+  },
+  {
+   "id": "top_oil_unit",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{u:temp}}",
+   "font": "apex_unit",
+   "color": "dim",
+   "align": "right",
+   "x": 608,
+   "y": 317,
+   "w": 26,
+   "h": 26,
+   "toggle": "apexTop=oil"
+  },
+  {
+   "id": "top_coolant_label",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "WATER",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 342,
+   "y": 324,
+   "w": 88,
+   "h": 17,
+   "toggle": "apexTop=coolant"
+  },
+  {
+   "id": "top_coolant_val",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{coolant}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 515,
+   "y": 313,
+   "w": 92,
+   "h": 29,
+   "toggle": "apexTop=coolant"
+  },
+  {
+   "id": "top_coolant_unit",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{u:temp}}",
+   "font": "apex_unit",
+   "color": "dim",
+   "align": "right",
+   "x": 608,
+   "y": 317,
+   "w": 26,
+   "h": 26,
+   "toggle": "apexTop=coolant"
+  },
+  {
+   "id": "top_intake_label",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "INTAKE",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 342,
+   "y": 324,
+   "w": 85,
+   "h": 17,
+   "toggle": "apexTop=intake"
+  },
+  {
+   "id": "top_intake_val",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{intake}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 515,
+   "y": 313,
+   "w": 92,
+   "h": 29,
+   "toggle": "apexTop=intake"
+  },
+  {
+   "id": "top_intake_unit",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{u:temp}}",
+   "font": "apex_unit",
+   "color": "dim",
+   "align": "right",
+   "x": 608,
+   "y": 317,
+   "w": 26,
+   "h": 26,
+   "toggle": "apexTop=intake"
+  },
+  {
+   "id": "top_torque_label",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "TORQUE",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 342,
+   "y": 324,
+   "w": 95,
+   "h": 17,
+   "toggle": "apexTop=torque"
+  },
+  {
+   "id": "top_torque_val",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{torquePct}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 517,
+   "y": 313,
+   "w": 92,
+   "h": 29,
+   "toggle": "apexTop=torque"
+  },
+  {
+   "id": "top_torque_unit",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "%",
+   "font": "apex_unit",
+   "color": "dim",
+   "align": "right",
+   "x": 610,
+   "y": 317,
+   "w": 24,
+   "h": 26,
+   "toggle": "apexTop=torque"
+  },
+  {
+   "id": "top_power_label",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "POWER",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 342,
+   "y": 324,
+   "w": 89,
+   "h": 17,
+   "toggle": "apexTop=power"
+  },
+  {
+   "id": "top_power_val",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{powerPct}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 517,
+   "y": 313,
+   "w": 92,
+   "h": 29,
+   "toggle": "apexTop=power"
+  },
+  {
+   "id": "top_power_unit",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "%",
+   "font": "apex_unit",
+   "color": "dim",
+   "align": "right",
+   "x": 610,
+   "y": 317,
+   "w": 24,
+   "h": 26,
+   "toggle": "apexTop=power"
+  },
+  {
+   "id": "low_boost_label",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "BOOST",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 342,
+   "y": 412,
+   "w": 82,
+   "h": 17,
+   "toggle": "apexLow=boost"
+  },
+  {
+   "id": "low_boost_val",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{boost}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 484,
+   "y": 401,
+   "w": 114,
+   "h": 29,
+   "toggle": "apexLow=boost"
+  },
+  {
+   "id": "low_boost_unit",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{u:pressure}}",
+   "font": "apex_unit",
+   "color": "dim",
+   "align": "right",
+   "x": 599,
+   "y": 405,
+   "w": 35,
+   "h": 26,
+   "toggle": "apexLow=boost"
+  },
+  {
+   "id": "low_brake_label",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "BRAKE",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 342,
+   "y": 412,
+   "w": 80,
+   "h": 17,
+   "toggle": "apexLow=brake"
+  },
+  {
+   "id": "low_brake_val",
+   "type": "text",
+   "class": "content",
+   "z": 13,
    "conn": 1,
    "text": "{{brakeG}}",
    "font": "apex_val",
@@ -5862,13 +7840,270 @@
    "x": 517,
    "y": 401,
    "w": 99,
-   "h": 29
+   "h": 29,
+   "toggle": "apexLow=brake"
+  },
+  {
+   "id": "low_brake_unit",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "g",
+   "font": "apex_unit",
+   "color": "dim",
+   "align": "right",
+   "x": 617,
+   "y": 405,
+   "w": 17,
+   "h": 26,
+   "toggle": "apexLow=brake"
+  },
+  {
+   "id": "low_oil_label",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "OIL",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 342,
+   "y": 412,
+   "w": 38,
+   "h": 17,
+   "toggle": "apexLow=oil"
+  },
+  {
+   "id": "low_oil_val",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{oil}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 515,
+   "y": 401,
+   "w": 92,
+   "h": 29,
+   "toggle": "apexLow=oil"
+  },
+  {
+   "id": "low_oil_unit",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{u:temp}}",
+   "font": "apex_unit",
+   "color": "dim",
+   "align": "right",
+   "x": 608,
+   "y": 405,
+   "w": 26,
+   "h": 26,
+   "toggle": "apexLow=oil"
+  },
+  {
+   "id": "low_coolant_label",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "WATER",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 342,
+   "y": 412,
+   "w": 88,
+   "h": 17,
+   "toggle": "apexLow=coolant"
+  },
+  {
+   "id": "low_coolant_val",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{coolant}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 515,
+   "y": 401,
+   "w": 92,
+   "h": 29,
+   "toggle": "apexLow=coolant"
+  },
+  {
+   "id": "low_coolant_unit",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{u:temp}}",
+   "font": "apex_unit",
+   "color": "dim",
+   "align": "right",
+   "x": 608,
+   "y": 405,
+   "w": 26,
+   "h": 26,
+   "toggle": "apexLow=coolant"
+  },
+  {
+   "id": "low_intake_label",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "INTAKE",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 342,
+   "y": 412,
+   "w": 85,
+   "h": 17,
+   "toggle": "apexLow=intake"
+  },
+  {
+   "id": "low_intake_val",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{intake}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 515,
+   "y": 401,
+   "w": 92,
+   "h": 29,
+   "toggle": "apexLow=intake"
+  },
+  {
+   "id": "low_intake_unit",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{u:temp}}",
+   "font": "apex_unit",
+   "color": "dim",
+   "align": "right",
+   "x": 608,
+   "y": 405,
+   "w": 26,
+   "h": 26,
+   "toggle": "apexLow=intake"
+  },
+  {
+   "id": "low_torque_label",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "TORQUE",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 342,
+   "y": 412,
+   "w": 95,
+   "h": 17,
+   "toggle": "apexLow=torque"
+  },
+  {
+   "id": "low_torque_val",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{torquePct}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 517,
+   "y": 401,
+   "w": 92,
+   "h": 29,
+   "toggle": "apexLow=torque"
+  },
+  {
+   "id": "low_torque_unit",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "%",
+   "font": "apex_unit",
+   "color": "dim",
+   "align": "right",
+   "x": 610,
+   "y": 405,
+   "w": 24,
+   "h": 26,
+   "toggle": "apexLow=torque"
+  },
+  {
+   "id": "low_power_label",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "POWER",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 342,
+   "y": 412,
+   "w": 89,
+   "h": 17,
+   "toggle": "apexLow=power"
+  },
+  {
+   "id": "low_power_val",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{powerPct}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 517,
+   "y": 401,
+   "w": 92,
+   "h": 29,
+   "toggle": "apexLow=power"
+  },
+  {
+   "id": "low_power_unit",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "%",
+   "font": "apex_unit",
+   "color": "dim",
+   "align": "right",
+   "x": 610,
+   "y": 405,
+   "w": 24,
+   "h": 26,
+   "toggle": "apexLow=power"
   },
   {
    "id": "coolant",
    "type": "text",
    "class": "content",
-   "z": 13,
+   "z": 14,
    "conn": 1,
    "text": "{{coolant}}",
    "font": "apex_val",
@@ -5883,7 +8118,7 @@
    "id": "coolant_unit",
    "type": "text",
    "class": "content",
-   "z": 13,
+   "z": 14,
    "conn": 1,
    "text": "{{u:temp}}",
    "font": "apex_temp",
@@ -5898,7 +8133,7 @@
    "id": "range",
    "type": "text",
    "class": "content",
-   "z": 13,
+   "z": 14,
    "conn": 1,
    "text": "{{range}} {{u:distLc}}",
    "font": "apex_val",
@@ -5913,7 +8148,7 @@
    "id": "clock",
    "type": "text",
    "class": "content",
-   "z": 13,
+   "z": 14,
    "conn": 1,
    "text": "{{time}}",
    "font": "apex_clock",
@@ -5932,7 +8167,7 @@
    "own": false,
    "toggle": "apexMid=mbadge",
    "class": "content",
-   "z": 13,
+   "z": 14,
    "conn": 1,
    "x": 905,
    "y": 588,

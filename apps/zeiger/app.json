@@ -2,7 +2,7 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Cyan (an 80s LCD dash with TURBO and ECON bars), VFD (a late-80s fluorescent dash, mint on black with teal windows), Apex and Apex Sport (a racing cluster with boost and braking bars), Dark Moon (a sunrise seen from orbit, the speed under the sun, today's weather), Underpass and Mist (photos, with Dark Moon's readouts), and Map Mist (the phone's map in the middle of the Mist photo)",
-  "version": "0.34.0",
+  "version": "0.35.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -770,6 +770,86 @@
       ]
     },
     {
+      "key": "apexTop",
+      "label": "Apex: upper bar",
+      "type": "choice",
+      "default": "boost",
+      "options": [
+        [
+          "boost",
+          "Boost"
+        ],
+        [
+          "brake",
+          "Braking"
+        ],
+        [
+          "oil",
+          "Oil temperature"
+        ],
+        [
+          "coolant",
+          "Coolant"
+        ],
+        [
+          "intake",
+          "Intake air"
+        ],
+        [
+          "torque",
+          "Torque %"
+        ],
+        [
+          "power",
+          "Power %"
+        ],
+        [
+          "none",
+          "Empty"
+        ]
+      ]
+    },
+    {
+      "key": "apexLow",
+      "label": "Apex: lower bar",
+      "type": "choice",
+      "default": "brake",
+      "options": [
+        [
+          "boost",
+          "Boost"
+        ],
+        [
+          "brake",
+          "Braking"
+        ],
+        [
+          "oil",
+          "Oil temperature"
+        ],
+        [
+          "coolant",
+          "Coolant"
+        ],
+        [
+          "intake",
+          "Intake air"
+        ],
+        [
+          "torque",
+          "Torque %"
+        ],
+        [
+          "power",
+          "Power %"
+        ],
+        [
+          "none",
+          "Empty"
+        ]
+      ]
+    },
+    {
       "key": "apexSportMid",
       "label": "Apex Sport: bottom middle",
       "type": "choice",
@@ -802,6 +882,86 @@
         [
           "rpm",
           "Rpm"
+        ],
+        [
+          "none",
+          "Empty"
+        ]
+      ]
+    },
+    {
+      "key": "apexSportTop",
+      "label": "Apex Sport: upper bar",
+      "type": "choice",
+      "default": "boost",
+      "options": [
+        [
+          "boost",
+          "Boost"
+        ],
+        [
+          "brake",
+          "Braking"
+        ],
+        [
+          "oil",
+          "Oil temperature"
+        ],
+        [
+          "coolant",
+          "Coolant"
+        ],
+        [
+          "intake",
+          "Intake air"
+        ],
+        [
+          "torque",
+          "Torque %"
+        ],
+        [
+          "power",
+          "Power %"
+        ],
+        [
+          "none",
+          "Empty"
+        ]
+      ]
+    },
+    {
+      "key": "apexSportLow",
+      "label": "Apex Sport: lower bar",
+      "type": "choice",
+      "default": "brake",
+      "options": [
+        [
+          "boost",
+          "Boost"
+        ],
+        [
+          "brake",
+          "Braking"
+        ],
+        [
+          "oil",
+          "Oil temperature"
+        ],
+        [
+          "coolant",
+          "Coolant"
+        ],
+        [
+          "intake",
+          "Intake air"
+        ],
+        [
+          "torque",
+          "Torque %"
+        ],
+        [
+          "power",
+          "Power %"
         ],
         [
           "none",

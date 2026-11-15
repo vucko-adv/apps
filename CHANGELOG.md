@@ -4,6 +4,8 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.35.0:** Apex's and Apex Sport's two bars can be customised (CUSTOMISE on their card): **Upper bar** and **Lower bar** each show boost, braking, oil, coolant, intake air, torque %, power %, or nothing. Their labels are now text, so they change with the pick. Checked on the bench (oil on the upper bar, the lower one empty, the M badge); not yet on a car.
+
 - **Zeiger 0.34.0:** Apex and Apex Sport can be customised.
   - A **CUSTOMISE** button on their gallery card opens a list of places. **Bottom middle:** clock, BMW's M badge, or empty. **Big number:** speed, rpm, or empty. Each theme keeps its own picks.
   - **Checked:** the list in the emulator; Apex Sport with the M badge and the rpm on the bench. Not yet on a car.
