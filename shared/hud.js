@@ -147,6 +147,10 @@
  *             from there up to the bar's own first red segment are drawn red: lit ones in that red ("hot", else the
  *             first red segment's own colour, else [255, 64, 48]), unlit ones in it at "dim" (0.3) opacity over the
  *             face. The bar's own red segments (found in its picture: red over 2.2x green and blue; orange is not red) keep theirs.
+ *             "above": true with measure "redFrom" (Zeiger addition, 0.27.0, VFD's red scale end): lit from the red
+ *             zone's start up (segment i lit while steps[i] >= it): "redAt" rpm (where the face's red begins) while
+ *             the engine is warm, lower while the cold guard holds (the cold-engine red zone's start, never above
+ *             "redAt"). "dim": 0 on a "zone" bar leaves its unlit zone segments dark.
  *             Measures "econEco" / "econLoad" (Zeiger addition, Vintage Cyan's ECON bar): the engine load (torquePct)
  *             under / over ECON_MID as 0..1, the green half filling left while driving economically (coasting fills
  *             it) and the red half right under load; 0 while standing still
@@ -2645,6 +2649,7 @@ class HudApp {
         const w = x.w, segs = w.segs, steps = w.steps, p = x.pic;
         if (!p || !Array.isArray(segs) || !Array.isArray(steps)) return;
         if (w.zone && w.one !== true) { this._updateZone(x, now, force); return; }
+        if (w.above) { this._updateAbove(x, now, force); return; }
         let v;
         if (w.measure === 'rpm') v = this.rpmF;
         else {
@@ -2736,6 +2741,26 @@ class HudApp {
             parts.push(b);
         });
         x.zoneSt = st; x.lit = n;
+        if (rects.length) this._blit(x, rects, Buffer.concat(parts));
+    }
+
+    /** An "above" bar (measure "redFrom"): the segments from the red zone's start up lit, the rest clear. */
+    _updateAbove(x, now, force) {
+        const w = x.w, segs = w.segs, steps = w.steps, p = x.pic;
+        const at = isNum(w.redAt) ? w.redAt : this.setting('redline');
+        const from = Math.min(at, this._coldRed());
+        const st = segs.map((s, i) => (i < steps.length && steps[i] >= from ? 1 : 0));
+        const old = x.zoneSt || [];
+        const rects = [], parts = [];
+        st.forEach((s, i) => {
+            if (!force && old[i] === s) return;
+            const [sx, sy, sw, sh] = segs[i];
+            const b = Buffer.alloc(sw * sh * 4, 0);
+            if (s) for (let r = 0; r < sh; r++) p.rgba.copy(b, r * sw * 4, ((sy + r) * w.w + sx) * 4, ((sy + r) * w.w + sx + sw) * 4);
+            rects.push({ x: sx, y: sy, w: sw, h: sh });
+            parts.push(b);
+        });
+        x.zoneSt = st;
         if (rects.length) this._blit(x, rects, Buffer.concat(parts));
     }
 

@@ -8,7 +8,8 @@ Newest first. Dates are when the build was pushed.
   - With a cold engine the rev bar's red zone starts at 3500 rpm (oil at 30 °C or under) and moves back to the redline as the oil warms to 80 °C. In it, segments are dim red under the rpm and bright red once reached.
   - Vintage Green, Vintage Cyan, VFD, Apex and Apex Sport; drawn from each bar's own picture, no new pictures.
   - The cold shift point follows the zone (300 rpm under it by default) instead of the old fixed 4500 at 30 °C.
-  - **Checked:** on the bench (oil 20 °C and 55 °C, Vintage Green, Apex, VFD); not yet on a car.
+  - **VFD:** the scale's red end (red ticks and the dashed line, 7000-8000) moves down with the zone instead; the band's columns in the zone light red only once reached. The coolant line C-H is level now (it fell 8 px toward H).
+  - **Checked:** on the bench (oil 20 °C and 55 °C, Vintage Green, Apex; VFD at 20 °C and 95 °C); not yet on a car.
 
 - **Zeiger 0.26.0:** the page and the widgets after the first look on the car.
   - **Gallery:** a tap on the left or right half of the screen, or a finger swiped sideways, goes through the themes. The round arrows beside the card are gone; plain arrows sit at the screen's edges.
