@@ -20,7 +20,9 @@
  * The small widget shows no picture, only the layout's text lines (the same words). Drawn again when what it shows
  * changes, else the same picture every REDRAW_MS (in case the HMI dropped it). BMW's Drive Recorder widget layout, as
  * the kit's Live Data uses (checked on a G05): the HMI scales the 384 x 256 picture up, crops a little of every edge
- * and fades them (startWidget.safe, kept clear here).
+ * and fades them (startWidget.safe). Since 0.26.0 safe is measured on a G20 (photos of the Engine and weather widgets:
+ * about 8 % of the width and 7.5 % of the height cut off each side), and everything keeps PAD px more inside it, so
+ * nothing runs up to the window's frame.
  */
 const zlib = require('zlib');
 const data = require('./hud_data');
@@ -34,6 +36,8 @@ const DIM = [196, 203, 214], FRAME = [72, 80, 92], WHITE = [255, 255, 255];
 const ENG = { cold: [89, 199, 255], warm: [61, 220, 132], hot: [255, 72, 64], boost: [255, 106, 31], track: [38, 42, 50] };
 const RANGE = { oil: [40, 150], coolant: [40, 130], boost: [0, 1.6] };
 const PEAK_MS = 5000, WARM_OIL = 80, WARM_COOLANT = 70;
+// the margin inside the part of the picture the HMI shows (px of the 384 x 256 picture)
+const PAD = 14;
 // the weather's looks: the background (hud/pictures) and the theme's colours (shared/hud_themes.js: fg, dim; rev.from
 // for the rain; bar.mid for OFFLINE); shadow: how dark the soft shadow under the text is
 const LOOKS = {
@@ -125,8 +129,8 @@ class ZeigerWidget {
         this.bg = Object.create(null);       // a look's background -> RGBA (W x H), or null: none
         const sw = ctx.spec.startWidget || {};
         [this.W, this.H] = sw.size || [384, 256];
-        const safe = sw.safe || [0.09, 0.1];
-        this.box = { x: Math.round(this.W * safe[0]), y: Math.round(this.H * safe[1]) };
+        const safe = sw.safe || [0.08, 0.075];
+        this.box = { x: Math.round(this.W * safe[0]) + PAD, y: Math.round(this.H * safe[1]) + PAD };
         this.box.w = this.W - 2 * this.box.x; this.box.h = this.H - 2 * this.box.y;
     }
 
@@ -286,27 +290,29 @@ class ZeigerWidget {
      */
     renderEngine(s) {
         const W = this.W, b = this.box, cv = new Canvas(W, this.H).clear([6, 7, 10, 255]);
-        const L = b.x + 6, R = b.x + b.w - 6, F = { font: 'zsb', literal: true };
+        const L = b.x, R = b.x + b.w, F = { font: 'zsb', literal: true };
         const deg = (v) => (v === null ? '--' : String(s.us ? Math.round(v * 9 / 5 + 32) : v) + '°');
         const bar = (v) => (v === null ? '--' : s.us ? String(Math.round(v * 14.5)) : v.toFixed(2));
         // the status line
-        cv.text('ENGINE', L, b.y + 20, 16, DIM, Object.assign({ spacing: 3 }, F));
+        cv.text('ENGINE', L, b.y + 13, 14, DIM, Object.assign({ spacing: 3 }, F));
         const st = s.cold === null ? ['NO DATA', DIM] : s.cold ? ['COLD' + (s.shift ? ' · SHIFT BY ' + s.shift : ''), ENG.cold] : ['READY', ENG.warm];
-        cv.text(st[0], R, b.y + 20, 16, st[1], Object.assign({ spacing: 2, align: 'right' }, F));
+        cv.text(st[0], R, b.y + 13, 14, st[1], Object.assign({ spacing: 2, align: 'right' }, F));
         // the rows
         const rows = [
             ['OIL', s.oil, deg(s.oil), RANGE.oil, s.warn.oil, WARM_OIL],
             ['WATER', s.coolant, deg(s.coolant), RANGE.coolant, s.warn.coolant, WARM_COOLANT],
             ['BOOST', s.boost, bar(s.boost) + (s.us ? ' psi' : ' bar'), RANGE.boost, s.warn.boost, null],
         ];
-        const top = b.y + 34, rh = Math.floor((b.y + b.h - top) / 3), SEG = 24, gap = 3, sw = (R - L - gap * (SEG - 1)) / SEG;
+        const top = b.y + 24, rh = Math.floor((b.y + b.h - top) / 3), SEG = 20, gap = 3, sw = (R - L - gap * (SEG - 1)) / SEG;
         rows.forEach(([name, v, txt, rg, lim, warm], i) => {
             const y = top + i * rh, boost = warm === null, over = !!lim && v !== null && v > lim;
             const col = over ? ENG.hot : boost ? ENG.boost : v !== null && v < warm ? ENG.cold : ENG.warm;
-            cv.text(name, L, y + 26, 15, DIM, Object.assign({ spacing: 2.5 }, F));
-            cv.text(txt, R, y + 30, 30, v === null ? DIM : over ? ENG.hot : WHITE, Object.assign({ align: 'right' }, F));
-            const k = v === null ? 0 : Math.max(0, Math.min(1, (v - rg[0]) / (rg[1] - rg[0]))), lit = Math.round(k * SEG);
-            const by = y + 37, bh = Math.max(10, rh - 43);
+            cv.text(name, L, y + 22, 13, DIM, Object.assign({ spacing: 2.5 }, F));
+            cv.text(txt, R, y + 24, 24, v === null ? DIM : over ? ENG.hot : WHITE, Object.assign({ align: 'right' }, F));
+            // a value under the bar's range still lights the first segment (a cold engine: one blue segment)
+            const k = v === null ? 0 : Math.max(0, Math.min(1, (v - rg[0]) / (rg[1] - rg[0])));
+            const lit = v === null ? 0 : boost && !(v > 0) ? 0 : Math.max(1, Math.round(k * SEG));
+            const by = y + 31, bh = Math.max(9, Math.min(12, rh - 40));
             for (let j = 0; j < SEG; j++) cv.roundRect(L + j * (sw + gap), by, sw, bh, 2, j < lit ? col : ENG.track);
             // the warning limit as a red tick over the bar; the boost's held peak as a white segment
             if (lim && lim > rg[0] && lim < rg[1]) cv.fillRect(Math.round(L + (lim - rg[0]) / (rg[1] - rg[0]) * SEG * (sw + gap)) - 2, by - 4, 2, bh + 8, ENG.hot);
@@ -381,8 +387,11 @@ class ZeigerWidget {
         const lk = LOOKS[s.look] || LOOKS.mist, bg = this._background(lk.bg), sh = lk.shadow;
         if (bg) cv.drawImage(bg.d, bg.w, bg.h, 0, 0, W, H);
         const deg = (v) => this._deg(v, s.us) + '°';
-        const L = b.x + 4, R = b.x + b.w - 2;              // the text's left and right edges
-        const Y_PLACE = b.y + 18, Y_NOW = b.y + 92, Y_WORD = b.y + 120, Y_LINE = b.y + 144, ROW = 48;
+        const L = b.x + 2, R = b.x + b.w;                  // the text's left and right edges
+        // the block (place line to today's line, 140 px) in the middle of the box's height
+        // (Sunrise keeps it at the top: its horizon starts at y 180)
+        const T = lk === LOOKS.sunrise ? b.y - 2 : b.y + Math.max(0, Math.round((b.h - 140) / 2)) - 6;
+        const Y_PLACE = T + 14, Y_NOW = T + 80, Y_WORD = T + 106, Y_LINE = T + 134, ROW = 44;
         // the place, small and spaced, over everything (OFFLINE beside it while the forecast shown is a kept one)
         let place = plain(s.city, 's_small') || 'WEATHER';
         while (place.length > 3 && this._width(place, 's_small', 13, 2) > 190) place = place.slice(0, -1).trim();
@@ -396,11 +405,11 @@ class ZeigerWidget {
             return cv;
         }
         // now: the temperature big, the weather's icon beside it, the word under them
-        const tw = this._write(cv, deg(t.now), 's_mid', 74, L - 3, Y_NOW, lk.fg, { shadow: sh + 0.05 });
-        if (t.nowIcon) this._write(cv, t.nowIcon, 's_icon', 50, L + tw + 6, b.y + 36, lk.fg, { top: true, shadow: sh + 0.05 });
+        const tw = this._write(cv, deg(t.now), 's_mid', 62, L - 3, Y_NOW, lk.fg, { shadow: sh + 0.05 });
+        if (t.nowIcon) this._write(cv, t.nowIcon, 's_icon', 42, L + tw + 6, T + 34, lk.fg, { top: true, shadow: sh + 0.05 });
         let word = t.nowWord || '';
-        if (this._width(word, 's_small', 17, 2) > 180) word = word.split(' ').pop();
-        this._write(cv, word, 's_small', 17, L, Y_WORD, lk.fg, { spacing: 2, shadow: sh });
+        if (this._width(word, 's_small', 15, 2) > 160) word = word.split(' ').pop();
+        this._write(cv, word, 's_small', 15, L, Y_WORD, lk.fg, { spacing: 2, shadow: sh });
         // the next three days: the day, its icon, the high (white) and the low (grey), in columns laid out from the
         // right edge as wide as their widest entry
         const next = s.days.slice(1, 4), rowH = ROW, y0 = Y_LINE - 2 * ROW, GAP = 9, ICON = 26;

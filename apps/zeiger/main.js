@@ -5,8 +5,8 @@
  * The center screen is the app's own page (page.js, a canvas screen): the themes as a gallery, which
  * drive mode shows which, and the settings. Each choice is saved in the app's data/settings.json
  * by the kit; the shared engine (hud.js) listens and redraws at once. It keeps running after the page is
- * closed (OAP apps stay up in the background), so the page is only needed for changes. The kit's own
- * settings list stays one tap away (the bar's All settings).
+ * closed (OAP apps stay up in the background), so the page is only needed for changes. Since 0.26.0 the
+ * kit's own settings list is no longer offered: every setting Zeiger's themes use is on the page.
  */
 const mgu = require('./kit/mgu');
 const HudApp = require('./hud');

@@ -63,7 +63,8 @@ A car set to a removed theme shows the nearest one left (shared/hud.js `RENAMED`
 
 `widget.js`, through app.json `startWidget` and the kit's `ctx.widget` (kit/runtime/mgu.js). It uses BMW's Drive Recorder widget layout, as the kit's Live Data does (checked on a G05). The setting **Home-screen widget** picks what it shows:
 
-- **Engine** (the default since 0.25.0): oil, coolant and boost, each as its value and a bar of 24 segments. The temperature bars are blue while cold (oil under 80 °C, coolant under 70 °C), green when warm and red over the Warnings limits, which show as a red tick; boost is orange, its peak of the last 5 s held as a white segment. On top: READY, or COLD and the shift point the cold-engine guard asks for. Boost comes from the sport display or, while the widget is placed, the engine unit (shared/hud.js `widgetBoost`).
+- **Fit (0.26.0):** the part of the picture the HMI shows was measured on a G20 from photos: about 8 % of the width and 7.5 % of the height is cut off each side (`startWidget.safe`). Everything keeps 14 px more inside that, smaller than before, and the weather sits in the middle of the window's height (Sunrise's at the top, over its horizon).
+- **Engine** (the default since 0.25.0): oil, coolant and boost, each as its value and a bar of 20 segments. The temperature bars are blue while cold (oil under 80 °C, coolant under 70 °C), green when warm and red over the Warnings limits, which show as a red tick; boost is orange, its peak of the last 5 s held as a white segment. On top: READY, or COLD and the shift point the cold-engine guard asks for. Boost comes from the sport display or, while the widget is placed, the engine unit (shared/hud.js `widgetBoost`).
 - **Weather, Mist** (the default) and **Weather, Sunrise:** the weather on Mist's photo, or on a sunrise over mountains (an earlier Sunrise theme's). On the left: the place, the temperature now with its icon, the weather now in a word, and today's high, low and chance of rain (in blue). On the right: the next three days, each with its icon, high (white) and low (grey). It uses the cluster themes' own fonts and colours. Every line on the left shares a baseline with the right, and nothing goes below Sunrise's horizon. While the forecast shown is an old one and there's no internet, OFFLINE shows in amber beside the place. Backgrounds: `cluster-design/mist/widget_bg.html` and `cluster-design/sunrise/widget_bg.html`.
 - **The cluster's theme:** ZEIGER, the shown theme's gallery picture (hud/previews, shrunk by averaging), its name, and the drive mode while "Change with SPORT / COMFORT / ECO PRO" is on.
 - **Weather fetching:** the forecast (`shared/weather.js`, Open-Meteo, 4 days) is fetched while a widget is placed and shows the weather. This is apart from the themes' weather and the **Today's weather** setting. Like the themes, it needs the Store's Internet uplink.
@@ -96,9 +97,9 @@ The bench shows both (bench/README.md): the hang button (`POST /hang`) and `stal
 
 ## The page
 
-`page.js`, Zeiger's own page on the centre screen (since 0.24.0, written new; the design is `cluster-design/app_ui/mock.html` next to this repo). Two tabs in the header, and the kit's **All settings** list beside them:
+`page.js`, Zeiger's own page on the centre screen (since 0.24.0, written new; the design is `cluster-design/app_ui/mock.html` next to this repo). Two tabs in the header (since 0.26.0 without the kit's **All settings** list: everything is on the page):
 
-- **Themes:** a gallery. The theme looked at is big in the middle, with its neighbours beside it and a dot per theme under it; the arrows, a neighbour or the iDrive controller go through them. Looking changes nothing on the cluster: **Use this theme** (or **Use for COMFORT / SPORT / ECO PRO**) does. Under it, **Change with the drive mode**, and with it on, the theme of each drive mode: tap one to give it another theme. The car's drive mode now is marked NOW.
+- **Themes:** a gallery. The theme looked at is big in the middle, with its neighbours beside it and a dot per theme under it. A tap on the left or right half of the screen, a finger swiped sideways (the kit's `ctx.onSwipe`, a Zeiger addition) or the iDrive controller go through them; the arrows at the screen's edges only show the way. **BMW's own cluster** is not a card but a switch in the bottom right corner: on, BMW's own cluster shows (for the drive mode being set, while the theme changes with it); off, the theme from before comes back. Looking changes nothing on the cluster: **Use this theme** (or **Use for COMFORT / SPORT / ECO PRO**) does. Under it, **Change with the drive mode**, and with it on, the theme of each drive mode: tap one to give it another theme. The car's drive mode now is marked NOW.
 - **Settings:** groups on the left, each with what it is set to now; the open group's rows on the right, a switch or `- value +`. The groups:
   - **Cluster:** start animation, today's weather, the phone's map in Map Mist, theme position (px to the right, -12 by default), night colours.
   - **BMW's cluster:** hide BMW's black boxes (test), leave BMW's bottom strip clear.
@@ -109,7 +110,8 @@ The bench shows both (bench/README.md): the hang button (`POST /hang`) and `stal
   - **About:** demo data, the version and the credits.
 - **Pictures:** the gallery's big card uses `hero` (1152x432) from `hud/previews/<layout>.json`, made from the bench captures in `docs/images` by `cluster-design/app_ui/make_hero.js`; the rest `big` and `small`. One big picture is kept in memory at a time.
 - **Fonts:** Barlow Semi Condensed (SemiBold `zsb`, Medium `zsm`) and Michroma (`zmi`) in the kit's atlas format (`kit/runtime/fonts/`), baked by `cluster-design/app_ui/bake_fonts.html`.
-- **Calibration grid** and **Map calibration** are still in **All settings**, Theme, to measure what BMW hides on your car's cluster.
+- **Steppers:** a list of choices (the widget, units, clock, ...) goes round: past the last, the first again. Numbers (redline, limits, position) stop at their ends.
+- **Calibration** (BMW's cluster group): Off, Grid or Map frame on the cluster, to measure what BMW hides on your car's cluster; Off puts the themes from before back.
 
 ## Black boxes
 

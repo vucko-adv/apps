@@ -57,6 +57,7 @@ const GROUPS = [
     { name: 'BMW\'s cluster', about: 'What BMW draws under and over the themes.', rows: [
         ['hideBoxes', 'Hide BMW\'s black boxes', 'test'],
         ['stripClear', 'Leave BMW\'s bottom strip clear', 'the theme only above it'],
+        ['calib', 'Calibration', 'a grid or the map frame on the cluster, to measure what BMW hides'],
     ] },
     { name: 'Warnings', about: 'Over its limit, the value flashes red on the cluster. Not during the start animation.', rows: [
         ['warnOil', 'Oil temperature', 'flashes from', 'OIL', '#ffb23e'],
@@ -82,6 +83,8 @@ const GROUPS = [
         ['demo', 'Demo data', 'made-up values while the car sends none'],
     ] },
 ];
+// the calibration layouts (hudLayout values), for the row in BMW's cluster
+const CALIB = [['', 'Off'], ['grid', 'Grid'], ['mapcal', 'Map frame']];
 const CREDITS = [
     'Zeiger by vucko-adv. Every theme is drawn by vucko-adv.',
     'Forked from bimmer-lab/apps (Cluster Themes), MIT.',
@@ -131,6 +134,8 @@ class Page {
         this.atFor = null;           // ... for this key (looking starts over at its theme when the key changes)
         this.group = 0;              // the open settings group
         this.loop = null;
+        this.prev = {};              // the theme each setting had before BMW's own was switched on (the corner shortcut)
+        this.calPrev = null;         // byMode and hudLayout from before a calibration layout was put on
     }
 
     start() {
@@ -138,6 +143,8 @@ class Page {
         // the kit's header in Zeiger's orange
         Object.assign(ctx.theme(), { sel: C.acc, selText: '#ffffff', accent2: C.accSoft, bg: C.bg });
         if (ctx.onTab) ctx.onTab((i) => this.openTab(i));
+        // a finger swiped sideways goes through the gallery (Themes tab only)
+        if (ctx.onSwipe) ctx.onSwipe((d) => { if (this.tab === 0 && this.goBy) this.goBy(d); });
         this.loop = ctx.loop('MAIN', 10, () => this.render());
         ctx.settings.onChange(() => this.kick());
         ctx.onLayout(() => this.kick());
@@ -154,6 +161,7 @@ class Page {
     optLabel(k, v) { const o = (this.item(k).options || []).find((x) => x[0] === v); return o ? o[1] : String(v); }
     /** the values a stepper goes through */
     steps(k) {
+        if (k === 'calib') return CALIB.map((c) => c[0]);
         const it = this.item(k);
         if (it.steps) return it.steps;
         if (it.options) return it.options.map((o) => o[0]);
@@ -164,10 +172,27 @@ class Page {
         if (!list.length) return;
         let i = list.indexOf(v);
         if (i < 0) i = list.reduce((b, x, j) => (Math.abs(x - v) < Math.abs(list[b] - v) ? j : b), 0);
-        this.set(k, list[Math.max(0, Math.min(list.length - 1, i + d))]);
+        // a list of choices goes round (past the last, the first again); a range of numbers stops at its ends
+        const round = k === 'calib' || (!this.item(k).steps && !!this.item(k).options);
+        const j = round ? (i + d + list.length) % list.length : Math.max(0, Math.min(list.length - 1, i + d));
+        if (k === 'calib') this.calib(list[j]); else this.set(k, list[j]);
+    }
+    /** the calibration layout on the cluster now: '' (none), 'grid' or 'mapcal' */
+    calibNow() { const v = this.get('hudLayout'); return this.get('byMode') !== true && CALIB.some((c) => c[0] && c[0] === v) ? v : ''; }
+    calib(v) {
+        if (v) {
+            if (!this.calibNow()) this.calPrev = { byMode: this.get('byMode') === true, hudLayout: this.get('hudLayout') };
+            this.set('byMode', false); this.set('hudLayout', v);
+        } else if (this.calibNow()) {
+            const p = this.calPrev || { byMode: false, hudLayout: this.looks()[0] };
+            this.set('hudLayout', p.hudLayout && !CALIB.some((c) => c[0] === p.hudLayout) ? p.hudLayout : this.looks()[0]);
+            this.set('byMode', p.byMode);
+            this.calPrev = null;
+        }
     }
     us() { return this.get('units') === 'us'; }
     valueText(k) {
+        if (k === 'calib') { const n = this.calibNow(); return CALIB.find((c) => c[0] === n)[1]; }
         const v = this.get(k), it = this.item(k);
         if (k === 'warnOil' || k === 'warnCoolant') return v ? (this.us() ? Math.round(v * 9 / 5 + 32) + ' °F' : v + ' °C') : 'Off';
         if (k === 'warnBoost') return v ? (this.us() ? Math.round(v * 14.5) + ' psi' : v.toFixed(1) + ' bar') : 'Off';
@@ -191,17 +216,24 @@ class Page {
         if (g.name === 'Shift point') return 'redline ' + this.valueText('redline') + ' · flash ' + (on('shiftFlash') ? 'on' : 'off');
         if (g.name === 'Units and time') return (this.us() ? 'mph' : 'km/h') + ' · ' + this.valueText('clock') + ' · ' + this.valueText('timeZone');
         if (g.name === 'Home-screen widget') return this.valueText('widgetShows');
-        if (g.name === 'BMW\'s cluster') return 'black boxes ' + (on('hideBoxes') ? 'hidden' : 'shown') + ' · bottom strip ' + (on('stripClear') ? 'clear' : 'covered');
+        if (g.name === 'BMW\'s cluster') return 'black boxes ' + (on('hideBoxes') ? 'hidden' : 'shown') + ' · bottom strip ' + (on('stripClear') ? 'clear' : 'covered') + (this.calibNow() ? ' · calibrating' : '');
         return 'version ' + ((this.ctx.spec && this.ctx.spec.version) || '?') + ' · credits';
     }
 
     /* ---------- themes ---------- */
-    looks() { return (this.item('inSport').options || []).map((o) => o[0]); }
+    /** the gallery's themes (BMW's own is the corner shortcut, not a card) */
+    looks() { return (this.item('inSport').options || []).map((o) => o[0]).filter((v) => v !== 'off'); }
     name(v) { return v === 'off' ? 'BMW\'s own' : this.optLabel('hudLayout', v); }
     shown() { return this.hud.activeName || this.hud._layoutName() || 'off'; }
     carMode() { const m = MODES.find((x) => x[2] === this.hud.driveMode); return m ? m[0] : null; }
     /** the setting the gallery's "Use" sets: a drive mode's own while the theme changes with it, else hudLayout */
     key() { return this.get('byMode') === true ? this.mode || this.carMode() || 'inComfort' : 'hudLayout'; }
+    /** the corner shortcut: BMW's own cluster on (the theme remembered), or the theme from before it back */
+    bmw() {
+        const k = this.key(), cur = this.get(k);
+        if (cur === 'off') this.use(this.prev[k] && this.prev[k] !== 'off' ? this.prev[k] : this.at || this.looks()[0]);
+        else { this.prev[k] = cur; this.use('off'); }
+    }
     use(v) {
         const scr = this.hud.screen;
         if (scr) { if (v !== 'off' && scr.otherOn()) scr.claim(); else scr.release(); }
@@ -226,8 +258,12 @@ class Page {
 
     gallery(cv, bottom) {
         const looks = this.looks(), key = this.key(), cur = this.get(key), shown = this.shown();
-        if (this.atFor !== key || looks.indexOf(this.at) < 0) { this.at = looks.indexOf(cur) >= 0 ? cur : looks[0]; this.atFor = key; }
+        if (this.atFor !== key || looks.indexOf(this.at) < 0) {
+            const back = this.prev[key];
+            this.at = looks.indexOf(cur) >= 0 ? cur : looks.indexOf(back) >= 0 ? back : looks[0]; this.atFor = key;
+        }
         const i = looks.indexOf(this.at), go = (d) => () => { this.at = looks[(i + d + looks.length) % looks.length]; this.kick(); };
+        this.goBy = (d) => go(d)();
         // the big card and its neighbours
         const ch = Math.min(440, bottom - 48 - 104), cw = Math.round(ch * 8 / 3), cx = (W - cw) / 2, cy = 48;
         const sh = Math.round(ch * 0.8), sw = Math.round(sh * 8 / 3), sy = cy + (ch - sh) / 2;
@@ -236,7 +272,6 @@ class Page {
             this.picture(cv, v, 'big', x, sy, sw, sh);
             cv.roundRect(x, sy, sw, sh, 18, A(C.bg, 0.62));
             cv.noclip();
-            cv.target(Math.max(L, x), sy, Math.min(R, x + sw) - Math.max(L, x), sh, go(d), 'side:' + d, 18);
         };
         side(looks[(i - 1 + looks.length) % looks.length], cx - 24 - sw, -1);
         side(looks[(i + 1) % looks.length], cx + cw + 24, 1);
@@ -259,8 +294,8 @@ class Page {
             cv.text(s, bx + bw / 2, by + 34, 23, '#ffffff', { font: B, align: 'center', literal: true });
             cv.target(bx, by, bw, 52, () => this.use(this.at), 'use', 26);
         }
-        arrow(cv, cx - 34, cy + ch / 2, -1); cv.target(cx - 68, cy + ch / 2 - 34, 68, 68, go(-1), 'prev', 34);
-        arrow(cv, cx + cw + 34, cy + ch / 2, 1); cv.target(cx + cw, cy + ch / 2 - 34, 68, 68, go(1), 'next', 34);
+        // plain arrows at the screen's edges; the taps are the whole left and right half (added last: the buttons win)
+        arrow(cv, L + 26, cy + ch / 2, -1); arrow(cv, R - 26, cy + ch / 2, 1);
         // a dot per theme
         const dw = looks.reduce((a, v) => a + (v === this.at ? 30 : 9) + 10, -10);
         let dx = (W - dw) / 2;
@@ -286,6 +321,16 @@ class Page {
         };
         if (byMode) MODES.forEach((m) => cell(m[0], m[1], m[0] === this.carMode(), m[0] === key, 300));
         else cell('hudLayout', 'EVERY DRIVE MODE', false, true, 360);
+        // the corner shortcut: BMW's own cluster
+        const bw = 264, bx = R - 12 - bw, own = cur === 'off';
+        glass(cv, bx, y, bw, h, own);
+        cv.text(byMode ? 'For ' + (mode ? mode[1] : '') : 'Quick switch', bx + 18, y + 23, 16, own ? C.accSoft : C.dim, { font: M, literal: true });
+        cv.text("BMW's own cluster", bx + 18, y + 44, 20, C.text, { font: B, literal: true });
+        toggle(cv, bx + bw - 72, y + 13, own);
+        cv.target(bx, y, bw, h, () => this.bmw(), 'bmw', 14);
+        // the gallery's halves: a tap left goes back, right goes on
+        cv.target(L, cy, W / 2 - L, ch + 40, go(-1), 'prev', 0);
+        cv.target(W / 2, cy, R - W / 2, ch + 40, go(1), 'next', 0);
     }
 
     settings(cv, bottom) {
@@ -376,10 +421,9 @@ function pill(cv, xr, y, s, c) {
     cv.circle(xr - w + 22, y + 20, 5, c);
     cv.text(s, xr - w + 36, y + 26, 17, c, { font: B, spacing: 2, literal: true });
 }
+/** a plain chevron at the screen's edge, pointing d (-1 left, 1 right) */
 function arrow(cv, x, y, d) {
-    cv.circle(x, y, 30, A('#000000', 0.72));
-    cv.arc(x, y, 29, 30, 0, 360, A('#ffffff', 0.22));
-    cv.line(x + 6 * d * -1 + 1 * d, y - 11, x + 6 * d, y, 3, '#ffffff');
-    cv.line(x + 6 * d, y, x + 6 * d * -1 + 1 * d, y + 11, 3, '#ffffff');
+    cv.line(x - 9 * d, y - 22, x + 9 * d, y, 4, A('#ffffff', 0.85));
+    cv.line(x + 9 * d, y, x - 9 * d, y + 22, 4, A('#ffffff', 0.85));
 }
 module.exports = Page;

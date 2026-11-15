@@ -545,6 +545,8 @@ async function runInner(impl) {
         onTab(fn) { display.onTab = fn; },
         /** onTap(fn): fn(x, y) for a tap on the page (app drawing px), where the kit runs the screen. */
         onTap(fn) { display.onTap = fn; },
+        /** onSwipe(fn) (Zeiger addition): fn(1) for a finger swiped right to left over the page, fn(-1) left to right. */
+        onSwipe(fn) { display.onSwipe = fn; },
         /** Show a sheet (sheet.js) over the page; false where it can't be (software path, other renderers). */
         sheet(sh) { return display.openSheet(sh); },
         /** hideButton(id): leave bar button id out where the kit runs the screen (its job is on the page there). */

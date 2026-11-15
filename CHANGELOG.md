@@ -4,6 +4,15 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.26.0:** the page and the widgets after the first look on the car.
+  - **Gallery:** a tap on the left or right half of the screen, or a finger swiped sideways, goes through the themes. The round arrows beside the card are gone; plain arrows sit at the screen's edges.
+  - **BMW's own cluster** is a quick switch in the bottom right corner, not a card; switched off, the theme from before comes back.
+  - **All settings** is gone from the header: everything is on the page. The calibration grid and map frame are a row in BMW's cluster.
+  - Lists of choices (the widget, units, clock, ...) go round with - and +; numbers still stop at their ends.
+  - **Widgets:** measured on a G20 from photos, the HMI cuts about 8 % / 7.5 % off each side. The Engine and weather widgets keep 14 px inside that, with smaller text; a cold value lights the bar's first segment.
+  - The kit: `ctx.onSwipe(fn)` for a sideways swipe on the page (display.js, mgu.js, the emulator's hu-stub.js).
+  - **Checked:** in the kit's emulator (taps, swipes, the switch, the steppers going round) and the widgets drawn as the G20 cuts them; not yet on a car.
+
 - **Zeiger 0.25.1:** the start animation of Dark Moon, Mist and Underpass is a soft fade now.
   - The picture fades up out of black over 1.4 s (eased in and out), the readouts 0.3 s after it; 1.8 s in all.
   - The picture no longer slides in from the side (or from below): on the car it looked like the picture shaking.

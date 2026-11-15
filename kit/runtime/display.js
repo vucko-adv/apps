@@ -423,7 +423,15 @@ class Display {
             const tab = !bar && (this.tabs || []).find(inside);
             const tgt = !bar && !tab && !this.sheet ? (this.pageTargets || []).find(inside) : null;
             const key = bar ? 'bar:' + bar.id : tab ? 'tab:' + tab.i : tgt ? 'tgt:' + tgt.key : this.sheet ? 'sheet:' + (this.sheetTargets || []).findIndex(inside) : null;
-            if (phase === 3 && this.dragging && !this.sheet) { this.dragging = false; this.ownDown = null; return; }
+            if (phase === 3 && this.dragging && !this.sheet) {
+                // a sideways swipe on the page (Zeiger addition): ctx.onSwipe(1) for right to left, -1 for left to right
+                const dx = this.downAt ? x - this.downAt.x : 0, dy = this.downAt ? y - this.downAt.y : 0;
+                if (this.swiping && this.onSwipe && Math.abs(dx) >= 60 && Math.abs(dx) > Math.abs(dy)) {
+                    const d = dx < 0 ? 1 : -1;
+                    Promise.resolve().then(() => this.onSwipe(d)).catch((e) => this.log.error('swipe', e));
+                }
+                this.dragging = false; this.swiping = false; this.ownDown = null; return;
+            }
             if (phase === 3 && !this.dragging && key && key === this.ownDown && (tab || tgt)) {
                 this.ownDown = null;
                 if (tab) this._openTab(tab.i);
@@ -435,8 +443,12 @@ class Display {
                 return;
             }
             // a finger moved on a sheet: its list follows (no tap then)
-            if (phase === 1) { this.ownDown = key; this.downAt = { x, y }; this.lastY = y; this.dragging = false; } else if (phase === 2) {
-                if (!this.sheet && this.pageScroll && this.onScroll && !bar && !tab && this.downAt) {
+            if (phase === 1) { this.ownDown = key; this.downAt = { x, y }; this.lastY = y; this.dragging = false; this.swiping = false; } else if (phase === 2) {
+                if (!this.sheet && this.onSwipe && !bar && !tab && this.downAt && !this.dragging) {
+                    const dx = Math.abs(x - this.downAt.x), dy = Math.abs(y - this.downAt.y);
+                    if (dx > 24 && dx > dy * 1.5) { this.dragging = true; this.swiping = true; }
+                }
+                if (!this.sheet && !this.swiping && this.pageScroll && this.onScroll && !bar && !tab && this.downAt) {
                     if (!this.dragging && Math.abs(y - this.downAt.y) > 14) this.dragging = true;
                     if (this.dragging) this._scrollBy(this.lastY - y);
                 }
