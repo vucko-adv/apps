@@ -2,7 +2,7 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Cyan (an 80s LCD dash with TURBO and ECON bars), VFD (a late-80s fluorescent dash, mint on black with teal windows), Apex and Apex Sport (a racing cluster with boost and braking bars), Dark Moon (a sunrise seen from orbit, the speed under the sun, today's weather), Underpass and Mist (photos, with Dark Moon's readouts), and Map Mist (the phone's map in the middle of the Mist photo)",
-  "version": "0.29.1",
+  "version": "0.30.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -89,13 +89,13 @@
     }
   ],
   "startWidget": {
-    "comment": "Home-screen widget (widget.js): the weather in Mist's look or the first Sunrise theme's (the theme itself left in 0.22.0), or the theme the cluster shows now (setting widgetShows). The layout and cells are BMW's Drive Recorder widget on this firmware, as the kit's Live Data's (checked on a G05): the big widget's picture goes into BackgroundImage1 (384 x 256), which the HMI scales up, crops (safe: the share of each edge it cuts) and fades at the edges; the small widget shows only the text lines.",
+    "comment": "Home-screen widget (widget.js): the weather in Mist's look or the first Sunrise theme's (the theme itself left in 0.22.0), or the theme the cluster shows now (setting widgetShows). The layout and cells are BMW's Drive Recorder widget on this firmware, as the kit's Live Data's (checked on a G05): the big widget's picture goes into BackgroundImage1 (drawn as 384 x 256, sent 3 times as big since 0.30.0), which the HMI scales up, crops (safe: the share of each edge it cuts) and fades at the edges; the small widget shows only the text lines.",
     "name": "Zeiger",
     "layout": "LT_Table_OnlineApps_DriveRecorderWidget",
     "image": "BackgroundImage1",
     "size": [
-      384,
-      256
+      1152,
+      768
     ],
     "safe": [
       0.08,

@@ -436,8 +436,7 @@ class Display {
                 this.ownDown = null;
                 if (tab) this._openTab(tab.i);
                 else {
-                    this.pressed = key; this.pressedT = Date.now(); this._repaint();
-                    setTimeout(() => this._repaint(), 320);
+                    if (!tgt.quiet) { this.pressed = key; this.pressedT = Date.now(); this._repaint(); setTimeout(() => this._repaint(), 320); }
                     try { Promise.resolve(tgt.run()).catch((e) => this.log.error('target', e)); } catch (e) { this.log.error('target', e); }
                 }
                 return;

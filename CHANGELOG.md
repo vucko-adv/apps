@@ -4,6 +4,14 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.30.0:** a cleaner theme change, the gallery's taps, Apex's zones, and a sharp widget.
+  - **Changing themes:** a black curtain covers the cluster while the new theme's layers arrive, then fades, so BMW's own cluster no longer shows in between.
+  - **Gallery:** a tap left or right of the big card no longer lights half the page orange. A tap on the big card puts that theme on the cluster, and the card lights up with ON THE CLUSTER. The last 4 big pictures are kept and the neighbours' sent ahead, so swiping waits less.
+  - **Apex and Apex Sport:** no orange between 6000 and 6500 any more. The yellow zone is the app's amber, and the track under unlit strips is drawn by the app, so the cold-engine guard's zones show no orange between the reds.
+  - **Apex Sport's start animation:** the plain rev band sweep. No theme flashes its shift light or band during a start animation.
+  - **Home-screen widget:** drawn 3 times as big (1152 x 768), so its text is sharp on the car.
+  - **Checked:** Apex and Apex Sport zones and the curtain on the bench, the gallery in the emulator, the widget pictures rendered; not yet on a car.
+
 - **Zeiger 0.29.1:** **Leave BMW's gear letter open** is gone again, and **Watch BMW's slots** shows more.
   - **Car test of 0.29.0 (G20):** BMW's black gear box shows when a theme starts and goes at the first gear change, on every theme, the gear letter open or not; the switch made no difference.
   - **The slot watch:** while it is on, BMW's cluster group shows only its switch and the watch: every slot now (0.29.0 showed the first four), and each change before with the slot and what it had before and after (0.29.0 showed only the times). The last 40 changes are kept.

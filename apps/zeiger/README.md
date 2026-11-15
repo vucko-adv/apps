@@ -34,12 +34,13 @@ A fluorescent display in the manner of the late-80s Japanese digital dashes, dra
 
 A racing cluster, drawn in code by `cluster-design/apex/build.html` (`?v=sport` for Apex Sport) from the same drawing as its design pictures (`draw.js`).
 
-- **Rpm:** a band of 32 blocks (up to 1500, level to 6500, down to 8000) that fills in one continuous line through the blocks: 4 px strips of a `segments` widget, lit white (Sport: yellow), orange from 6000, red from 6500.
+- **Rpm:** a band of 32 blocks (up to 1500, level to 6500, down to 8000) that fills in one continuous line through the blocks: 4 px strips of a `segments` widget, lit white (Sport: yellow), the yellow zone amber, the red zone red.
+- **Zones (0.30.0):** the pictures still have the band orange from 6000 and its track dark orange and dark red, but the layout's `zoneSteps`, `zoneColors` and `zoneTrack` (shared/hud.js) take over: each strip's zone comes from its rpm, a lit strip in the yellow zone is the app's amber (no orange), and every unlit strip is drawn opaque over the track, dark amber or dark red in the yellow and red zones and the plain track elsewhere. So when the cold-engine guard moves the zones down, no orange is left between the reds.
 - **Middle:** the speed, the gear (`{{gearnum}}`) and P R N D M. The letter in use is bigger and white (`{{is:stage:X}}`); the others are dim (`{{isnt:stage:X}}`), and the fourth place shows D, or S in the sport programme.
 - **Bars:** boost (0-1.6 bar) and braking (`brakeG`, 0-1.2 g), one segment at a time.
 - **Bottom row:** coolant (40-130 °C) and fuel in 2 px strips, and the clock (`{{time}}`, white, Michroma 38 px) between them, where the design had a logo.
 - **Apex Sport:** a red glow over a red tray line, the band thicker.
-- **Shift flash (Apex Sport):** a `bandflash` effect layer (shaders.js) draws the whole band in one colour and flashes it 5 times a second. It is white from 500 rpm before the shift point, yellow from 250 before, and red at it. Only a colour and an on / off go to the car, never pixels. The setting **Shift flash** turns it off.
+- **Shift flash (Apex Sport):** a `bandflash` effect layer (shaders.js) draws the whole band in one colour and flashes it 5 times a second. It is white from 500 rpm before the shift point, yellow from 250 before, and red at it. Only a colour and an on / off go to the car, never pixels. The setting **Shift flash** turns it off. It doesn't flash during the start animation (0.30.0), nor does any theme's shift light.
 
 The glows are one quarter-size picture stretched by the GPU. The rest of the face is 6-7 pieces. Every sheet is chosen by its z group, so the theme takes about 8-9 MiB of pixel memory and 15-16 layers on two connections.
 
@@ -63,6 +64,7 @@ A car set to a removed theme shows the nearest one left (shared/hud.js `RENAMED`
 
 `widget.js`, through app.json `startWidget` and the kit's `ctx.widget` (kit/runtime/mgu.js). It uses BMW's Drive Recorder widget layout, as the kit's Live Data does (checked on a G05). The setting **Home-screen widget** picks what it shows:
 
+- **Sharpness (0.30.0):** the HMI shows the picture about 2.8 times the 384 x 256 it was drawn at, so text came out soft. It is still laid out in 384 x 256 but drawn 3 times as big (`startWidget.size` 1152 x 768, `scaledCanvas` in widget.js), and the theme pictures and the weather's text masks are made at that size.
 - **Fit (0.26.0):** the part of the picture the HMI shows was measured on a G20 from photos: about 8 % of the width and 7.5 % of the height is cut off each side (`startWidget.safe`). Everything keeps 14 px more inside that, smaller than before, and the weather sits in the middle of the window's height (Sunrise's at the top, over its horizon).
 - **Engine** (the default since 0.25.0): oil, coolant and boost, each as its value and a bar of 20 segments. The temperature bars are blue while cold (oil under 80 °C, coolant under 70 °C), green when warm and red over the Warnings limits, which show as a red tick; boost is orange, its peak of the last 5 s held as a white segment. On top: READY, or COLD and the shift point the cold-engine guard asks for. Boost comes from the sport display or, while the widget is placed, the engine unit (shared/hud.js `widgetBoost`).
 - **Weather, Mist** (the default) and **Weather, Sunrise:** the weather on Mist's photo, or on a sunrise over mountains (an earlier Sunrise theme's). On the left: the place, the temperature now with its icon, the weather now in a word, and today's high, low and chance of rain (in blue). On the right: the next three days, each with its icon, high (white) and low (grey). It uses the cluster themes' own fonts and colours. Every line on the left shares a baseline with the right, and nothing goes below Sunrise's horizon. While the forecast shown is an old one and there's no internet, OFFLINE shows in amber beside the place. Backgrounds: `cluster-design/mist/widget_bg.html` and `cluster-design/sunrise/widget_bg.html`.
@@ -70,6 +72,10 @@ A car set to a removed theme shows the nearest one left (shared/hud.js `RENAMED`
 - **Weather fetching:** the forecast (`shared/weather.js`, Open-Meteo, 4 days) is fetched while a widget is placed and shows the weather. This is apart from the themes' weather and the **Today's weather** setting. Like the themes, it needs the Store's Internet uplink.
 - **Small widget:** the layout's text lines only (ASCII: the place, the weather now, today's high / low / rain, the next days).
 - **Refresh:** redrawn when what it shows changes, else the same picture again every 30 s, in case the HMI dropped it.
+
+## Changing themes: the curtain (0.30.0)
+
+A new theme's layers are made after the old one's are gone (cluster-render's 16 MiB of pixel memory), and its big pictures take a moment through the upload budget. In between, BMW's own cluster showed, and the change looked like a glitch. Now a black fill over the whole panel goes up when the theme changes, on a fourth connection no layout uses (an effect layer: no pixel memory), and fades out in 0.35 s once cluster-render says every layer of the new theme is shown (4 s at most). To BMW's own cluster it fades out at once. The log says how long it stood (`curtain: ...`).
 
 ## Fail-safe
 
@@ -89,6 +95,7 @@ The bench shows both (bench/README.md): the hang button (`POST /hang`) and `stal
 - **Texts:** a text per step, for typed-out lines and counters. `test` shows the widget's self-test string.
 - **Self-test:** for a stretch it can be on too (`"test"` ms).
 - **Layers:** a layer's opacity can follow a curve (`fade`), and the renderer can slide a layer into place (`move`).
+- **Apex Sport (0.30.0):** the same rev band sweep as Apex. It used to step through the shift flash's stages, and on the car that flashed too hard.
 - **Dark Moon, Mist, Underpass:** since 0.25.1 only a soft fade up out of black: the picture over 1.4 s, eased in and out, the readouts 0.3 s after it. The picture no longer slides in (on the car the slide looked like shaking).
 - **Black underlay:** the photo themes get a black underlay (an effect layer, no pixel memory), so a fading picture never shows BMW's own cluster through it. An intro's `"underlay"` can be a rect, for a theme that leaves BMW's own strip showing.
 - **Warnings:** no warning flashes during the animation, as its values are made up.
@@ -99,7 +106,7 @@ The bench shows both (bench/README.md): the hang button (`POST /hang`) and `stal
 
 `page.js`, Zeiger's own page on the centre screen (since 0.24.0, written new; the design is `cluster-design/app_ui/mock.html` next to this repo). Two tabs in the header (since 0.26.0 without the kit's **All settings** list: everything is on the page):
 
-- **Themes:** a gallery. The theme looked at is big in the middle, with its neighbours beside it and a dot per theme under it. A tap on the left or right half of the screen, a finger swiped sideways (the kit's `ctx.onSwipe`, a Zeiger addition) or the iDrive controller go through them; the arrows at the screen's edges only show the way. **BMW's own cluster** is not a card but a switch in the bottom right corner: on, BMW's own cluster shows (for the drive mode being set, while the theme changes with it); off, the theme from before comes back. Looking changes nothing on the cluster: **Use this theme** (or **Use for COMFORT / SPORT / ECO PRO**) does. Under it, **Change with the drive mode**, and with it on, the theme of each drive mode: tap one to give it another theme. The car's drive mode now is marked NOW.
+- **Themes:** a gallery. The theme looked at is big in the middle, with its neighbours beside it and a dot per theme under it. A tap left or right of the big card, a finger swiped sideways (the kit's `ctx.onSwipe`, a Zeiger addition) or the iDrive controller go through them; the arrows at the screen's edges only show the way. Since 0.30.0 those taps don't light up (the kit's quiet targets), and **a tap on the big card puts that theme on the cluster**: the card lights up in orange with ON THE CLUSTER for a moment. The big pictures of the last 4 themes looked at are kept, and the neighbours' are sent ahead, so swiping no longer waits for a 2 MB picture. **BMW's own cluster** is not a card but a switch in the bottom right corner: on, BMW's own cluster shows (for the drive mode being set, while the theme changes with it); off, the theme from before comes back. Looking changes nothing on the cluster: **Use this theme** (or **Use for COMFORT / SPORT / ECO PRO**) does. Under it, **Change with the drive mode**, and with it on, the theme of each drive mode: tap one to give it another theme. The car's drive mode now is marked NOW.
 - **Settings:** groups on the left, each with what it is set to now; the open group's rows on the right, a switch or `- value +`. The groups:
   - **Cluster:** start animation, today's weather, the phone's map in Map Mist, theme position (px to the right, -12 by default), night colours.
   - **BMW's cluster:** hide BMW's black boxes (test), leave BMW's bottom strip clear.

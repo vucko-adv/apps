@@ -100,7 +100,6 @@ const CREDITS = [
 
 /* ---------- theme pictures (hud/previews/<layout>.json: big, small, hero) ---------- */
 const IMG = 0x5a500000;              // our image ids ('ZP' + n), clear of the kit's own
-const HERO = IMG;                    // one slot for the big picture: set again when another theme is looked at
 const pics = Object.create(null);
 let nextImg = 1;
 function decode(name, size) {
@@ -120,15 +119,25 @@ function pic(name, size) {
     if (d) rec.setImage(pics[k].id, d.w, d.h, d.px);
     return pics[k];
 }
-let heroName = null, heroPic = null;
-/** the big card's picture: 'hero' (1152 x 432) where there is one, else 'big'; one slot, so one in memory */
+// the big card's picture: 'hero' (1152 x 432) where there is one, else 'big'. Since 0.30.0 HERO_SLOTS of them are kept
+// (each its own image, so the renderer keeps its copy too) and the neighbours are sent ahead (gallery()): a swipe shows
+// a picture already there, without decoding and sending 2 MB first. The one used longest ago gives up its slot.
+const HERO_IDS = 0x5a5f0000, HERO_SLOTS = 4;
+const heroes = [], noHero = new Set();
 function hero(name) {
-    if (name === heroName) return heroPic;
-    heroName = name;
-    const d = name === 'off' ? null : decode(name, 'hero') || decode(name, 'big');
-    heroPic = d ? { id: HERO, w: d.w, h: d.h } : null;
-    if (d) rec.setImage(HERO, d.w, d.h, d.px);
-    return heroPic;
+    if (name === 'off' || noHero.has(name)) return null;
+    let h = heroes.find((q) => q && q.name === name);
+    if (!h) {
+        const d = decode(name, 'hero') || decode(name, 'big');
+        if (!d) { noHero.add(name); return null; }
+        let slot = heroes.length;
+        if (slot >= HERO_SLOTS) { slot = 0; heroes.forEach((q, i) => { if (q.used < heroes[slot].used) slot = i; }); }
+        h = { name, id: HERO_IDS + slot, w: d.w, h: d.h, used: 0 };
+        heroes[slot] = h;
+        rec.setImage(h.id, d.w, d.h, d.px);
+    }
+    h.used = Date.now();
+    return h;
 }
 
 class Page {
@@ -242,6 +251,13 @@ class Page {
         if (cur === 'off') this.use(this.prev[k] && this.prev[k] !== 'off' ? this.prev[k] : this.at || this.looks()[0]);
         else { this.prev[k] = cur; this.use('off'); }
     }
+    /** a tap on the big card: that theme on the cluster, and the card lights up a moment (pickedAt) */
+    pick() {
+        const v = this.at;
+        if (v !== this.get(this.key())) this.use(v);
+        this.picked = { v, t: Date.now() };
+        [120, 240, 360, 480, 600, 900, 1300, 1700].forEach((ms) => setTimeout(() => this.kick(), ms));
+    }
     use(v) {
         const scr = this.hud.screen;
         if (scr) { if (v !== 'off' && scr.otherOn()) scr.claim(); else scr.release(); }
@@ -272,6 +288,8 @@ class Page {
         }
         const i = looks.indexOf(this.at), go = (d) => () => { this.at = looks[(i + d + looks.length) % looks.length]; this.kick(); };
         this.goBy = (d) => go(d)();
+        // landed on a theme: its neighbours' big pictures sent ahead a moment later (drawn off the page, 1 px)
+        if (this.atWas !== this.at) { this.atWas = this.at; this.atSince = Date.now(); setTimeout(() => this.kick(), 700); }
         // the big card and its neighbours
         const ch = Math.min(440, bottom - 48 - 104), cw = Math.round(ch * 8 / 3), cx = (W - cw) / 2, cy = 48;
         const sh = Math.round(ch * 0.8), sw = Math.round(sh * 8 / 3), sy = cy + (ch - sh) / 2;
@@ -283,12 +301,25 @@ class Page {
         };
         side(looks[(i - 1 + looks.length) % looks.length], cx - 24 - sw, -1);
         side(looks[(i + 1) % looks.length], cx + cw + 24, 1);
+        if (Date.now() - this.atSince >= 650) {
+            [looks[(i - 1 + looks.length) % looks.length], looks[(i + 1) % looks.length]].forEach((v) => { const h = hero(v); if (h) cv.image(h.id, -8, -8, 1, 1); });
+        }
         this.picture(cv, this.at, 'hero', cx, cy, cw, ch);
         cv.gradientRect(cx, cy + ch - 170, cw, 170, [[0, A('#000000', 0)], [0.5, A('#000000', 0.78)], [1, A('#000000', 0.94)]]);
         cv.strokeRoundRect(cx, cy, cw, ch, 22, 1, A('#ffffff', 0.12));
         cv.text(this.name(this.at), cx + 30, cy + ch - 56, 46, C.text, { font: B, literal: true });
         cv.text(ABOUT[this.at] || '', cx + 30, cy + ch - 22, 21, C.soft, { font: M, literal: true });
         if (this.at === shown) pill(cv, cx + cw - 22, cy + 20, 'ON THE CLUSTER', C.ok);
+        // just picked (a tap on the card): the card lights up in the accent, then a frame stays a little longer
+        const pk = this.picked && this.picked.v === this.at ? Date.now() - this.picked.t : Infinity;
+        if (pk < 1600) {
+            if (pk < 500) cv.roundRect(cx, cy, cw, ch, 22, A(C.acc, 0.28 * (1 - pk / 500)));
+            const fa = pk < 1100 ? 1 : (1600 - pk) / 500;
+            cv.strokeRoundRect(cx - 3, cy - 3, cw + 6, ch + 6, 25, 4, A(C.acc, fa));
+            const s = 'ON THE CLUSTER', sw = cv.textWidth(s, 26, { font: B, spacing: 2, literal: true }) + 64;
+            cv.roundRect(cx + (cw - sw) / 2, cy + ch / 2 - 34, sw, 68, 34, A('#000000', 0.72 * fa));
+            cv.text(s, cx + cw / 2, cy + ch / 2 + 10, 26, A(C.acc, fa), { font: B, spacing: 2, align: 'center', literal: true });
+        }
         // Use
         const mode = MODES.find((m) => m[0] === key), what = mode ? 'for ' + mode[1] : '';
         if (this.at === cur) {
@@ -336,9 +367,11 @@ class Page {
         cv.text("BMW's own cluster", bx + 18, y + 44, 20, C.text, { font: B, literal: true });
         toggle(cv, bx + bw - 72, y + 13, own);
         cv.target(bx, y, bw, h, () => this.bmw(), 'bmw', 14);
-        // the gallery's halves: a tap left goes back, right goes on
-        cv.target(L, cy, W / 2 - L, ch + 40, go(-1), 'prev', 0);
-        cv.target(W / 2, cy, R - W / 2, ch + 40, go(1), 'next', 0);
+        // a tap on the big card puts it on the cluster; beside it, left goes back and right goes on (no press flash:
+        // since 0.30.0, the orange half page read as a choice)
+        cv.target(cx, cy, cw, ch, () => this.pick(), 'card', 22, true);
+        cv.target(L, cy, cx - L, ch + 40, go(-1), 'prev', 0, true);
+        cv.target(cx + cw, cy, R - cx - cw, ch + 40, go(1), 'next', 0, true);
     }
 
     settings(cv, bottom) {

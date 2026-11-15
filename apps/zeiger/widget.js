@@ -30,6 +30,27 @@ const text = require('./hud_text');
 const { Canvas } = require('./kit/canvas');
 
 const REDRAW_MS = 30000;
+// the layout's size (px): everything below is placed in it. The picture is drawn SCALE times as big (0.30.0: the HMI
+// shows it about 2.8 times its 384 x 256, so the old picture came out soft; now it shrinks a little instead)
+const LW = 384, LH = 256;
+
+/**
+ * A kit Canvas S times the layout's size, drawn in the layout's px (the calls widget.js uses). .cv: the real Canvas;
+ * .S: device px per layout px.
+ */
+function scaledCanvas(S, bg) {
+    const cv = new Canvas(Math.round(LW * S), Math.round(LH * S)).clear(bg);
+    const sp = (o) => { o = Object.assign({}, o || {}); if (o.spacing) o.spacing *= S; return o; };
+    return {
+        cv, S,
+        text(str, x, y, size, c, o) { return cv.text(str, x * S, y * S, size * S, c, sp(o)) / S; },
+        textWidth(str, size, o) { return cv.textWidth(str, size * S, sp(o)) / S; },
+        fillRect(x, y, w, h, c) { cv.fillRect(x * S, y * S, w * S, h * S, c); return this; },
+        roundRect(x, y, w, h, r, c) { cv.roundRect(x * S, y * S, w * S, h * S, r * S, c); return this; },
+        strokeRoundRect(x, y, w, h, r, lw, c) { cv.strokeRoundRect(x * S, y * S, w * S, h * S, r * S, lw * S, c); return this; },
+        drawImage(src, sw, sh, x, y, w, h) { cv.drawImage(src, sw, sh, x * S, y * S, w * S, h * S); return this; },
+    };
+}
 // brighter than before 0.25.0 (150, 158, 170): on the car the HMI's widget frame made the grey look faded
 const DIM = [196, 203, 214], FRAME = [72, 80, 92], WHITE = [255, 255, 255];
 // Engine: the bars' colours and ranges (C, bar); how long the boost's peak is held; warm from this oil temperature
@@ -128,7 +149,10 @@ class ZeigerWidget {
         this.cells = Object.create(null);    // spawnId -> { cell: value }: the text cells written
         this.bg = Object.create(null);       // a look's background -> RGBA (W x H), or null: none
         const sw = ctx.spec.startWidget || {};
-        [this.W, this.H] = sw.size || [384, 256];
+        // sw.size: the picture's px (1152 x 768 since 0.30.0); the drawing keeps the layout's 384 x 256
+        const size = sw.size || [LW, LH];
+        this.S = Math.max(1, size[0] / LW);
+        [this.W, this.H] = [LW, LH];
         const safe = sw.safe || [0.08, 0.075];
         this.box = { x: Math.round(this.W * safe[0]) + PAD, y: Math.round(this.H * safe[1]) + PAD };
         this.box.w = this.W - 2 * this.box.x; this.box.h = this.H - 2 * this.box.y;
@@ -209,7 +233,7 @@ class ZeigerWidget {
         if (!inst.big) return null;
         const last = this.sent[inst.spawnId];
         if (last && last.key === key && now - last.at < REDRAW_MS) return null;
-        if (this.key !== key) { this.cv = s.kind === 'weather' ? this.renderWeather(s) : s.kind === 'engine' ? this.renderEngine(s) : this.render(s); this.key = key; }
+        if (this.key !== key) { this.cv = (s.kind === 'weather' ? this.renderWeather(s) : s.kind === 'engine' ? this.renderEngine(s) : this.render(s)).cv; this.key = key; }
         this.sent[inst.spawnId] = { key, at: now };
         return this.cv;
     }
@@ -263,19 +287,20 @@ class ZeigerWidget {
 
     /** The big widget's picture for the theme state s (a kit Canvas) */
     render(s) {
-        const W = this.W, b = this.box, cx = W / 2, cv = new Canvas(W, this.H).clear([0, 0, 0, 255]);
+        const W = this.W, b = this.box, cx = W / 2, cv = scaledCanvas(this.S, [0, 0, 0, 255]), S = this.S;
         cv.text('ZEIGER', cx, b.y + 18, 15, DIM, { font: 'bold', align: 'center', literal: true, spacing: 3 });
         if (s.name === 'off') {
             cv.text('Off', cx, b.y + b.h / 2 + 6, 30, WHITE, { font: 'bold', align: 'center', literal: true });
             cv.text('BMW\'s own cluster', cx, b.y + b.h / 2 + 34, 16, DIM, { align: 'center', literal: true });
             return cv;
         }
-        const pic = this._picture(s.name, b.w), py = b.y + 30;
+        // the picture shrunk to the device px it takes, so it stays sharp
+        const pic = this._picture(s.name, Math.round(b.w * S)), py = b.y + 30, pw = pic ? pic.w / S : 0, ph = pic ? pic.h / S : 0;
         if (pic) {
-            cv.drawImage(pic.d, pic.w, pic.h, b.x, py, pic.w, pic.h);
-            cv.strokeRoundRect(b.x - 1, py - 1, pic.w + 2, pic.h + 2, 3, 1, FRAME);
+            cv.drawImage(pic.d, pic.w, pic.h, b.x, py, pw, ph);
+            cv.strokeRoundRect(b.x - 1, py - 1, pw + 2, ph + 2, 3, 1, FRAME);
         }
-        const ty = py + (pic ? pic.h : 100) + 30;
+        const ty = py + (pic ? ph : 100) + 30;
         cv.text(s.title, cx, ty, 22, WHITE, { font: 'bold', align: 'center', literal: true });
         if (s.mode) cv.text(s.mode, cx, ty + 22, 14, DIM, { align: 'center', literal: true });
         return cv;
@@ -289,7 +314,7 @@ class ZeigerWidget {
      * Big, white and in full colour: the HMI shows the widget smaller and paler than it is drawn.
      */
     renderEngine(s) {
-        const W = this.W, b = this.box, cv = new Canvas(W, this.H).clear([6, 7, 10, 255]);
+        const W = this.W, b = this.box, cv = scaledCanvas(this.S, [6, 7, 10, 255]);
         const L = b.x, R = b.x + b.w, F = { font: 'zsb', literal: true };
         const deg = (v) => (v === null ? '--' : String(s.us ? Math.round(v * 9 / 5 + 32) : v) + '°');
         const bar = (v) => (v === null ? '--' : s.us ? String(Math.round(v * 14.5)) : v.toFixed(2));
@@ -350,7 +375,10 @@ class ZeigerWidget {
         opts = opts || {};
         str = String(str);
         if (!str) return 0;
-        const f = text.loadFont(font), m = f.metrics, k = size / m.size, sp = (opts.spacing || 0) / k;
+        // in device px from here on (cv.S: the scaled canvas), the width returned in the layout's
+        const S = cv.S || 1, real = cv.cv || cv;
+        size *= S; x *= S; y *= S;
+        const f = text.loadFont(font), m = f.metrics, k = size / m.size, sp = (opts.spacing || 0) * S / k;
         const bw = Math.ceil(text.measure(str, font, sp)) + 2, bh = m.cellHeight;
         const tw = Math.max(1, Math.round(bw * k)), th = Math.max(1, Math.round(bh * k));
         const cov = scaleMask(text.mask(bw, bh, str, { font, spacing: sp, x: 1 }), bw, bh, tw, th);
@@ -362,12 +390,12 @@ class ZeigerWidget {
             for (let yy = 0; yy < th; yy++) cov.copy(big, (yy + pad) * sw + pad, yy * tw, yy * tw + tw);
             const soft = soften(big, sw, sh, r), d = new Uint8Array(sw * sh * 4), sa = opts.shadow || 0.55;
             for (let i = 0; i < soft.length; i++) d[i * 4 + 3] = Math.min(255, Math.round(soft[i] * sa * 1.6));
-            cv.blit({ w: sw, h: sh, d }, left - pad, top - pad + 1);
+            real.blit({ w: sw, h: sh, d }, left - pad, top - pad + Math.round(S));
         }
         const d = new Uint8Array(tw * th * 4);
         for (let i = 0; i < cov.length; i++) { const o = i * 4; d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = cov[i]; }
-        cv.blit({ w: tw, h: th, d }, left, top);
-        return tw;
+        real.blit({ w: tw, h: th, d }, left, top);
+        return tw / S;
     }
 
     _width(str, font, size, spacing) {
@@ -383,7 +411,7 @@ class ZeigerWidget {
      * y 180, where Sunrise's horizon starts.
      */
     renderWeather(s) {
-        const W = this.W, H = this.H, b = this.box, cv = new Canvas(W, H).clear([8, 10, 14, 255]);
+        const W = this.W, H = this.H, b = this.box, cv = scaledCanvas(this.S, [8, 10, 14, 255]);
         const lk = LOOKS[s.look] || LOOKS.mist, bg = this._background(lk.bg), sh = lk.shadow;
         if (bg) cv.drawImage(bg.d, bg.w, bg.h, 0, 0, W, H);
         const deg = (v) => this._deg(v, s.us) + '°';

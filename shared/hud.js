@@ -151,6 +151,12 @@
  *             [255, 196, 40] and red [255, 64, 48]; a segment of another zone than drawn is recoloured, as bright as
  *             it was. Unlit yellow and red segments show in their colour at "dim" (0.3) opacity over the face; 0
  *             leaves them dark.
+ *             "zoneSteps": [yellowAt, redAt] (Zeiger 0.30.0, Apex): the zone each segment is drawn in comes from its step,
+ *             not its colour; "zoneColors": [normal, yellow, red], each an [r, g, b] or null (the picture's own): a lit
+ *             segment in a zone with a colour given is always drawn in it (Apex's orange 6000-6500 as the yellow zone's
+ *             amber); "zoneTrack": [r, g, b], an unlit normal segment over a face drawn in a zone colour, and every
+ *             unlit yellow or red one in its colour at "zoneDark" (0.25), opaque, so the face's own dark orange and red
+ *             never show where the zones moved (the cold-engine guard).
  *             "above": true with measure "redFrom" (Zeiger addition, 0.27.0, VFD's red scale end): lit from where the
  *             red zone starts now (segment i lit while steps[i] >= it).
  *             Measures "econEco" / "econLoad" (Zeiger addition, Vintage Cyan's ECON bar): the engine load (torquePct)
@@ -302,6 +308,10 @@ const OWN_TYPES = { picture: true, needle: true, segments: true };
 const PACKABLE = { picture: true, segments: true };
 const STATUS_ASK_MS = 2000;      // after a rebuild: ask cluster-render for its own status text
 const LAYER_BUDGET = 8;          // cluster-render's limit per client connection (CompositorLimits.per_client; confirmed on the car Nov 5 2026)
+// the curtain (Zeiger 0.30.0): while the theme changes, a black fill over the whole panel on a connection no layout
+// uses, so BMW's own cluster doesn't show between the old theme's layers going and the new one's arriving; it fades
+// once every new layer is shown (CURTAIN_MAX_MS at most). An effect layer: no pixel memory.
+const CURTAIN_CONN = 3, CURTAIN_Z = 90, CURTAIN_MAX_MS = 4000, CURTAIN_FADE_MS = 350;
 const MAX_CONN = 4;              // connections a layout may ask for ("conn"): 32 layers service-wide / 8 per connection
 const PIXEL_BYTES = 16 * 1024 * 1024;   // cluster-render's pixel memory for every app's images together (CompositorLimits.pixel_bytes)
 const SHEET_AREA_FRAC = 4;       // the first sheet size limit: 1/4 of the target area (see the header)
@@ -931,6 +941,7 @@ class HudApp {
     start() {
         this.log.info('connecting to cluster-render at ' + this.socketPath);
         this.started = true;
+        if (this.target === 'panel') this._clientAt(CURTAIN_CONN);     // the curtain's connection, ready before a change
         this.clients.forEach((c) => c.connect());
         this.tickTimer = setInterval(() => this._guard('tick', () => this._tick()), TICK_MS);
         // Auto theme: check for sunrise / sunset once a minute; the status line too
@@ -1914,6 +1925,42 @@ class HudApp {
         this._status();
     }
 
+    /** The curtain (CURTAIN_* above) up, or held up again while one is still there. */
+    _curtainUp() {
+        if (this.target !== 'panel') return;
+        const c = this._clientAt(CURTAIN_CONN), now = Date.now();
+        if (!c.ready) return;
+        const k = this.curtain;
+        if (k) {
+            k.at = now; k.fade = 0;
+            if (k.alpha !== 1) { k.alpha = 1; c.uniform(k.ref, 'u_color', [0, 0, 0, 1]); }
+            return;
+        }
+        const [w, h] = this.size;
+        const ref = c.effect({ fs: shaders.fill, target: this.target, klass: 'content', z: CURTAIN_Z, x: 0, y: 0, w, h });
+        if (!ref) { this.log.warn('curtain: layer refused'); return; }
+        c.uniform(ref, 'u_size', [w, h]);
+        c.uniform(ref, 'u_color', [0, 0, 0, 1]);
+        c.uniform(ref, 'u_hole', [0, 0, 0, 0]);
+        c.uniform(ref, 'u_holeR', [0]);
+        this.curtain = { c, ref, at: now, fade: 0, alpha: 1 };
+    }
+
+    /** Each tick while the curtain is up: it fades once every layer of the new layout is shown (or none, or too long). */
+    _curtainTick(now) {
+        const k = this.curtain;
+        if (!k.fade) {
+            const refs = this._layerRefs();
+            const shown = refs.filter((r) => { const st = this.layerStates.get(r.key); return st && st.state === 'shown'; }).length;
+            if (refs.length && shown < refs.length && now - k.at < CURTAIN_MAX_MS) return;
+            k.fade = now;
+            this.log.info('curtain: ' + shown + ' of ' + refs.length + ' layers shown ' + (now - k.at) + ' ms after the change');
+        }
+        const a = Math.round(Math.max(0, 1 - (now - k.fade) / CURTAIN_FADE_MS) * 20) / 20;
+        if (a <= 0) { this._guard('curtain drop', () => k.c.drop(k.ref)); this.curtain = null; return; }
+        if (a !== k.alpha) { k.alpha = a; k.c.uniform(k.ref, 'u_color', [0, 0, 0, a]); }
+    }
+
     /** Drops the layers of the layout before (old: _rebuildInner's), all but the sheets in keep (a Map, or null). */
     _dropOld(old, keep) {
         const stay = {};
@@ -1981,7 +2028,8 @@ class HudApp {
         this.refused = null;
         clearTimeout(this.statusAskT); this.statusAskT = null;
         this.car.setRedline(this.setting('redline'));
-        const name = this._layoutName();
+        const name = this._layoutName(), before = this.activeName;
+        if (before && before !== name) this._guard('curtain', () => this._curtainUp());
         this.activeName = name;
         this.mapLayout = false;
         this.mapAlways = false;
@@ -2565,9 +2613,10 @@ class HudApp {
         if (!this.client.ready) return;
         // shift light: blink the whole bar at 8 Hz once the rpm reaches the redline
         const rpm = this._raw('rpm');
-        const flashing = isNum(rpm) && rpm >= this.setting('redline') - 150;
+        const flashing = !this.intro && isNum(rpm) && rpm >= this.setting('redline') - 150;
         this.flash = flashing ? Math.floor(now / 62.5) % 2 === 0 : false;
         this._guard('intro', () => this._introTick(now));
+        if (this.curtain) this._guard('curtain', () => this._curtainTick(now));
         this.widgets.forEach((x) => this._guard('widget ' + x.w.id, () => this._update(x, now, false)));
         this._failsafe(now, false);
     }
@@ -2732,6 +2781,7 @@ class HudApp {
     _zoneInfo(x) {
         if (x.zoneInfo) return x.zoneInfo;
         const w = x.w, p = x.pic, segs = w.segs, own = [], col = [null, null, null];
+        const zs = Array.isArray(w.zoneSteps) && w.zoneSteps.length === 2 ? w.zoneSteps : null;
         segs.forEach(([sx, sy, sw, sh], i) => {
             let r = 0, g = 0, b = 0, n = 0;
             for (let yy = 0; yy < sh; yy++) for (let xx = 0; xx < sw; xx++) {
@@ -2741,11 +2791,19 @@ class HudApp {
             }
             if (!n) { own.push(0); return; }
             r /= n; g /= n; b /= n;
-            const k = r > 2.2 * g && r > 2.2 * b ? 2 : r > 1.6 * b && g > 1.6 * b && r > 120 ? 1 : 0;
+            const st = w.steps[i];
+            const k = zs ? (isNum(st) && st >= zs[1] ? 2 : isNum(st) && st >= zs[0] ? 1 : 0)
+                : r > 2.2 * g && r > 2.2 * b ? 2 : r > 1.6 * b && g > 1.6 * b && r > 120 ? 1 : 0;
             own.push(k);
             if (!col[k]) col[k] = [Math.round(r), Math.round(g), Math.round(b)];
         });
-        x.zoneInfo = { own, col: [col[0] || [255, 255, 255], col[1] || [255, 196, 40], col[2] || [255, 64, 48]], dim: isNum(w.dim) ? w.dim : 0.3 };
+        const given = Array.isArray(w.zoneColors) ? w.zoneColors.map((c) => (Array.isArray(c) && c.length >= 3 ? c : null)) : [null, null, null];
+        // a given colour the picture's own differs from: its lit segments recoloured too (Apex's orange as amber)
+        const recolor = given.map((g, k) => !!g && (!col[k] || col[k].some((v, j) => Math.abs(v - g[j]) > 12)));
+        x.zoneInfo = {
+            own, given: recolor, track: Array.isArray(w.zoneTrack) ? w.zoneTrack : null, dark: isNum(w.zoneDark) ? w.zoneDark : 0.25,
+            col: [given[0] || col[0] || [255, 255, 255], given[1] || col[1] || [255, 196, 40], given[2] || col[2] || [255, 64, 48]], dim: isNum(w.dim) ? w.dim : 0.3,
+        };
         return x.zoneInfo;
     }
 
@@ -2767,7 +2825,18 @@ class HudApp {
             if (!force && old[i] === s) return;
             const [sx, sy, sw, sh] = segs[i], lit = s & 1, k = s >> 1;
             const b = Buffer.alloc(sw * sh * 4, 0);
-            if (lit && k === z.own[i]) {
+            // "zoneTrack": unlit, an opaque dark segment in its zone's colour (normal: the track), over the face's own
+            if (z.track && !lit && (k > 0 || z.own[i] !== 0)) {
+                const c = k > 0 ? z.col[k].map((v) => Math.round(v * z.dark)) : z.track;
+                for (let r = 0; r < sh; r++) {
+                    const o = ((sy + r) * w.w + sx) * 4;
+                    for (let q = 0; q < sw; q++) {
+                        if (p.rgba[o + q * 4 + 3] < 200) continue;          // the band itself, not its glow
+                        const d = (r * sw + q) * 4;
+                        b[d] = c[0]; b[d + 1] = c[1]; b[d + 2] = c[2]; b[d + 3] = 255;
+                    }
+                }
+            } else if (lit && k === z.own[i] && !z.given[k]) {
                 for (let r = 0; r < sh; r++) p.rgba.copy(b, r * sw * 4, ((sy + r) * w.w + sx) * 4, ((sy + r) * w.w + sx + sw) * 4);
             } else if (lit || (k > 0 && k !== z.own[i] && z.dim > 0)) {
                 const c = z.col[k], alpha = lit ? 1 : z.dim;
@@ -3041,7 +3110,7 @@ class HudApp {
             const rpm = this._raw('rpm'), sp = this._shift(), st = w.stages || [];
             let k = -1;
             if (isNum(rpm)) st.forEach((s, i) => { if (rpm >= sp.rpm + s[0]) k = i; });
-            const half = 500 / (w.hz || 5), on = k >= 0 && Math.floor(now / half) % 2 === 0;
+            const half = 500 / (w.hz || 5), on = !this.intro && k >= 0 && Math.floor(now / half) % 2 === 0;
             const key = on ? k : -1;
             if (!force && key === x.last) return;
             x.last = key;
