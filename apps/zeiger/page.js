@@ -41,7 +41,7 @@ const ABOUT = {
     dark_moon: 'A sunrise seen from orbit · today\'s weather',
     underpass: 'A photo · low sun on a tiled wall · today\'s weather',
     mist: 'A photo · a misty valley · today\'s weather',
-    peaks: 'A peak at dusk · minimal · speed, rev line, gear',
+    peaks: 'Ridges under a deep blue sky · minimal',
     sunrise_hills: 'Hills at sunrise · today\'s weather',
     map_mist: 'The phone\'s map in the middle of Mist\'s photo',
     off: 'No theme: BMW\'s own cluster shows',

@@ -4,6 +4,8 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.33.1:** **Peaks** on its other photo: sunlit ridges under a deep blue sky, darkened a little toward the top, the readouts in white and a soft grey (it was a peak against a pale evening sky in a dark ink). Checked on the bench.
+
 - **Zeiger 0.33.0:** a new theme, **Peaks**.
   - A minimal theme on a photo of a peak at dusk: the speed with a hairline rev line under it, the gear and drive mode on the left, range, clock and outside temperature on the right, in a warm dark ink on the light sky.
   - The rev line's yellow and red zones show faintly ahead of the rpm and move with the cold-engine guard (the new segments option `"zoneFaint"`).

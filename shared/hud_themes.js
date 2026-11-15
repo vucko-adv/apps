@@ -173,15 +173,15 @@ const THEMES = {
         bg: [1, 1, 1, 255], panel: [12, 16, 24, 255], line: [255, 255, 255, 255], head: [200, 208, 216, 255],
         ink: [1, 1, 1, 255], accent: [255, 59, 59, 255], well: [12, 16, 24, 255],
     },
-    // Peaks (layout peaks.json, Zeiger 0.33.0): a warm dark ink on a light evening sky, the second line a softer brown
+    // Peaks (layout peaks.json, Zeiger 0.33.0; its night look since 0.33.1): white on a deep blue sky, the second line a soft grey
     peaks: {
         name: 'Peaks',
-        fg: [42, 38, 34, 255], dim: [96, 88, 80, 255], track: [180, 170, 160, 255], arc: [200, 64, 44, 255],
+        fg: [244, 238, 244, 255], dim: [176, 178, 190, 255], track: [60, 70, 85, 255], arc: [255, 106, 85, 255],
         glow: 0, stripe: false,
-        bar: { low: [42, 38, 34], mid: [201, 138, 26], high: [200, 64, 44], midAt: 'shift' },
-        rev: { from: [96, 88, 80], to: [42, 38, 34] },
-        bg: [232, 226, 214, 255], panel: [232, 226, 214, 255], line: [42, 38, 34, 255], head: [96, 88, 80, 255],
-        ink: [42, 38, 34, 255], accent: [200, 64, 44, 255], well: [232, 226, 214, 255],
+        bar: { low: [244, 238, 244], mid: [255, 198, 92], high: [255, 106, 85], midAt: 'shift' },
+        rev: { from: [176, 178, 190], to: [244, 238, 244] },
+        bg: [1, 1, 1, 255], panel: [12, 16, 24, 255], line: [244, 238, 244, 255], head: [176, 178, 190, 255],
+        ink: [1, 1, 1, 255], accent: [255, 106, 85, 255], well: [12, 16, 24, 255],
     },
     // Map Mist (layout map_mist.json, Zeiger): Map's readouts round the phone's map over Mist's photo, Mist's colours
     map_mist: {

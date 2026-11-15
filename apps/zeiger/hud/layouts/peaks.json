@@ -6,7 +6,7 @@
  "packWaste": 1.5,
  "theme": "peaks",
  "noNightDim": true,
- "_about": "Peaks (Zeiger 0.33.0): a minimal theme on a photo of a peak against a pale evening sky (cluster-design/peaks/build.html). The speed with km/h and a hairline rev line under it in the middle, the selector letter, the gear and the drive mode on the left, range and the clock with the outside temperature on the right, in a warm dark ink. The rev line's yellow and red zones come from the rev range (zoneSteps / zoneColors), faint ahead of the rpm. Barlow and Barlow Semi Condensed (OFL). Widget reference: shared/hud.js header.",
+ "_about": "Peaks (Zeiger 0.33.0; 0.33.1 its night look): a minimal theme on a photo of sunlit ridges under a deep blue sky (cluster-design/peaks/build.html). The speed with km/h and a hairline rev line under it in the middle, the selector letter, the gear and the drive mode on the left, range and the clock with the outside temperature on the right, in white and a soft grey. The rev line's yellow and red zones come from the rev range (zoneSteps / zoneColors), faint ahead of the rpm. Barlow and Barlow Semi Condensed (OFL). Widget reference: shared/hud.js header.",
  "widgets": [
   {
    "id": "bg",
@@ -48,19 +48,19 @@
    ],
    "zoneColors": [
     [
-     42,
-     38,
-     34
+     244,
+     238,
+     244
     ],
     [
-     201,
-     138,
-     26
+     255,
+     198,
+     92
     ],
     [
-     200,
-     64,
-     44
+     255,
+     106,
+     85
     ]
    ],
    "class": "content",
