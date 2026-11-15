@@ -1,6 +1,8 @@
 {
  "schemaVersion": 2,
  "name": "Apex Sport",
+ "author": "vucko-adv",
+ "copyright": "Copyright (c) 2026 vucko-adv. Zeiger theme artwork.",
  "packWaste": 8,
  "theme": "apex_sport",
  "noNightDim": true,

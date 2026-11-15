@@ -1,6 +1,8 @@
 {
  "schemaVersion": 2,
  "name": "VFD",
+ "author": "vucko-adv",
+ "copyright": "Copyright (c) 2026 vucko-adv. Zeiger theme artwork.",
  "packWaste": 2,
  "theme": "vfd",
  "noNightDim": true,

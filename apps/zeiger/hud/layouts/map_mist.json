@@ -1,6 +1,8 @@
 {
  "schemaVersion": 2,
  "name": "Map Mist",
+ "author": "vucko-adv",
+ "copyright": "Copyright (c) 2026 vucko-adv. Zeiger theme artwork.",
  "packWaste": 1.5,
  "theme": "map_mist",
  "wantsMap": true,

@@ -1,6 +1,8 @@
 {
  "schemaVersion": 2,
  "name": "Vintage Green",
+ "author": "vucko-adv",
+ "copyright": "Copyright (c) 2026 vucko-adv. Zeiger theme artwork.",
  "packWaste": 2,
  "theme": "vintage_green",
  "noNightDim": true,

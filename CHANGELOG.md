@@ -2,6 +2,10 @@
 
 Newest first. Dates are when the build was pushed.
 
+## Nov 15 2026
+
+- **Zeiger 0.23.1:** every theme's pictures, layouts, start animations and gallery pictures name their author (vucko-adv). Nothing changes on the cluster.
+
 ## Nov 14 2026
 
 - **Zeiger 0.23.0:** the start animation waits until the theme is on the cluster.

@@ -1,6 +1,8 @@
 {
  "schemaVersion": 2,
  "name": "Mist",
+ "author": "vucko-adv",
+ "copyright": "Copyright (c) 2026 vucko-adv. Zeiger theme artwork.",
  "packWaste": 1.5,
  "theme": "mist",
  "wantsWeather": true,

@@ -1,6 +1,8 @@
 {
  "schemaVersion": 2,
  "name": "Dark Moon",
+ "author": "vucko-adv",
+ "copyright": "Copyright (c) 2026 vucko-adv. Zeiger theme artwork.",
  "packWaste": 1.5,
  "theme": "dark_moon",
  "wantsWeather": true,
