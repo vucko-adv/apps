@@ -2,7 +2,7 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Cyan (an 80s LCD dash with TURBO and ECON bars), VFD (a late-80s fluorescent dash, mint on black with teal windows), Apex and Apex Sport (a racing cluster with boost and braking bars), Dark Moon (a sunrise seen from orbit, the speed under the sun, today's weather), Underpass and Mist (photos, with Dark Moon's readouts), and Map Mist (the phone's map in the middle of the Mist photo)",
-  "version": "0.33.1",
+  "version": "0.34.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -727,6 +727,86 @@
         12,
         16,
         20
+      ]
+    },
+    {
+      "key": "apexMid",
+      "label": "Apex: bottom middle",
+      "type": "choice",
+      "default": "clock",
+      "options": [
+        [
+          "clock",
+          "Clock"
+        ],
+        [
+          "mbadge",
+          "M badge"
+        ],
+        [
+          "none",
+          "Empty"
+        ]
+      ]
+    },
+    {
+      "key": "apexBig",
+      "label": "Apex: big number",
+      "type": "choice",
+      "default": "speed",
+      "options": [
+        [
+          "speed",
+          "Speed"
+        ],
+        [
+          "rpm",
+          "Rpm"
+        ],
+        [
+          "none",
+          "Empty"
+        ]
+      ]
+    },
+    {
+      "key": "apexSportMid",
+      "label": "Apex Sport: bottom middle",
+      "type": "choice",
+      "default": "clock",
+      "options": [
+        [
+          "clock",
+          "Clock"
+        ],
+        [
+          "mbadge",
+          "M badge"
+        ],
+        [
+          "none",
+          "Empty"
+        ]
+      ]
+    },
+    {
+      "key": "apexSportBig",
+      "label": "Apex Sport: big number",
+      "type": "choice",
+      "default": "speed",
+      "options": [
+        [
+          "speed",
+          "Speed"
+        ],
+        [
+          "rpm",
+          "Rpm"
+        ],
+        [
+          "none",
+          "Empty"
+        ]
       ]
     },
     {

@@ -87,6 +87,12 @@ const GROUPS = [
         ['demo', 'Demo data', 'made-up values while the car sends none'],
     ] },
 ];
+// Customise (Zeiger 0.34.0): the themes whose places can show other things, the setting prefix and the rows (the
+// setting key's ending, label, the line under it); the layouts show a widget for its pick ("toggle": "<key>=<value>")
+const CUSTOM = {
+    apex: { key: 'apex', rows: [['Mid', 'Bottom middle', 'where the clock is'], ['Big', 'Big number', 'in the middle']] },
+    apex_sport: { key: 'apexSport', rows: [['Mid', 'Bottom middle', 'where the clock is'], ['Big', 'Big number', 'in the middle']] },
+};
 // the slot watch (BMW's cluster group): while it is on, the group shows only its switch, the rest is the watch
 const WATCH_ROW = 64, WATCH_LH = 22;
 // the calibration layouts (hudLayout values), for the row in BMW's cluster
@@ -184,7 +190,7 @@ class Page {
         this.render();
     }
     kick() { if (this.loop && this.loop.kick) this.loop.kick(); }
-    openTab(i) { if (i === 0 || i === 1) { this.tab = i; this.kick(); } }
+    openTab(i) { if (i === 0 || i === 1) { this.tab = i; this.custom = null; this.kick(); } }
 
     /* ---------- settings ---------- */
     get(k) { return this.hud.setting(k); }
@@ -292,7 +298,8 @@ class Page {
         ]);
         // the header drawn on the page itself (not the kit's full-screen one): its tabs take taps here
         if (!cv.chrome && cv.tabRects) cv.tabRects.forEach((r) => cv.target(r.x, r.y, r.w, r.h, () => this.openTab(r.i), 'tab:' + r.i, 0));
-        if (this.tab === 0) this.gallery(cv, bottom); else this.settings(cv, bottom);
+        if (this.tab === 0 && this.custom && CUSTOM[this.custom]) this.customise(cv, bottom);
+        else if (this.tab === 0) this.gallery(cv, bottom); else this.settings(cv, bottom);
         return this.ctx.ui.image('MAIN_GFX', cv);
     }
 
@@ -326,6 +333,14 @@ class Page {
         cv.text(this.name(this.at), cx + 30, cy + ch - 56, 46, C.text, { font: B, literal: true });
         cv.text(ABOUT[this.at] || '', cx + 30, cy + ch - 22, 21, C.soft, { font: M, literal: true });
         if (this.at === shown) pill(cv, cx + cw - 22, cy + 20, 'ON THE CLUSTER', C.ok);
+        // a theme whose places can show other things: Customise, top left on the card
+        if (CUSTOM[this.at]) {
+            const s = 'CUSTOMISE', w = cv.textWidth(s, 17, { font: B, spacing: 2, literal: true }) + 56, x = cx + 22, y = cy + 20;
+            cv.roundRect(x, y, w, 40, 20, A('#000000', 0.66));
+            cv.strokeRoundRect(x, y, w, 40, 20, 1.5, A(C.acc, 0.9));
+            cv.text(s, x + w / 2, y + 27, 17, C.accSoft, { font: B, spacing: 2, align: 'center', literal: true });
+            cv.target(x, y, w, 40, () => { this.custom = this.at; this.kick(); }, 'customise', 20);
+        }
         // just picked (a tap on the card): the card lights up in the accent, then a frame stays a little longer
         const pk = this.picked && this.picked.v === this.at ? Date.now() - this.picked.t : Infinity;
         if (pk < 1600) {
@@ -465,6 +480,25 @@ class Page {
         cv.text('changes (newest first):', rx, y + 18, 18, C.accSoft, F);
         if (!out.length) cv.text('none yet', rx + 12, y + 18 + LH, 17, C.dim, F);
         out.slice(0, n).forEach((l, i) => cv.text(fit(cv, l, 16, rw - 12, M), rx + 12, y + 18 + (i + 1) * LH, 16, C.text, F));
+    }
+
+    /** Customise: the theme's picture and a way back on the left, its places on the right (rows as in Settings). */
+    customise(cv, bottom) {
+        const v = this.custom, c = CUSTOM[v], gx = 24, gw = 476, gy = 48;
+        this.picture(cv, v, 'hero', gx, gy, gw, Math.round(gw * 3 / 8), 16);
+        cv.text(this.name(v), gx + 6, gy + 230, 34, C.text, { font: B, literal: true });
+        cv.text('What each place shows', gx + 6, gy + 260, 19, C.dim, { font: M, literal: true });
+        const bw = 220, by = gy + 286;
+        cv.roundRect(gx + 6, by, bw, 52, 26, A('#ffffff', 0.10));
+        cv.text('Back to the themes', gx + 6 + bw / 2, by + 33, 21, C.soft, { font: B, align: 'center', literal: true });
+        cv.target(gx + 6, by, bw, 52, () => { this.custom = null; this.kick(); }, 'customBack', 26);
+        const px = 524, pw = R - 12 - px, py = gy, ph = bottom - 6 - py;
+        cv.roundRect(px, py, pw, ph, 20, A(C.panel, 0.92));
+        cv.strokeRoundRect(px, py, pw, ph, 20, 1, C.faint);
+        cv.text('Customise ' + this.name(v), px + 32, py + 52, 38, C.text, { font: B, literal: true });
+        cv.text('Other themes keep theirs. The cluster changes as you pick.', px + 32, py + 86, 19, C.dim, { font: M, literal: true });
+        const y = py + 104, rh = Math.min(84, Math.floor((py + ph - 10 - y) / Math.max(1, c.rows.length)));
+        c.rows.forEach(([end, label, sub], j) => this.row(cv, px + 32, y + j * rh, pw - 64, rh, [c.key + end, label, sub]));
     }
 
     /** one setting: label and line under it on the left, a switch or - value + on the right */

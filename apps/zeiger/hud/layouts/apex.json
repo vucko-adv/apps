@@ -5602,7 +5602,8 @@
    "x": 748,
    "y": 306,
    "w": 429,
-   "h": 135
+   "h": 135,
+   "toggle": "apexBig=speed"
   },
   {
    "id": "unit",
@@ -5616,8 +5617,41 @@
    "align": "center",
    "x": 926,
    "y": 444,
-   "w": 58,
-   "h": 29
+   "w": 59,
+   "h": 29,
+   "toggle": "apexBig=speed"
+  },
+  {
+   "id": "rpm_big",
+   "type": "text",
+   "class": "content",
+   "z": 11,
+   "conn": 1,
+   "text": "{{rpm}}",
+   "font": "apex_speed",
+   "color": "fg",
+   "align": "center",
+   "x": 680,
+   "y": 306,
+   "w": 565,
+   "h": 135,
+   "toggle": "apexBig=rpm"
+  },
+  {
+   "id": "rpm_unit",
+   "type": "text",
+   "class": "content",
+   "z": 11,
+   "conn": 1,
+   "text": "rpm",
+   "font": "apex_kmh",
+   "color": "dim",
+   "align": "center",
+   "x": 932,
+   "y": 444,
+   "w": 46,
+   "h": 29,
+   "toggle": "apexBig=rpm"
   },
   {
    "id": "gear",
@@ -5887,7 +5921,22 @@
    "x": 882,
    "y": 588,
    "w": 160,
-   "h": 36
+   "h": 36,
+   "toggle": "apexMid=clock"
+  },
+  {
+   "id": "mbadge",
+   "type": "picture",
+   "picture": "apex_mbadge",
+   "own": false,
+   "toggle": "apexMid=mbadge",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "x": 905,
+   "y": 588,
+   "w": 110,
+   "h": 42
   }
  ]
 }

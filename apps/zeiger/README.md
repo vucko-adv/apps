@@ -42,6 +42,8 @@ A racing cluster, drawn in code by `cluster-design/apex/build.html` (`?v=sport` 
 - **Apex Sport:** a red glow over a red tray line, the band thicker.
 - **Shift flash (Apex Sport):** a `bandflash` effect layer (shaders.js) draws the whole band in one colour and flashes it 5 times a second. It is white from 500 rpm before the shift point, yellow from 250 before, and red at it. Only a colour and an on / off go to the car, never pixels. The setting **Shift flash** turns it off. It doesn't flash during the start animation (0.30.0), nor does any theme's shift light.
 
+- **Customise (0.34.0):** a **CUSTOMISE** button on Apex's and Apex Sport's gallery card opens a list of places and what each shows (page.js `CUSTOM`; the settings `apexMid` / `apexBig`, `apexSportMid` / `apexSportBig`, the diesel versions sharing their petrol one's). **Bottom middle:** the clock, BMW's M badge (`apex_mbadge`, drawn by build.html from the user's picture), or empty. **Big number:** the speed, the rpm (four digits in the speed's font, "rpm" under them), or empty. Each layout widget shows for its pick only (`"toggle": "apexMid=clock"`, shared/hud.js), so a pick rebuilds the theme. More places (the bars, the bottom corners, the gear) are next.
+
 The glows are one quarter-size picture stretched by the GPU. The rest of the face is 6-7 pieces. Every sheet is chosen by its z group, so the theme takes about 8-9 MiB of pixel memory and 15-16 layers on two connections.
 
 ## Dark Moon

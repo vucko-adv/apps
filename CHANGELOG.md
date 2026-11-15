@@ -4,6 +4,10 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.34.0:** Apex and Apex Sport can be customised.
+  - A **CUSTOMISE** button on their gallery card opens a list of places. **Bottom middle:** clock, BMW's M badge, or empty. **Big number:** speed, rpm, or empty. Each theme keeps its own picks.
+  - **Checked:** the list in the emulator; Apex Sport with the M badge and the rpm on the bench. Not yet on a car.
+
 - **Zeiger 0.33.1:** **Peaks** on its other photo: sunlit ridges under a deep blue sky, darkened a little toward the top, the readouts in white and a soft grey (it was a peak against a pale evening sky in a dark ink). Checked on the bench.
 
 - **Zeiger 0.33.0:** a new theme, **Peaks**.
