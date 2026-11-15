@@ -48,6 +48,10 @@ The glows are one quarter-size picture stretched by the GPU. The rest of the fac
 
 A sunrise seen from orbit, drawn in code by `cluster-design/darkmoon/build.html`: the speed in a dark moon's disc under the sun, the selector and drive mode on the right, today's weather on the left (Open-Meteo, through the Store's Internet uplink), range and coolant at the bottom with a small clock between them (`{{time}}` in the second line's grey), everything mirrored about the middle.
 
+## Peaks (0.33.0)
+
+A minimal theme (`cluster-design/peaks/build.html`, drafted in `design.html`) on a photo of a peak against a pale evening sky, over the whole panel. The photo came from a friend of the author. Little on it, in a warm dark ink (colour theme `peaks`): the speed (Barlow Medium 150, font `p_speed`) with km/h and a hairline rev line under it, the selector letter with the gear (`{{gearInD}}`) and the drive mode on the left, range and the clock with the outside temperature on the right. The rev line is a `segments` bar drawn white and coloured by the engine (`zoneColors`: the ink, the yellow and the red zone); `"zoneFaint"` (new) shows the yellow and red zones faintly ahead of the rpm all the time, and they move with the cold-engine guard. Its start animation is the soft fade of the photo themes.
+
 ## Underpass and Mist
 
 Dark Moon's readouts and weather over a photo (`cluster-design/underpass` and `cluster-design/mist`, built by `cluster-design/photo/photo_theme.js`): soft scrims behind the readouts so they read on it, and black wherever BMW's gear box lands.

@@ -156,7 +156,8 @@
  *             segment in a zone with a colour given is always drawn in it (Apex's orange 6000-6500 as the yellow zone's
  *             amber); "zoneTrack": [r, g, b], an unlit normal segment over a face drawn in a zone colour, and every
  *             unlit yellow or red one in its colour at "zoneDark" (0.25), opaque, so the face's own dark orange and red
- *             never show where the zones moved (the cold-engine guard).
+ *             never show where the zones moved (the cold-engine guard). "zoneFaint": true (Zeiger 0.33.0, Peaks' hairline):
+ *             every unlit yellow and red segment in its zone's colour at "dim" opacity, ahead of the rpm, always.
  *             "above": true with measure "redFrom" (Zeiger addition, 0.27.0, VFD's red scale end): lit from where the
  *             red zone starts now (segment i lit while steps[i] >= it).
  *             Measures "econEco" / "econLoad" (Zeiger addition, Vintage Cyan's ECON bar): the engine load (torquePct)
@@ -2893,7 +2894,7 @@ class HudApp {
                 }
             } else if (lit && k === z.own[i] && !z.given[k]) {
                 for (let r = 0; r < sh; r++) p.rgba.copy(b, r * sw * 4, ((sy + r) * w.w + sx) * 4, ((sy + r) * w.w + sx + sw) * 4);
-            } else if (lit || (k > 0 && k !== z.own[i] && z.dim > 0)) {
+            } else if (lit || (k > 0 && (k !== z.own[i] || w.zoneFaint === true) && z.dim > 0)) {
                 const c = z.col[k], alpha = lit ? 1 : z.dim;
                 for (let r = 0; r < sh; r++) {
                     const o = ((sy + r) * w.w + sx) * 4;

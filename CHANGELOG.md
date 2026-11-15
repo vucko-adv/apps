@@ -4,6 +4,11 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.33.0:** a new theme, **Peaks**.
+  - A minimal theme on a photo of a peak at dusk: the speed with a hairline rev line under it, the gear and drive mode on the left, range, clock and outside temperature on the right, in a warm dark ink on the light sky.
+  - The rev line's yellow and red zones show faintly ahead of the rpm and move with the cold-engine guard (the new segments option `"zoneFaint"`).
+  - **Checked:** on the bench; not yet on a car. The app grows by about 3 MB (the photo).
+
 - **Zeiger 0.32.0:** Sunrise over the whole panel, and **Leave BMW's bottom strip clear** cuts the theme instead of squeezing it.
   - **Sunrise** covers the whole panel again, as the first Sunrise did: the hills and trees to the bottom edge, no black band, the range and coolant where they were. BMW's strip shows only with the switch on. New gallery picture.
   - **Leave BMW's bottom strip clear:** the theme stays exactly as it is and is only cut at the strip (from y 662): image pixels there are see-through, a fill gets the strip as its hole, and a readout that sits mostly in the strip is left out. It used to squeeze every layer to 662 / 720 of its height.

@@ -30,6 +30,10 @@
 
 <p align="center"><img src="docs/images/zeiger-mist.png" width="900" alt="The Mist theme"></p>
 
+**Peaks**: a minimal theme on a photo of a peak at dusk: the speed with a hairline rev line, the gear and drive mode, range, clock and outside temperature, in a warm dark ink on the light sky.
+
+<p align="center"><img src="docs/images/zeiger-peaks.png" width="900" alt="The Peaks theme"></p>
+
 **Map Mist**: the phone's map (through waze-on-cluster) in the middle of Mist's photo.
 
 <p align="center"><img src="docs/images/zeiger-map-mist.png" width="900" alt="The Map Mist theme"></p>
