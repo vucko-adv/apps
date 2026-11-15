@@ -4,12 +4,15 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
-- **Zeiger 0.27.0:** the red zone moves with the oil temperature.
-  - With a cold engine the rev bar's red zone starts at 3500 rpm (oil at 30 °C or under) and moves back to the redline as the oil warms to 80 °C. In it, segments are dim red under the rpm and bright red once reached.
+- **Zeiger 0.27.0:** the rev range: BMW's yellow and red zones, a diesel version, and zones that move with the oil temperature.
+  - **Settings, Rev range:** Engine (Petrol: scale to 8000, yellow from 6000, red from 6500; Diesel: scale to 6000, yellow from 4500, red from 5000), and Red zone from / Yellow zone from to set them by hand. They replace "Redline" (7000).
+  - Every rpm bar is coloured by these zones, whatever its picture has.
+  - **Diesel:** Vintage Green, Vintage Cyan, VFD, Apex and Apex Sport have a 0-6 scale version, shown with Engine: Diesel (the app grows by about 0.5 MB: only the pictures that differ are in twice).
+  - With a cold engine the red zone starts at 3500 rpm (diesel 3000; oil at 30 °C or under) and moves back as the oil warms to 80 °C, the yellow zone with it. In it, segments are dim red under the rpm and bright red once reached.
   - Vintage Green, Vintage Cyan, VFD, Apex and Apex Sport; drawn from each bar's own picture, no new pictures.
   - The cold shift point follows the zone (300 rpm under it by default) instead of the old fixed 4500 at 30 °C.
   - **VFD:** the scale's red end (red ticks and the dashed line, 7000-8000) moves down with the zone instead; the band's columns in the zone light red only once reached. The coolant line C-H is level now (it fell 8 px toward H).
-  - **Checked:** on the bench (oil 20 °C and 55 °C, Vintage Green, Apex; VFD at 20 °C and 95 °C); not yet on a car.
+  - **Checked:** on the bench (petrol and diesel, cold and warm, Vintage Green, Apex, VFD); every layout loads with the app's own checks. Not yet on a car.
 
 - **Zeiger 0.26.0:** the page and the widgets after the first look on the car.
   - **Gallery:** a tap on the left or right half of the screen, or a finger swiped sideways, goes through the themes. The round arrows beside the card are gone; plain arrows sit at the screen's edges.

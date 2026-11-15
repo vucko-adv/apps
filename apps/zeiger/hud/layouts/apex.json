@@ -110,6 +110,7 @@
    "own": false,
    "picture": "apex_rpm0",
    "measure": "rpm",
+   "zone": true,
    "class": "content",
    "z": 8,
    "conn": 1,
@@ -484,8 +485,7 @@
     952,
     971,
     990
-   ],
-   "zone": true
+   ]
   },
   {
    "id": "rpm1",
@@ -493,6 +493,7 @@
    "own": false,
    "picture": "apex_rpm1",
    "measure": "rpm",
+   "zone": true,
    "class": "content",
    "z": 8,
    "conn": 1,
@@ -867,8 +868,7 @@
     1952,
     1971,
     1990
-   ],
-   "zone": true
+   ]
   },
   {
    "id": "rpm2",
@@ -876,6 +876,7 @@
    "own": false,
    "picture": "apex_rpm2",
    "measure": "rpm",
+   "zone": true,
    "class": "content",
    "z": 9,
    "conn": 1,
@@ -2342,8 +2343,7 @@
     5952,
     5971,
     5990
-   ],
-   "zone": true
+   ]
   },
   {
    "id": "rpm3",
@@ -2351,6 +2351,7 @@
    "own": false,
    "picture": "apex_rpm3",
    "measure": "rpm",
+   "zone": true,
    "class": "content",
    "z": 10,
    "conn": 1,
@@ -2725,8 +2726,7 @@
     6952,
     6971,
     6990
-   ],
-   "zone": true
+   ]
   },
   {
    "id": "rpm4",
@@ -2734,6 +2734,7 @@
    "own": false,
    "picture": "apex_rpm4",
    "measure": "rpm",
+   "zone": true,
    "class": "content",
    "z": 10,
    "conn": 1,
@@ -3108,8 +3109,7 @@
     7952,
     7971,
     7990
-   ],
-   "zone": true
+   ]
   },
   {
    "id": "boost_bar",

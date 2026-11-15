@@ -104,11 +104,17 @@ The bench shows both (bench/README.md): the hang button (`POST /hang`) and `stal
   - **Cluster:** start animation, today's weather, the phone's map in Map Mist, theme position (px to the right, -12 by default), night colours.
   - **BMW's cluster:** hide BMW's black boxes (test), leave BMW's bottom strip clear.
   - **Warnings:** oil and coolant temperature and boost; over its limit, the value flashes red on the cluster.
-  - **Shift point:** redline, shift point before it, shift flash, cold-engine rev guard.
+  - **Rev range:** engine (petrol or diesel), where the red and the yellow zones start, the shift point before the red, shift flash, cold-engine rev guard.
 
-## Cold engine: the red zone moves (0.27.0)
+## Rev range: petrol, diesel, yellow and red (0.27.0)
 
-With **Cold-engine rev guard** on (the default), the rev bars of Vintage Green, Vintage Cyan, VFD, Apex and Apex Sport start their red zone lower while the oil is cold: at 3500 rpm with the oil at 30 °C or under, then straight up with the oil temperature (100 rpm steps) back to the redline at 80 °C. In the zone the bar's segments are drawn red: dim while the rpm is under them, bright red once it reaches them; the bar's own red end keeps its colour. The shift point follows: "Shift point before redline" under the zone's start (3200 rpm cold with the default 300), so the Engine widget's COLD · SHIFT BY and Apex Sport's flash say the same.
+- **Engine** (Settings, Rev range): **Petrol**, BMW's: the scale to 8000, yellow from 6000, red from 6500; **Diesel**: the scale to 6000, yellow from 4500, red from 5000. **Red zone from** and **Yellow zone from** set them by hand (Auto: the engine's; yellow Auto is 500 under the red). The red zone's start is also the "redline" everything else uses (the shift point is "Shift point" before it, the Engine widget, Apex Sport's flash).
+- **The bars:** every rpm bar is drawn in the zones the settings say, whatever its picture has: a segment in another zone than its picture's is recoloured (shared/hud.js `_updateZone`; the yellow and red are the picture's own where it has them). Unlit yellow and red segments show dim (Vintage, Apex) or dark (VFD).
+- **Diesel scales:** Vintage Green, Vintage Cyan, VFD, Apex and Apex Sport have a diesel version, `<theme>_diesel` (its scale 0-6, built with `build.html?d=1` in `cluster-design/vintage2`, `vfd`, `apex`), which the app shows in place of the theme with Engine: Diesel. Only the pictures that differ are in the app twice (`cluster-design/dedupe_diesel.js` points the rest at the petrol ones; run it after `watermark.js mark`). The photo themes have no rev scale and look the same for both.
+
+## Cold engine: the zones move (0.27.0)
+
+With **Cold-engine rev guard** on (the default), the rev bars of Vintage Green, Vintage Cyan, VFD, Apex and Apex Sport start their red zone lower while the oil is cold: at 3500 rpm (diesel 3000) with the oil at 30 °C or under, then straight up with the oil temperature (100 rpm steps) back to the red zone's setting at 80 °C. The yellow zone keeps its distance under it. In the zone the bar's segments are drawn red: dim while the rpm is under them, bright red once it reaches them; the bar's own red end keeps its colour. The shift point follows: "Shift point" under the zone's start (3200 rpm cold with the default 300), so the Engine widget's COLD · SHIFT BY and Apex Sport's flash say the same.
 
 - **How:** a segments widget with `"zone": true` (the layouts' rpm bars; the builders in `cluster-design/vintage2`, `vfd` and `apex` set it). shared/hud.js `_updateZone` redraws the segments whose state changed, the picture's own pixels recoloured, so no theme needed new pictures. The zone's start is `ShiftScore.coldRed(oil)` (shared/shift_score.js).
 - **VFD** does it its own way: the scale's red end (the red ticks and the red dashed line, from 7000) is no longer on the face but a bar of its own (`red_scale`, `"above": true`, measure `redFrom`) that starts at the zone's start, so the red end moves down while cold. The rpm band's columns in the zone light red as over 7000, and stay dark under the rpm (`"dim": 0`).

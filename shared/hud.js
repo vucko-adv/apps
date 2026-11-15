@@ -142,15 +142,17 @@
  *             name). Unlit segments are see-through, so the face under it shows them dark. Only the segments that
  *             changed are sent (bimmer-lab-apps fork addition, Vintage theme). "one": true (Zeiger addition, VFD's
  *             coolant block and low-fuel pump) lights only the last segment reached, a marker riding along the scale.
- *             "zone": true (Zeiger addition, 0.27.0; rpm bars): the cold-engine red zone. While the cold guard holds
- *             (ShiftScore.coldRed: from 3500 rpm with the oil at 30 °C, back to the redline at 80 °C) the segments
- *             from there up to the bar's own first red segment are drawn red: lit ones in that red ("hot", else the
- *             first red segment's own colour, else [255, 64, 48]), unlit ones in it at "dim" (0.3) opacity over the
- *             face. The bar's own red segments (found in its picture: red over 2.2x green and blue; orange is not red) keep theirs.
- *             "above": true with measure "redFrom" (Zeiger addition, 0.27.0, VFD's red scale end): lit from the red
- *             zone's start up (segment i lit while steps[i] >= it): "redAt" rpm (where the face's red begins) while
- *             the engine is warm, lower while the cold guard holds (the cold-engine red zone's start, never above
- *             "redAt"). "dim": 0 on a "zone" bar leaves its unlit zone segments dark.
+ *             "zone": true (Zeiger addition, 0.27.0; rpm bars): the rev range's colours. Each segment is drawn in the
+ *             colour of the zone its step is in: normal, yellow from the "yellowLine", red from the "redline" (both
+ *             from the settings: engine, redFrom, yellowFrom; BMW's petrol 6000 / 6500, diesel 4500 / 5000), both
+ *             lower while the cold guard holds (ShiftScore.zones: the red from 3500 petrol / 3000 diesel with the oil
+ *             at 30 °C, back at 80 °C). The colours are the picture's own (its first normal, yellow / orange and red
+ *             segments: red over 2.2x green and blue, yellow-orange red and green over 1.6x blue), else amber
+ *             [255, 196, 40] and red [255, 64, 48]; a segment of another zone than drawn is recoloured, as bright as
+ *             it was. Unlit yellow and red segments show in their colour at "dim" (0.3) opacity over the face; 0
+ *             leaves them dark.
+ *             "above": true with measure "redFrom" (Zeiger addition, 0.27.0, VFD's red scale end): lit from where the
+ *             red zone starts now (segment i lit while steps[i] >= it).
  *             Measures "econEco" / "econLoad" (Zeiger addition, Vintage Cyan's ECON bar): the engine load (torquePct)
  *             under / over ECON_MID as 0..1, the green half filling left while driving economically (coasting fills
  *             it) and the red half right under load; 0 while standing still
@@ -732,6 +734,17 @@ class HudApp {
 
     /** A setting's value, or its default when the saved value isn't one the schema allows. */
     setting(key) {
+        // the rev range (Zeiger 0.27.0): "redline" is where the red zone starts (setting "redFrom", 0 = BMW's for the
+        // "engine": petrol 6500, diesel 5000), "yellowLine" where the yellow one does ("yellowFrom", 0 = 500 under
+        // the red), "rpmMax" the scale's end (petrol 8000, diesel 6000)
+        if (key === 'redline' || key === 'yellowLine' || key === 'rpmMax') {
+            const diesel = this.setting('engine') === 'diesel', max = diesel ? 6000 : 8000;
+            if (key === 'rpmMax') return max;
+            const rf = this.setting('redFrom'), red = Math.min(max, rf > 0 ? rf : diesel ? 5000 : 6500);
+            if (key === 'redline') return red;
+            const yf = this.setting('yellowFrom');
+            return yf > 0 && yf < red ? yf : red - 500;
+        }
         // "mapUp": not saved, the Waze map is showing inside the theme now (the setting on, waze.js says so)
         if (key === 'mapUp') return !!(this.waze && this.waze.up && (this.mapAlways || this.ctx.settings.get('mapInTheme') === true));
         const s = this.ctx.settings.item(key);
@@ -826,6 +839,7 @@ class HudApp {
         this.resetG();
         this.score = new ShiftScore(this.car, () => ({
             redline: this.setting('redline'), shiftBefore: this.setting('shiftBefore'), coldGuard: this.setting('coldGuard'),
+            yellow: this.setting('yellowLine'), coldStart: this.setting('engine') === 'diesel' ? 3000 : 3500,
         }), this.log);
     }
 
@@ -1969,6 +1983,11 @@ class HudApp {
             this._wazeWant();
             return;
         }
+        // the diesel version (Zeiger 0.27.0, setting "engine": diesel): "<name>_diesel" where a theme has one (its rev
+        // scale to 6000); the theme keeps its name (start animation, previews), and a theme without one shows as it is
+        if (this.setting('engine') === 'diesel') {
+            try { layout = this.layouts.load(name + '_diesel'); } catch (e) { /* none: the theme as it is */ }
+        }
         // "withMap" (Zeiger: Vintage Green / Amber): the layout to show in its place while the phone's map is on
         // (waze-on-cluster streaming, the setting "mapInTheme" on); back to this one when the map has been off a while
         this.hasWithMap = typeof layout.withMap === 'string' && layout.withMap.length > 0;
@@ -2681,60 +2700,66 @@ class HudApp {
         if (rects.length) this._blit(x, rects, Buffer.concat(parts));
     }
 
-    /** Where the red zone starts now (rpm): lower than the redline while the oil is cold (ShiftScore.coldRed). */
-    _coldRed() {
-        if (this.intro || this.testUntil > Date.now()) return Infinity;      // the start animation's values are made up
-        const red = this.score.coldRed(this.car.data().oil);
-        return isNum(red) && red < this.setting('redline') ? red : Infinity;
+    /** Where the yellow and red zones start now (rpm): the settings', lower while the oil is cold (ShiftScore.zones). */
+    _zones() {
+        const warm = { yellow: this.setting('yellowLine'), red: this.setting('redline') };
+        if (this.intro || this.testUntil > Date.now()) return warm;      // the start animation's values are made up
+        const z = this.score.zones(this.car.data().oil);
+        return isNum(z.red) && isNum(z.yellow) ? z : warm;
     }
 
-    /** A "zone" bar's first red segment and its colour, from the picture (once). */
+    /** A "zone" bar's segments' own zones (0 normal, 1 yellow, 2 red) and its three colours, from the picture (once). */
     _zoneInfo(x) {
         if (x.zoneInfo) return x.zoneInfo;
-        const w = x.w, p = x.pic, segs = w.segs;
-        let first = segs.length, col = null;
-        for (let i = 0; i < segs.length; i++) {
-            const [sx, sy, sw, sh] = segs[i];
+        const w = x.w, p = x.pic, segs = w.segs, own = [], col = [null, null, null];
+        segs.forEach(([sx, sy, sw, sh], i) => {
             let r = 0, g = 0, b = 0, n = 0;
             for (let yy = 0; yy < sh; yy++) for (let xx = 0; xx < sw; xx++) {
                 const o = ((sy + yy) * w.w + sx + xx) * 4;
                 if (p.rgba[o + 3] < 128) continue;
                 r += p.rgba[o]; g += p.rgba[o + 1]; b += p.rgba[o + 2]; n++;
             }
-            if (n && r > 2.2 * g && r > 2.2 * b) { first = i; col = [Math.round(r / n), Math.round(g / n), Math.round(b / n)]; break; }
-        }
-        const hot = Array.isArray(w.hot) ? w.hot : col || [255, 64, 48];
-        x.zoneInfo = { first, hot, dim: isNum(w.dim) ? w.dim : 0.3 };
+            if (!n) { own.push(0); return; }
+            r /= n; g /= n; b /= n;
+            const k = r > 2.2 * g && r > 2.2 * b ? 2 : r > 1.6 * b && g > 1.6 * b && r > 120 ? 1 : 0;
+            own.push(k);
+            if (!col[k]) col[k] = [Math.round(r), Math.round(g), Math.round(b)];
+        });
+        x.zoneInfo = { own, col: [col[0] || [255, 255, 255], col[1] || [255, 196, 40], col[2] || [255, 64, 48]], dim: isNum(w.dim) ? w.dim : 0.3 };
         return x.zoneInfo;
     }
 
     /**
-     * A "zone" rpm bar: as _updateSegments, each segment 0 (unlit), 1 (lit), 2 (unlit in the cold red zone) or 3 (lit
-     * in it); only the segments whose state changed are sent. In the zone the picture's pixels are drawn in the red,
-     * as bright as they were (the dots and their glow keep their shape).
+     * A "zone" rpm bar: each segment's state (lit or not, and its zone now), and only the segments whose state changed
+     * sent: in its own zone as the picture has it (unlit: clear, the face shows it dark), in another zone recoloured
+     * (unlit: in yellow or red at "dim" opacity, normal: clear).
      */
     _updateZone(x, now, force) {
-        const w = x.w, segs = w.segs, steps = w.steps, p = x.pic, z = this._zoneInfo(x);
+        const w = x.w, segs = w.segs, steps = w.steps, p = x.pic, z = this._zoneInfo(x), zn = this._zones();
         const v = this.testUntil > now ? Number.MAX_VALUE : this.rpmF;
         let n = 0;
         if (isNum(v)) while (n < segs.length && n < steps.length && v >= steps[n]) n++;
-        const from = this._coldRed();
-        const st = segs.map((s, i) => (i < n ? 1 : 0) + (i < z.first && i < steps.length && steps[i] >= from ? 2 : 0));
+        const zoneOf = (i) => (i >= steps.length ? z.own[i] : steps[i] >= zn.red ? 2 : steps[i] >= zn.yellow ? 1 : 0);
+        const st = segs.map((s, i) => (i < n ? 1 : 0) + 2 * zoneOf(i));
         const old = x.zoneSt || [];
         const rects = [], parts = [];
         st.forEach((s, i) => {
             if (!force && old[i] === s) return;
-            const [sx, sy, sw, sh] = segs[i];
+            const [sx, sy, sw, sh] = segs[i], lit = s & 1, k = s >> 1;
             const b = Buffer.alloc(sw * sh * 4, 0);
-            if (s) for (let r = 0; r < sh; r++) {
-                const o = ((sy + r) * w.w + sx) * 4;
-                if (s === 1) { p.rgba.copy(b, r * sw * 4, o, o + sw * 4); continue; }
-                for (let c = 0; c < sw; c++) {
-                    const k = o + c * 4, d = (r * sw + c) * 4, a = p.rgba[k + 3];
-                    if (!a) continue;
-                    const lum = Math.max(p.rgba[k], p.rgba[k + 1], p.rgba[k + 2]) / 255;
-                    b[d] = Math.round(z.hot[0] * lum); b[d + 1] = Math.round(z.hot[1] * lum); b[d + 2] = Math.round(z.hot[2] * lum);
-                    b[d + 3] = s === 3 ? a : Math.round(a * z.dim);
+            if (lit && k === z.own[i]) {
+                for (let r = 0; r < sh; r++) p.rgba.copy(b, r * sw * 4, ((sy + r) * w.w + sx) * 4, ((sy + r) * w.w + sx + sw) * 4);
+            } else if (lit || (k > 0 && k !== z.own[i] && z.dim > 0)) {
+                const c = z.col[k], alpha = lit ? 1 : z.dim;
+                for (let r = 0; r < sh; r++) {
+                    const o = ((sy + r) * w.w + sx) * 4;
+                    for (let q = 0; q < sw; q++) {
+                        const kk = o + q * 4, d = (r * sw + q) * 4, a = p.rgba[kk + 3];
+                        if (!a) continue;
+                        const lum = Math.max(p.rgba[kk], p.rgba[kk + 1], p.rgba[kk + 2]) / 255;
+                        b[d] = Math.round(c[0] * lum); b[d + 1] = Math.round(c[1] * lum); b[d + 2] = Math.round(c[2] * lum);
+                        b[d + 3] = Math.round(a * alpha);
+                    }
                 }
             }
             rects.push({ x: sx, y: sy, w: sw, h: sh });
@@ -2744,11 +2769,10 @@ class HudApp {
         if (rects.length) this._blit(x, rects, Buffer.concat(parts));
     }
 
-    /** An "above" bar (measure "redFrom"): the segments from the red zone's start up lit, the rest clear. */
+    /** An "above" bar (measure "redFrom"): the segments from where the red zone starts now up lit, the rest clear. */
     _updateAbove(x, now, force) {
         const w = x.w, segs = w.segs, steps = w.steps, p = x.pic;
-        const at = isNum(w.redAt) ? w.redAt : this.setting('redline');
-        const from = Math.min(at, this._coldRed());
+        const from = this._zones().red;
         const st = segs.map((s, i) => (i < steps.length && steps[i] >= from ? 1 : 0));
         const old = x.zoneSt || [];
         const rects = [], parts = [];

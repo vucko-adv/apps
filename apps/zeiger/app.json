@@ -97,7 +97,10 @@
       384,
       256
     ],
-    "safe": [0.08, 0.075],
+    "safe": [
+      0.08,
+      0.075
+    ],
     "cells": {
       "ErrorInfo": [
         false,
@@ -557,22 +560,74 @@
       ]
     },
     {
-      "key": "redline",
-      "label": "Redline (shift light)",
+      "key": "engine",
+      "label": "Engine",
+      "type": "choice",
+      "default": "petrol",
+      "options": [
+        [
+          "petrol",
+          "Petrol: scale to 8000, yellow from 6000, red from 6500"
+        ],
+        [
+          "diesel",
+          "Diesel: scale to 6000, yellow from 4500, red from 5000"
+        ]
+      ]
+    },
+    {
+      "key": "redFrom",
+      "label": "Red zone from (0: the engine's)",
       "type": "number",
       "unit": "rpm",
-      "default": 7000,
+      "default": 0,
       "steps": [
+        0,
+        4000,
+        4250,
+        4500,
+        4750,
+        5000,
+        5250,
         5500,
+        5750,
         6000,
+        6250,
         6500,
+        6750,
         7000,
+        7250,
         7500
       ]
     },
     {
+      "key": "yellowFrom",
+      "label": "Yellow zone from (0: 500 under the red)",
+      "type": "number",
+      "unit": "rpm",
+      "default": 0,
+      "steps": [
+        0,
+        3500,
+        3750,
+        4000,
+        4250,
+        4500,
+        4750,
+        5000,
+        5250,
+        5500,
+        5750,
+        6000,
+        6250,
+        6500,
+        6750,
+        7000
+      ]
+    },
+    {
       "key": "shiftBefore",
-      "label": "Shift point before redline",
+      "label": "Shift point before the red zone",
       "type": "number",
       "unit": "rpm",
       "default": 300,

@@ -64,11 +64,13 @@ const GROUPS = [
         ['warnCoolant', 'Coolant temperature', 'flashes from', 'H₂O', '#59c7ff'],
         ['warnBoost', 'Boost', 'Apex, Vintage · flashes from', 'BAR', '#c58cff'],
     ] },
-    { name: 'Shift point', about: 'Where Apex Sport\'s rev band flashes, and the shift light.', rows: [
-        ['redline', 'Redline', 'where the shift light ends'],
-        ['shiftBefore', 'Shift point', 'before the redline'],
+    { name: 'Rev range', about: 'The rev bars\' yellow and red zones, and the shift point.', rows: [
+        ['engine', 'Engine', 'petrol: scale to 8000 · diesel: scale to 6000'],
+        ['redFrom', 'Red zone from', 'Auto: BMW\'s, 6500 petrol, 5000 diesel'],
+        ['yellowFrom', 'Yellow zone from', 'Auto: 500 under the red'],
+        ['shiftBefore', 'Shift point', 'before the red zone'],
         ['shiftFlash', 'Shift flash', 'Apex Sport: white, yellow, then red'],
-        ['coldGuard', 'Cold-engine rev guard', 'the red zone from 3500 rpm, back to the redline as the oil warms'],
+        ['coldGuard', 'Cold-engine rev guard', 'both zones lower while the oil is cold'],
     ] },
     { name: 'Units and time', about: 'km/h and °C are drawn into the themes: keep the units metric.', rows: [
         ['units', 'Units', 'speed, temperatures, pressure'],
@@ -197,7 +199,9 @@ class Page {
         if (k === 'warnOil' || k === 'warnCoolant') return v ? (this.us() ? Math.round(v * 9 / 5 + 32) + ' °F' : v + ' °C') : 'Off';
         if (k === 'warnBoost') return v ? (this.us() ? Math.round(v * 14.5) + ' psi' : v.toFixed(1) + ' bar') : 'Off';
         if (k === 'shiftX') return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + ' px';
-        if (k === 'redline') return num(v) + ' rpm';
+        if (k === 'engine') return v === 'diesel' ? 'Diesel' : 'Petrol';
+        if (k === 'redFrom') return v > 0 ? num(v) + ' rpm' : 'Auto · ' + num(this.hud.setting('redline'));
+        if (k === 'yellowFrom') return v > 0 ? num(v) + ' rpm' : 'Auto · ' + num(this.hud.setting('yellowLine'));
         if (k === 'shiftBefore') return v ? num(v) + ' rpm' : 'At the redline';
         if (k === 'tankLitres') return v + ' L';
         if (k === 'timeZone') return tz.name(v);
@@ -213,7 +217,7 @@ class Page {
             const s = [['warnOil', 'oil'], ['warnCoolant', 'coolant'], ['warnBoost', 'boost']].filter((x) => this.get(x[0])).map((x) => x[1] + ' ' + this.valueText(x[0]));
             return s.length ? s.join(' · ') : 'all off';
         }
-        if (g.name === 'Shift point') return 'redline ' + this.valueText('redline') + ' · flash ' + (on('shiftFlash') ? 'on' : 'off');
+        if (g.name === 'Rev range') return this.valueText('engine') + ' · yellow ' + num(this.hud.setting('yellowLine')) + ' · red ' + num(this.hud.setting('redline'));
         if (g.name === 'Units and time') return (this.us() ? 'mph' : 'km/h') + ' · ' + this.valueText('clock') + ' · ' + this.valueText('timeZone');
         if (g.name === 'Home-screen widget') return this.valueText('widgetShows');
         if (g.name === 'BMW\'s cluster') return 'black boxes ' + (on('hideBoxes') ? 'hidden' : 'shown') + ' · bottom strip ' + (on('stripClear') ? 'clear' : 'covered') + (this.calibNow() ? ' · calibrating' : '');

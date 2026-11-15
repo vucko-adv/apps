@@ -2322,7 +2322,7 @@
    "id": "red_scale",
    "type": "segments",
    "above": true,
-   "redAt": 7000,
+   "redAt": 6500,
    "own": false,
    "picture": "vfd_red_scale",
    "measure": "redFrom",
