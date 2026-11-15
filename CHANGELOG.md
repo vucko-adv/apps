@@ -1,0 +1,176 @@
+# Changes
+
+Newest first. Dates are when the build was pushed.
+
+## Nov 14 2026
+
+- **Zeiger 0.23.0:** the start animation waits until the theme is on the cluster.
+  - On the car only Vintage's start animation could be seen; VFD's, Apex's, Mist's and Dark Moon's played out before the theme showed.
+  - The likely reason: the animation started 0.5 s after the theme was made, while its pictures take seconds to reach the cluster (Apex about 4 MB, a photo theme's picture 5.5 MB), and at power-on BMW holds the display a while first.
+  - It now holds its first frame until cluster-render says every layer of the theme is shown, then starts 0.3 s later (photo themes 0.4 s).
+  - If some layers still aren't shown after 15 s, it plays anyway; if none are, it's skipped.
+  - The log says how long it waited.
+  - **Checked:** on the bench, also with layers held back by the bench's layer cap; not yet on a car.
+
+- **Zeiger 0.22.0:** fewer themes, Vintage Green in Vintage Cyan's layout, and fixes from the first drive with 0.20 and 0.21.
+  - **Removed:**
+    - **Sunrise**: BMW's bottom strip under it didn't take BMW's black boxes away on a G20.
+    - **Map** and **Map Underpass**: **Map Mist** is the one theme with the phone's map now.
+    - **Vintage Amber**, and Vintage Green's and Amber's versions with the phone's map.
+    - A car set to a removed theme shows the nearest one left: Sunrise shows Mist, Map and Map Underpass show Map Mist, Vintage Amber shows Vintage Green.
+    - The home-screen widget's **Weather, Sunrise** stays.
+  - **Vintage Green:** Vintage Cyan's layout in Green's colours, cream readouts on dark green windows.
+    - A dot-matrix rpm band in place of the wedge.
+    - TURBO and ECON beside the speed.
+    - Three dot-matrix strips along the bottom: outside temperature, range and average speed, clock.
+    - The roundel in the theme's colours.
+    - The same start animation as Cyan's, TURBO and ECON included.
+  - **Boost:**
+    - Vintage Cyan's TURBO bar rarely got past half at full throttle, while Apex's boost bar was full of life on the same car.
+    - Boost now comes from the sport display only while that value comes several times a second; otherwise the engine unit is asked up to 4 times a second, and its value wins.
+    - Before, the engine unit was asked only after 3 s with no sport display value at all, so a value sent now and then could stand for seconds: the likely cause, not yet confirmed on the car.
+    - The log says which source is used.
+  - **TURBO and ECON labels** (Green and Cyan):
+    - Sharp, with no glow round them.
+    - The speed window's layer also held the labels' ends, so they were drawn twice; now each face piece holds only its own pixels (`cluster-design/vintage2/build.html`).
+    - That also fixes the start animation's TURBO blink, which dimmed only half the word.
+  - **Checked:** on the bench, not yet on a car.
+
+- **Zeiger 0.21.0:** a **start animation** for the themes, about 2.5 s, when the car starts.
+  - **VFD:** the tube strikes, everything lights, the windows come on left to right, then SYSTEM CHECK and OK.
+  - **Vintage:**
+    - The rpm sweeps to the end and back, the bars fill one after another, and the speed counts 000 to 888.
+    - The message types BMW · SYSTEM CHECK, then ALL OK.
+    - Vintage Cyan: TURBO blinks and sweeps, and ECON sweeps green, then red.
+  - **Apex:** a rev sweep. Apex Sport's band flashes white, yellow, red.
+  - **Dark Moon, Mist, Underpass:** the picture comes up out of black.
+  - **Sunrise:** the mountains, then the sky's glow behind them.
+  - **When it plays:**
+    - Once per theme after the car starts, or when a theme is first picked.
+    - Only while the car stands still; it stops at once when the car moves off.
+    - The new setting **Start animation** turns it off.
+  - **Engine (`shared/hud.js`):** a layout's `intro`, or `hud/intros/<layout>.json` (made by `cluster-design/intro/make_intros.js`):
+    - keyframes for values;
+    - stepped texts;
+    - a self-test stretch;
+    - layer opacity curves;
+    - renderer slides;
+    - a black underlay.
+  - **VFD:** a hidden dot-matrix text in its middle window, for SYSTEM CHECK.
+  - **Checked:** on the bench, every theme. Layer opacity and slides are not yet tried on a car.
+- **Zeiger 0.20.0:** a new theme, **VFD**: a fluorescent display as the late-80s Japanese digital dashes had.
+  - **The look:**
+    - Pale mint phosphor glowing on black.
+    - Dot-matrix fuel and rpm bands; the rpm scale has a red dashed end.
+    - A dot block riding along the coolant line from C to H.
+    - Big slanted segment digits for the speed.
+    - Three teal filter windows: shift position and gear; the clock with the oil and outside temperatures; the range.
+    - The drive mode in a green lamp.
+    - A 2.5 s self-test at power-on. No roundel, as the dashes it follows had none.
+  - **On the cluster:** BMW's gear box falls on black. It takes 4.4 MiB of cluster-render's 16 MiB in 19 layers on 3 connections.
+  - **Engine:** a `segments` widget's `"one": true` lights only the last segment reached: a marker riding along a scale. VFD uses it for the coolant block, and for the pump that turns orange under 15 % fuel.
+  - Checked on the bench, not yet on a car.
+- **Also in 0.20.0:** a third Vintage, **Vintage Cyan**, with a layout of its own.
+  - **Colours:** cyan fluorescent readouts on dark teal windows. The roundel is drawn in the theme's colours.
+  - **Rpm:** a dot-matrix band with ghost dots, orange from 5200 and red from 6750, over a tick scale with dot-matrix numbers. It replaces the long wedge.
+  - **Middle row:** the speed sits 78 px higher. Left of it, an amber **TURBO** lamp over a boost bar (0-1.6 bar, rising segments).
+  - **ECON bar,** right of the speed, as on 80s econometers:
+    - Green fills to the left while you drive economically; coasting fills it.
+    - Red fills to the right under load; full throttle fills it.
+    - Its segments grow from the middle toward the ends.
+    - It reads the engine's load from its torque. Standing still, it stays empty.
+  - **Bottom:** three dot-matrix strips: the outside temperature; the range and average speed (under the speed); the clock.
+  - **Size and limits:** 6.7 MiB in 23 layers. BMW's gear box falls on black. There is no map version yet: while the phone's map is on, it stays as it is.
+  - **Engine:** measures `econEco` and `econLoad`, the engine load (torquePct) under or over 35 % of its peak torque, each 0..1. The message font (`v2_dots`) gains the degree sign.
+  - Checked on the bench, not yet on a car.
+- **Zeiger 0.19.0:** **Sunrise** is back: the first Sunrise theme (a sunrise over mountains, today's weather), as its own theme next to Dark Moon.
+  - **It ends above BMW's own bottom strip:**
+    - Nothing is drawn below y 646 except a black band to 662 (to 658 over the strip's drive mode and gear, x 1196-1424).
+    - BMW's strip (gear, drive mode, ranges, time, outside temperature, warning lights) shows below the theme.
+    - With the strip showing, BMW is reported to leave out its black boxes. The measures are from eroobeeroo's Cluster Layouts, found on cars by thatgrayg22. This is a test: not yet tried on a G20 with Zeiger.
+  - **The other themes are unchanged.**
+  - **Engine:**
+    - A layout's `"ownStrip": true` says it already ends above BMW's strip; **Leave BMW's bottom strip clear** doesn't squeeze it.
+    - A widget's `"fixed": true` stays put when **Theme position** moves the rest.
+  - **Theme:** the land fades to black above the band, and the range and coolant groups sit 36 px higher (`cluster-design/sunrise/strip_sunrise.js` rebuilds it from the 0.8.2 files).
+- **Zeiger 0.18.1:** Vintage Green and Amber load faster and stay on when the phone's map starts.
+  - **Why they went dark:**
+    - Vintage's layers took 10.5 MiB of cluster-render's 16 MiB (its map version 12.2). That memory is for every app together, and the phone's map takes another 3.2 MiB.
+    - At the switch to the map version the old and new layers counted together for a moment, so layers were refused.
+    - Each start sent 5.5-6.4 MB over the link to the cluster, which carries 2-5.5 MB/s for everything, the map's video included.
+  - **Vintage's layers:**
+    - Each face piece is now in a z group of its own, so the planner no longer packs far-apart pieces into big, mostly empty sheets.
+    - They are spread over three connections: 6.5 MiB (map version 7.3) and 3.4 MB sent at a start.
+  - **Engine (shared/hud.js):**
+    - A rebuild keeps a sheet the new layout has again, pixel for pixel. The switch to the map version keeps the face pieces both versions share, so it sends 2.6 MB instead of 6.4.
+    - A layer refused for room has the layout made again 2 s later, at most twice.
+    - Only the shown theme's pictures stay decoded. After going through every theme the app used 138 MB instead of 216 MB on the bench.
+  - Bench: every theme in turn and back to back with the map on, no refusals. Not yet seen on a car.
+- **Zeiger 0.18.0:** the home-screen widget can show the **weather**: the temperature now, the weather in a word, today's high, low and chance of rain, and the next three days.
+  - **Two looks:** **Mist** (the Mist theme's photo, the default) and **Sunrise** (the first Sunrise theme's sunrise over mountains, from before Dark Moon). The text uses the cluster themes' own fonts and colours.
+  - The new setting **Home-screen widget** picks Weather, Mist, Weather, Sunrise, or the cluster's theme as before.
+  - **Weather data:** `shared/weather.js` now fetches 4 days and the weather right now. It fetches while a theme with weather shows or a widget shows the weather. Each asks on its own, so the **Today's weather** setting still only concerns the themes.
+  - When the forecast shown is an old one and there's no internet, OFFLINE shows beside the place.
+  - Not yet seen on a car.
+- **Zeiger 0.17.0:** a **home-screen widget**. Hold a finger on a home-screen tile and pick Zeiger.
+  - **Big widget:** the theme the cluster shows now, with its picture and name, and the drive mode when the theme follows it. **Off** when Zeiger isn't drawing.
+  - **Small widget:** the same in words.
+  - It's BMW's own widget mechanism for apps (StartWidget), which the kit already had, on the Drive Recorder layout checked on a G05. The build makes its resources.
+  - Not yet seen on a car.
+
+## Nov 13 2026
+
+- **Zeiger 0.16.1:** Apex Sport's shift flash shader asks for `highp` only where the GPU has it in fragment shaders, else `mediump`. Many embedded GPUs lack it, and a shader that demands it doesn't compile there; cruzen991/Cluster saw that on a car. On a GPU with `highp` nothing changes. Without it, the flash now shows, its edges a little coarser.
+- **Zeiger 0.16.0:** a **fail-safe**, after G's Dash's.
+  - **If Zeiger hangs:** its theme disappears within about 1.2 s and BMW's own cluster shows. Every layer plays a cluster-render animation that holds its scale and then shrinks it to nothing, and Zeiger renews it every 200 ms.
+  - **If the speed signal stops while the car moves:** for over a second, the theme hides at once and comes back half a second after the speed returns.
+  - Both were tested on the bench, not yet in the car.
+  - Engine: the kit's `car.ageOf()`, and `animate` taking the caller's animation number.
+  - Bench: animations, the hang test (`POST /hang`) and `stall` in manual signals.
+- **Zeiger 0.15.1:** the same small grey **clock** on **Map**, **Map Underpass** and **Map Mist**, under the map's window between the range and the coolant. Map's small font gains the colon. The clock is on the second connection, so the layouts keep their small sheets.
+- **Zeiger 0.15.0:** Dark Moon, Underpass and Mist get a small grey **clock** in the middle of the bottom row, between the range and the coolant. It uses the readouts' own font and follows the **Clock** setting (12 or 24 hours).
+- **Zeiger 0.14.0:** Apex and Apex Sport get a **clock**: white, in their racing face, in the middle of the bottom row. Apex Sport gets a **shift flash**:
+  - Toward the shift point the whole rev band flashes: white from 500 rpm before it, yellow from 250 before, red at it.
+  - The shift point is **Redline (shift light)** less **Shift point before redline**, lower while the engine is cold.
+  - The new setting **Shift flash** turns it off.
+  - Engine: the `bandflash` effect widget. A flash sends a colour and an on / off, not pixels.
+- **Zeiger 0.13.0:** two new themes, **Apex** and **Apex Sport**: a racing cluster.
+  - **Rpm:** a 32-block band across the top (up to 1500, level to 6500, down to 8000). It fills in one continuous line through the blocks, white (Sport: yellow), orange from 6000, red from 6500.
+  - **Middle:** the speed, with the gear and P R N D M (S in the sport programme) to its right.
+  - **Bars:** boost and braking bars to its left.
+  - **Bottom row:** coolant and fuel / range.
+  - **Apex Sport** adds a red glow over a red tray line and a thicker band. It is meant for SPORT with **Change with SPORT / COMFORT / ECO PRO**.
+  - **Engine:**
+    - `{{brakeG}}` (braking in g, also a `measure`) and `{{isnt:<token>:<value>[:<other>...]}}`.
+    - A layout's glow can be a small stretched picture that is the background too (no `fill` layer).
+    - Both themes take about 8-9 MiB of pixel memory.
+- **Zeiger 0.12.1:** a soft black fade along the bottom of Dark Moon, Underpass, Mist, Map, Map Underpass and Map Mist (from y 628 down, nearly black in BMW's bottom strip), so the dark backing BMW draws behind its gear letter there (P R N D, always shown) blends in. The readouts above keep their background. The Vintage themes are black there already.
+- **Zeiger 0.12.0:** **Vintage Green and Vintage Amber with the phone's map.** While waze-on-cluster streams the phone's map, they change by themselves to a layout with the map:
+  - the map in a window (x 656-1296, y 341-600) under a veil in the theme's colours, with scanlines and a vignette;
+  - the temperature and clock to its left, under a smaller dot-matrix strip;
+  - the speed to its right;
+  - between them, a window as tall as the speed's, with the selector's letter over the gear number.
+
+  The plain layout comes back 8 s after the map stops, without the self-test. The setting **Show the phone's map** turns it off. Engine changes (shared/hud.js): a layout's `withMap` names the one to show while the map streams, a full-width fill's map window can follow Theme position (`holeFollowsShift`), and waze.js reports `streaming` on any target. The map stays at waze-on-cluster's own size, so the Map themes are unaffected. 12.2 of the cluster's 16 MiB.
+- **Zeiger 0.11.0:** two more themes, **Map Underpass** and **Map Mist**: the Map theme's window onto the phone's map and its readouts (the speed on the left, the selector on the right, range and coolant at the bottom) on Underpass's and Mist's photos, black where BMW's gear box lands. `cluster-design/photo/photo_theme.js` makes them with `map: true`. 11.7 of the cluster's 16 MiB each.
+- **Zeiger 0.10.0:** two new themes, **Underpass** and **Mist**: Dark Moon's readouts and weather over a photo (low sun on a tiled wall over a stairway; a misty valley between two dark hills). `cluster-design/photo/photo_theme.js` fits a 1920x720 photo to the cluster: soft scrims behind the readouts (white on them reads at 8:1 or better), black wherever BMW's gear box lands (Mist's right hill raised there), the picture moving with Theme position. 12.3 of the cluster's 16 MiB each.
+- **Zeiger 0.9.1:** **Dark Moon**: the speed and the selector line up with the weather. All three columns share one band: the speed's digits, the selector letter and the temperature start on one line (y 245), and km/h, the drive mode and the forecast's last line end on one line (y 413).
+- **Zeiger 0.9.0:** a new theme, **Dark Moon**, in place of Sunrise (a saved Sunrise choice opens Dark Moon): a sunrise seen from orbit, drawn in code (`cluster-design/darkmoon/orbit_scene.js`). Black space and stars, the sun coming up behind the top of a dark moon over the Earth's thin blue limb, dark cloud tops below, warm under the sun. The speed sits in the moon's disc right under the sun; the weather on the left and the selector on the right, the range group and the coolant group at the bottom mirror each other about the middle. **Map** has Dark Moon's look: the phone's map in a window in the middle with the sun rising on its top edge, the window cut equally from both sides of the map, the speed on the left, the selector on the right. Both pictures move with **Theme position** like the readouts (shared/hud.js `followsShift`: the picture's own pixels move, so the panel stays covered), and BMW's gear box falls on black space in every theme. Dark Moon uses 12.4 and Map 11.7 of the cluster's 16 MiB.
+- **Zeiger 0.8.2:** the **Map** theme shows the phone's map in a window in the middle of a black cluster, at waze-on-cluster's own size (`map_rect` left empty), and the window ends just left of the black box BMW draws behind its gear display (on a G20 about x 1420-1610, y 318-433), so the box falls on black. The map over the whole cluster (`map_rect = 0,0,1920,720`), the **Map size** setting and the dark shades under the readouts are gone. Docs: black boxes in the middle come from a cluster coded to BMW's M layout on a car that isn't a real M; coding it back to M Sport or M Performance removes them.
+- **Zeiger 0.8.1:** a new app icon, a dot-matrix Z in Vintage Green's colours (cluster-design/icon/concepts.html).
+- **Zeiger 0.8.0:** **Sunrise** now shows in the page's theme gallery (it lists the drive-mode theme choices, which lacked it) and in the drive-mode lists, and shows the drive mode (COMFORT, SPORT, SPORT+, ECO PRO) under the selector. **Vintage 1** is gone; **Vintage 2** is now **Vintage Green**, and **Vintage Amber** is the same layout in Vintage 1's colours (amber readouts, green lit segments and labels, dark amber windows). Their message line shows the range and the average speed this drive instead of the oil temperature (it has its bar); the strip is wider for it. A car set to Vintage 1 or 2 shows Vintage Green. **Theme position** is -12 px by default. For the black boxes BMW draws over the themes with the ignition on: the Settings tab now shows, above the status line, what BMW shows in each display slot and the state of cluster-render's map and guide hold (**BMW slots: ...**), so a photo with the ignition on and one with it off tell which of BMW's panels the boxes are. Engine: `{{modeShort}}`, and the demo drive shows COMFORT as its drive mode.
+- **Zeiger 0.7.0:** a fourth theme, **Sunrise**: a sunrise over mountains drawn in code, the speed in the middle, the selector and drive mode on the right, and on the left **today's weather**: an icon for the day, the outside temperature from the car, the day's weather in words and its high / low / chance of rain. The forecast is Open-Meteo's, for where the internet connection is (ipinfo.io, rounded to 0.1°), checked every 30 min and kept for the day. Internet only through the Store's **Internet uplink** (a phone's hotspot, USB tethering or an LTE stick): Zeiger now asks for it (`"internet": true` in app.json, `mguInternet` in the package) and resolves names through the uplink's DNS servers. New setting **Today's weather** (on) turns it off. Engine: `wantsWeather` and the `{{wx...}}` tokens (shared/weather.js).
+- **Zeiger 0.6.0:** a third theme, **Map**: the phone's map (waze-on-cluster) over the whole cluster with only the speed, the selector and drive mode, range and coolant over it, on dark shades so they read on a day map too. **Show the phone's map** is now on by default, and the new **Map size** setting says how waze-on-cluster draws it: Full screen (its `map_rect = 0,0,1920,720`) or Centre (1088x480, black round it). Engine: a picture with `stretch` (a small image drawn over a large rect, for gradients) and `toggle` lists.
+- **Zeiger 0.5.0:** two themes now, **Vintage 1** and the new **Vintage 2**, an LCD from 1985: a continuous rpm wedge lit cream into orange into red (the red from the scale's red line), slanted seven-segment digits over ghost 8s, P R N D S M with the one in use lit, pixel icons over the oil / water / fuel bars, a dot-matrix message line (oil, range), scanlines, and a 2.5 s self-test at power-on. Vintage, Vintage 3 and Vintage 4 are gone; a car set to one of them shows Vintage 2. New in the engine: a layout's `selfTest` (ms with every segment lit and every text showing its `test` string) and the `{{is:<token>:<value>}}` text token.
+
+## Nov 12 2026
+
+- **Zeiger 0.4.1:** new setting **Theme position (px to the right)**, 6 by default: on a G20 the themes sat about 6 px left of BMW's own cluster. It moves every widget but the full-screen black backdrop, so BMW's cluster never shows at an edge; -20 to 20 px, on the Settings tab.
+- **Zeiger 0.4.0:** two more themes after a design review, with Vintage and Vintage 1 kept as they are. **Vintage 3** is Vintage with an orange warning zone (rpm from 5200, the bars' cold and low ends: the old yellow was too close to the cream to stand out) and ghost 8s behind the speed and gear, the unlit segments of an LCD. **Vintage 4** is Vintage 1 with the same, plus dimmer green labels (they no longer pull the eye like readouts), slightly lighter windows, and an orange warning zone apart from the amber readouts. Fixed: a text's `zeros` never padded (a broken pattern); Vintage and Vintage 1 drop it, so they look as they did in the car.
+- **Zeiger 0.3.0:** new setting **Hide BMW's black boxes (test)**, on by default. On a G20 the KOMBI drew two solid black boxes over every theme (about x 796-1037 y 267-369 and x 1224-1395 y 300-375), but none over Waze on the map. cluster-render hides the stock CarPlay maneuver box (its guide hold) only while its `map` target is shown, so while a theme is up Zeiger keeps a see-through 16x16 layer on `map`, on a second connection. Not yet tried on the car. **Leave BMW's bottom strip clear** is now on the Settings tab too.
+- **Zeiger 0.2.1:** Vintage and Vintage 1 have a black backdrop again. Since 0.1.1 the face is cut into pieces without its black, and BMW's own cluster showed between them; a full-screen `fill` effect layer under the pieces hides it and costs no pixel memory (8 layers, 9.3 MiB).
+- **Zeiger 0.2.0:** a second theme, **Vintage 1**: the Vintage artwork in the 80s amber/green LCD colours (amber readouts and scale, green lit segments and labels, dark amber windows, the rpm bar amber from 5200). `cluster-design/vintage/build.html?v=1` builds it.
+- **Zeiger 0.1.1:** Vintage fits the car's pixel memory. In the car the speed, gear, clock and outside temperature stayed empty: the face was one 1920x720 picture (10.5 MiB of the 16 MiB every app shares), and the sheet with those readouts was refused. The face is now cut into its 9 drawn pieces, and pictures and segment bars with `"own": false` pack into sheets like text: 7 layers and 9.3 MiB instead of 14.0.
+- **Zeiger 0.1.0:** the first build of this fork. Cluster Themes becomes **Zeiger**, with one theme of its own: **Vintage**, an 80s LCD dash in cream on dark green, with a 48-segment rpm bar (yellow from 5200, red past 7000), oil, water and fuel segment bars with centred values, the speed (3 digits), gear, clock and outside temperature (centred with its °C) in Technology Bold and Grand Sport Condensed. The other themes and HUD Widgets are gone. New widget types for themes drawn in a design tool: `picture` (a picture as it is), `needle` (a picture turned about a pivot by a value table) and `segments` (a bar lit segment by segment from a picture of its lit state); text `zeros` pads a value with leading zeros. `bench/server-win.js` runs the bench on Windows.
+
+Older entries are in [bimmer-lab/apps](https://github.com/bimmer-lab/apps), the Cluster Themes that Zeiger is forked from.
