@@ -3,7 +3,7 @@
 ## Repo layout
 
 ```
-apps/zeiger/      the app: app.json, main.js (entry), NOTICE, README
+apps/zeiger/      the app: app.json, main.js (entry), page.js (the centre-screen page), widget.js, NOTICE, README
                   hud/ (fonts, layouts, pictures, intros) is packed into hud.pack by the build
 shared/           the cluster-render drawing engine; app.json "shared" lists the files the app
                   needs and the build copies them in

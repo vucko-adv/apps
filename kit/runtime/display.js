@@ -219,7 +219,9 @@ class Display {
     _tabList() {
         const base = this.tabInfo || { tabs: [], sel: -1, badges: [] };
         const tabs = (base.tabs || []).slice();
-        const settings = this.own() && this.hasSettings() ? tabs.push('Settings') - 1 : -1;
+        // the settings button's own label as the tab's (Zeiger: 'All settings', beside its page's own Settings tab)
+        const sb = this.hasSettings() && this.screen.buttons.find((x) => x[0] === 'BTN_SETTINGS');
+        const settings = this.own() && sb ? tabs.push(sb[1] || 'Settings') - 1 : -1;
         const sel = this.sheet && this.sheet.settings ? settings : this.sheet ? -1 : base.sel;
         return { tabs, sel, badges: base.badges || [], settings };
     }

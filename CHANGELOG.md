@@ -4,6 +4,14 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.24.0:** a new page on the centre screen, written from scratch.
+  - **Themes:** a gallery. One theme big in the middle, its neighbours beside it, a dot per theme under it. Looking through it changes nothing on the cluster; **Use this theme** (or **Use for COMFORT / SPORT / ECO PRO**) does. Under it, the drive modes and the theme of each.
+  - **Settings:** seven groups (Cluster, BMW's cluster, Warnings, Shift point, Units and time, Home-screen widget, About), each showing what it is set to; the open group's rows on the right, with a switch or `- value +` for every setting. The warnings (Alerts before) are a group here now.
+  - The whole screen in the kit's full-screen layout, in Barlow Semi Condensed and Michroma, Zeiger orange for what is picked.
+  - The kit's settings list stays as **All settings** (its tab now carries the button's own label).
+  - bimmer-lab's page (`shared/page.js`, `shared/previews.js`) is gone from the repo.
+  - **Checked:** in the kit's emulator, by touch and by the controller; not yet on a car.
+
 - **Zeiger 0.23.1:** every theme's pictures, layouts, start animations and gallery pictures name their author (vucko-adv). Nothing changes on the cluster.
 
 ## Nov 14 2026

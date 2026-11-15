@@ -92,16 +92,22 @@ The bench shows both (bench/README.md): the hang button (`POST /hang`) and `stal
 - **Cluster-render features:** the opacity and moves use cluster-render layer opacity and animations. Seen on the bench, not yet on a car. Where the car ignores them, the values and texts still play.
 - **The setting:** **Start animation** turns it off, and with it the 2.5 s self-test of themes without an animation.
 
-## Settings
+## The page
 
-- **Change with SPORT / COMFORT / ECO PRO:** a theme per drive mode, or one theme always.
-- **Theme position:** px to the right (negative: left), -12 by default.
-- **Today's weather** (Dark Moon, Underpass, Mist): on by default.
-- **Home-screen widget:** Weather, Mist (default), Weather, Sunrise, or The cluster's theme.
-- **Units:** metric (km/h and °C are part of the drawing). **Clock:** 12 or 24 hours. **Time zone.** **Tank size.**
-- **Start animation:** the theme's start animation (above), on by default.
-- **Warnings:** oil and water values flash red over their limits.
-- **Calibration grid** and **Map calibration** help measure what BMW hides on your car's cluster.
+`page.js`, Zeiger's own page on the centre screen (since 0.24.0, written new; the design is `cluster-design/app_ui/mock.html` next to this repo). Two tabs in the header, and the kit's **All settings** list beside them:
+
+- **Themes:** a gallery. The theme looked at is big in the middle, with its neighbours beside it and a dot per theme under it; the arrows, a neighbour or the iDrive controller go through them. Looking changes nothing on the cluster: **Use this theme** (or **Use for COMFORT / SPORT / ECO PRO**) does. Under it, **Change with the drive mode**, and with it on, the theme of each drive mode: tap one to give it another theme. The car's drive mode now is marked NOW.
+- **Settings:** groups on the left, each with what it is set to now; the open group's rows on the right, a switch or `- value +`. The groups:
+  - **Cluster:** start animation, today's weather, the phone's map in Map Mist, theme position (px to the right, -12 by default), night colours.
+  - **BMW's cluster:** hide BMW's black boxes (test), leave BMW's bottom strip clear.
+  - **Warnings:** oil and coolant temperature and boost; over its limit, the value flashes red on the cluster.
+  - **Shift point:** redline, shift point before it, shift flash, cold-engine rev guard.
+  - **Units and time:** units (metric: km/h and °C are part of the drawing), clock, time zone, fuel tank size.
+  - **Home-screen widget:** Weather, Mist (default), Weather, Sunrise, or The cluster's theme.
+  - **About:** demo data, the version and the credits.
+- **Pictures:** the gallery's big card uses `hero` (1152x432) from `hud/previews/<layout>.json`, made from the bench captures in `docs/images` by `cluster-design/app_ui/make_hero.js`; the rest `big` and `small`. One big picture is kept in memory at a time.
+- **Fonts:** Barlow Semi Condensed (SemiBold `zsb`, Medium `zsm`) and Michroma (`zmi`) in the kit's atlas format (`kit/runtime/fonts/`), baked by `cluster-design/app_ui/bake_fonts.html`.
+- **Calibration grid** and **Map calibration** are still in **All settings**, Theme, to measure what BMW hides on your car's cluster.
 
 ## Black boxes
 

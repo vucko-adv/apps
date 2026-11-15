@@ -16,7 +16,7 @@ Besides its own code, the app ships with:
    The MPL text: https://mozilla.org/MPL/2.0/
 
 3. The Barlow typeface (hud.pack, fonts/head, unit, m_*, s_mid, s_small, apex_kmh, apex_temp, apex_unit,
-   vfd_mode): pre-rendered glyphs of Barlow, Barlow Semi Condensed and
+   vfd_mode; the page's kit/fonts/zsb and zsm): pre-rendered glyphs of Barlow, Barlow Semi Condensed and
    Barlow Condensed, Copyright 2017 The Barlow Project Authors, under the SIL Open Font License 1.1, reproduced below.
 
 4. The Vintage Green and Vintage Cyan themes (hud.pack, fonts/v2_*, pictures/vintage_*): drawn by vucko-adv.
@@ -33,7 +33,7 @@ Besides its own code, the app ships with:
    Mozilla Public License 2.0, Copyright (C) 2026 Robert Nisipeanu.
 
 7. The Michroma typeface (hud.pack, fonts/apex_clock, apex_gear, apex_sel_off, apex_sel_on, apex_speed, apex_val,
-   vfd_sel): pre-rendered glyphs of Michroma, Copyright 2011 The Michroma Project Authors
+   vfd_sel; the page's kit/fonts/zmi): pre-rendered glyphs of Michroma, Copyright 2011 The Michroma Project Authors
    (https://github.com/googlefonts/Michroma-font), under the SIL Open Font License 1.1, reproduced below.
 
 ----------------------------------------------------------------------------------------------
