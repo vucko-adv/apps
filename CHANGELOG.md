@@ -4,6 +4,8 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 16 2026
 
+- **Zeiger 0.38.2:** a test pattern for the home-screen widget (Settings, Home-screen widget, Shows: Test pattern), to see on the car how sharp the HMI shows the widget's picture: stripes 1, 2 and 3 px wide of the 1152 x 768 picture sent since 0.30.0 (A, B, C, upright and lying), text at three sizes, and a 1 px frame round the part the HMI keeps. Stripes the HMI can't show turn to an even grey: if only C keeps its stripes, the HMI shows the picture at about 384 x 256 whatever size it gets, and the widgets must be drawn for that.
+
 - **Zeiger 0.38.1:** fixes from a check of the whole app (every theme and the diesel versions on the bench, every page in the emulator, the home-screen widget, and a code review of 0.35-0.38).
   - **The black curtain between themes (0.37.0) most likely never showed on the car:** its shader used `u_p`, a name the renderer keeps for itself, so the car refused it (the bench's WebGL took it). Renamed; the bench now refuses such shaders as the car does.
   - **Holding the old theme:** its fail-safe stopped being renewed, so it would have vanished after 1.2 s if the new theme took longer to come; now it stays until the new one shows.

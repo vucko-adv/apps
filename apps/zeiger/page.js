@@ -246,7 +246,7 @@ class Page {
         if (k === 'shiftBefore') return v ? num(v) + ' rpm' : 'At the redline';
         if (k === 'tankLitres') return v + ' L';
         if (k === 'timeZone') return tz.name(v);
-        if (k === 'widgetShows') return { engine: 'Engine', mist: 'Weather, Mist', sunrise: 'Weather, Sunrise', theme: 'Cluster theme' }[v] || this.optLabel(k, v);
+        if (k === 'widgetShows') return { engine: 'Engine', mist: 'Weather, Mist', sunrise: 'Weather, Sunrise', theme: 'Cluster theme', test: 'Test pattern' }[v] || this.optLabel(k, v);
         if (it.type === 'bool') return v ? 'On' : 'Off';
         return this.optLabel(k, v);
     }

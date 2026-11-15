@@ -174,7 +174,7 @@ class ZeigerWidget {
     shows() {
         let v = 'engine';
         try { v = this.hud.setting('widgetShows'); } catch (e) { v = 'engine'; }
-        return v === 'theme' || v === 'engine' || LOOKS[v] ? v : 'engine';
+        return v === 'theme' || v === 'engine' || v === 'test' || LOOKS[v] ? v : 'engine';
     }
 
     // the weather is fetched while a widget is placed and shows it
@@ -187,6 +187,7 @@ class ZeigerWidget {
 
     /** What the widget says now: { kind: 'theme', name ('off' or a layout), title, mode } or { kind: 'weather', ... } */
     state() {
+        if (this.shows() === 'test') return { kind: 'test', size: this.W * this.S + 'x' + this.H * this.S };
         if (this.shows() === 'engine') return this.engine();
         if (this.shows() !== 'theme') return this.weather(this.shows());
         const h = this.hud, name = h.activeName && h.activeName !== 'off' ? h.activeName : 'off';
@@ -233,7 +234,7 @@ class ZeigerWidget {
         if (!inst.big) return null;
         const last = this.sent[inst.spawnId];
         if (last && last.key === key && now - last.at < REDRAW_MS) return null;
-        if (this.key !== key) { this.cv = (s.kind === 'weather' ? this.renderWeather(s) : s.kind === 'engine' ? this.renderEngine(s) : this.render(s)).cv; this.key = key; }
+        if (this.key !== key) { this.cv = (s.kind === 'test' ? this.renderTest() : s.kind === 'weather' ? this.renderWeather(s) : s.kind === 'engine' ? this.renderEngine(s) : this.render(s)).cv; this.key = key; }
         this.sent[inst.spawnId] = { key, at: now };
         return this.cv;
     }
@@ -251,6 +252,7 @@ class ZeigerWidget {
     }
 
     _lines(s) {
+        if (s.kind === 'test') return ['Zeiger', 'Test pattern', s.size, ''];
         if (s.kind === 'engine') {
             const t = (v) => (v === null ? '--' : String(s.us ? Math.round(v * 9 / 5 + 32) : v)) + (s.us ? ' F' : ' C');
             const b = (v) => (v === null ? '--' : s.us ? String(Math.round(v * 14.5)) + ' psi' : v.toFixed(2) + ' bar');
@@ -283,6 +285,31 @@ class ZeigerWidget {
         } catch (e) { out = null; }
         this.pics[k] = out;
         return out;
+    }
+
+    /**
+     * A test pattern (0.38.2; setting "Home-screen widget": Test pattern), to see on the car how sharp the HMI shows the
+     * picture: stripes 1, 2 and 3 device px wide (A, B, C; upright, then lying), text at three sizes, a 1 px frame round
+     * the part kept (safe). Stripes the HMI can't show turn to an even grey: if only C shows stripes, it shows the
+     * picture at about a third of the size it is sent (384 x 256).
+     */
+    renderTest() {
+        const S = this.S, b = this.box, cv = scaledCanvas(S, [0, 0, 0, 255]), real = cv.cv, W1 = [255, 255, 255, 255];
+        const X = (v) => Math.round(v * S);
+        cv.text('TEST  ' + Math.round(this.W * S) + ' x ' + Math.round(this.H * S), b.x, b.y + 14, 14, DIM, { font: 'bold', literal: true, spacing: 1 });
+        const bw = 88, bh = 38, gx = (b.w - 3 * bw) / 2;
+        [1, 2, 3].forEach((p, i) => {
+            const x0 = b.x + i * (bw + gx), up = b.y + 24, flat = up + bh + 24;
+            for (let x = 0; x < X(bw); x += 2 * p) real.fillRect(X(x0) + x, X(up), p, X(bh), W1);
+            for (let y = 0; y < X(bh); y += 2 * p) real.fillRect(X(x0), X(flat) + y, X(bw), p, W1);
+            cv.text('ABC'[i] + '  ' + p + ' px', x0, up + bh + 16, 12, DIM, { literal: true });
+        });
+        const ty = b.y + 24 + 2 * bh + 40;
+        [[10, 0], [14, 16], [18, 35]].forEach(([size, dy]) => cv.text('Zeiger 0123456789 ' + size, b.x, ty + dy, size, WHITE, { literal: true }));
+        // the part the HMI keeps, framed by 1 device px
+        real.fillRect(X(b.x), X(b.y) - 4, X(b.w), 1, W1); real.fillRect(X(b.x), X(b.y + b.h) + 3, X(b.w), 1, W1);
+        real.fillRect(X(b.x) - 4, X(b.y), 1, X(b.h), W1); real.fillRect(X(b.x + b.w) + 3, X(b.y), 1, X(b.h), W1);
+        return cv;
     }
 
     /** The big widget's picture for the theme state s (a kit Canvas) */
