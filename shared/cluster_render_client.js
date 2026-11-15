@@ -318,7 +318,9 @@ class ClusterRender extends EventEmitter {
             l.ih = o.ih;
             l.bpp = 4;
         } else if (kind === 'asset') {
-            l.bpp = o.format === 'r8' ? 1 : 4;
+            // bytes a pixel; the ETC2 formats (cluster-render 0.5.8) are 4x4 blocks sent whole once: 16 or 8 bytes a block
+            l.bpp = o.format === 'r8' || o.format === 'etc2rgba' ? 1 : o.format === 'etc2rgb' ? 0.5 : 4;
+            if (/^etc2/.test(o.format || '') && (o.w % 4 || o.h % 4)) return 0;
             if (!(o.w > 0 && o.h > 0 && o.w <= 2048 && o.h <= 2048 && o.w * o.h * l.bpp <= 1920 * 720 * 4)) return 0;
             l.iw = o.w;
             l.ih = o.h;

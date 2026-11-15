@@ -32,6 +32,7 @@ const os = require('os');
 const net = require('net');
 const http = require('http');
 const path = require('path');
+const etc2 = require('../shared/etc2');   // ETC2 assets, decoded for the page (Zeiger 0.38.0)
 const { fork, execFileSync } = require('child_process');
 // What the driver sees of each target (hood curve, BMW's gear box and belt light, the HUD window):
 // one source of truth, shared with the app's layout check. The page gets it in the 'hello' event.
@@ -47,7 +48,8 @@ let layerCap = Math.max(0, Number(process.env.BENCH_LAYER_CAP) || 0);
 const TOTAL_LAYERS = 32;
 const PIXEL_BYTES = (process.env.BENCH_PIXEL_MIB === undefined ? 16 : Math.max(0, Number(process.env.BENCH_PIXEL_MIB) || 0)) * 1024 * 1024;
 // the service's accounting: an image or asset costs its bytes twice (compositor.cpp: the pixels and a rectangle scratch)
-function pixelBytes() { let n = 0; layers.forEach((l) => { if (l.image) n += l.iw * l.ih * (l.bpp || 4) * 2; }); return n; }
+// an ETC2 asset counts its blocks once (l.cost), as cluster-render does
+function pixelBytes() { let n = 0; layers.forEach((l) => { if (l.cost) n += l.cost; else if (l.image) n += l.iw * l.ih * (l.bpp || 4) * 2; }); return n; }
 function layerCount() { let n = 0; layers.forEach((l) => { if (l.kind !== 'asset') n++; }); return n; }
 const TOTAL_ASSETS = 32, ASSETS_PER_CLIENT = 16;   // CompositorLimits assets / assets_per_client
 const mib = (b) => (b / 1048576).toFixed(1) + ' MiB';
@@ -259,19 +261,26 @@ const renderServer = net.createServer((sock) => {
                 // PROTOCOL.md "asset": an R8 or RGBA8 texture, not drawn, not a layer; effect layers sample it through "bind".
                 // The service's limits: 32 assets, 16 per client, 1..2048 a side, within one frame message; pixel memory twice its bytes.
                 if (!TARGETS[m.target]) return refuse('asset', m.ref, 'unknown target ' + m.target);
-                const format = m.format || 'rgba8', bpp = format === 'r8' ? 1 : format === 'rgba8' ? 4 : 0;
+                const format = m.format || 'rgba8', etcB = format === 'etc2rgba' ? 1 : format === 'etc2rgb' ? 0.5 : 0;
+                const bpp = format === 'r8' ? 1 : format === 'rgba8' || etcB ? 4 : 0;
                 if (!bpp) return refuse('asset', m.ref, 'unknown asset format ' + format);
+                // ETC2 (cluster-render 0.5.8): w and h multiples of 4, the blocks sent whole once; the bench decodes them
+                // (shared/etc2.js) so its page draws the asset as RGBA
+                // BENCH_NO_ETC2=1: a cluster-render older than 0.5.8, which doesn't know these formats
+                if (etcB && process.env.BENCH_NO_ETC2) return refuse('asset', m.ref, 'unknown asset format ' + format);
+                if (etcB && (m.w % 4 || m.h % 4)) return refuse('asset', m.ref, 'an ' + format + " asset's sides must be multiples of 4");
                 if (!(m.w > 0 && m.h > 0 && m.w <= 2048 && m.h <= 2048 && m.w * m.h * bpp + 64 <= 1920 * 720 * 4 + 64)) return refuse('asset', m.ref, 'asset size out of range');
                 let all = 0, mine = 0;
                 layers.forEach((o) => { if (o.kind === 'asset') { all++; if (o.conn === conn) mine++; } });
                 if (all >= TOTAL_ASSETS || mine >= ASSETS_PER_CLIENT) return refuse('asset', m.ref, 'too many assets');
-                if (PIXEL_BYTES && pixelBytes() + m.w * m.h * bpp * 2 > PIXEL_BYTES) return refuse('asset', m.ref, "the service's pixel memory is full");
+                if (PIXEL_BYTES && pixelBytes() + (etcB ? m.w * m.h * etcB : m.w * m.h * bpp * 2) > PIXEL_BYTES) return refuse('asset', m.ref, "the service's pixel memory is full");
                 layers.set(key, {
                     key, conn, ref: m.ref, app: st.app, kind: 'asset', target: m.target, format, bpp, class: '-', z: 0,
                     x: 0, y: 0, w: m.w, h: m.h, iw: m.w, ih: m.h, visible: 0, opacity: 1, exclusive: 0, uniforms: {},
                     image: Buffer.alloc(m.w * m.h * bpp), state: 'shown', reason: '',
+                    etc: etcB ? format : null, etcBytes: etcB ? m.w * m.h * etcB : 0, cost: etcB ? m.w * m.h * etcB : 0, etcSent: false,
                 });
-                log('info', 'asset ' + m.ref + ': ' + format + ' ' + m.w + 'x' + m.h + ' (' + mib(m.w * m.h * bpp * 2) + ' of pixel memory)');
+                log('info', 'asset ' + m.ref + ': ' + format + ' ' + m.w + 'x' + m.h + ' (' + mib(etcB ? m.w * m.h * etcB : m.w * m.h * bpp * 2) + ' of pixel memory)');
                 writeEv(sock, { ev: 'layer', ref: m.ref, state: 'shown' });
                 sceneChanged();
                 return;
@@ -358,6 +367,17 @@ const renderServer = net.createServer((sock) => {
         if (l.kind !== 'image' && l.kind !== 'asset') return bad('frame for a ' + l.kind + ' layer (ref ' + ref + ')');
         const head = 14 + n * 8, bpp = l.bpp || 4;
         const px = body.slice(head);
+        if (l.etc) {
+            // an ETC2 asset: no rects, the blocks whole, once
+            if (n !== 0) return refuse('frame', ref, 'an ' + l.etc + ' asset takes no rects');
+            if (l.etcSent) return refuse('frame', ref, 'an ' + l.etc + ' asset is sent once');
+            if (px.length !== l.etcBytes) return bad('whole frame for ' + l.etc + ' asset ' + ref + ' is ' + px.length + ' bytes, it needs ' + l.etcBytes);
+            try { etc2.decode(px, l.iw, l.ih, l.etc).copy(l.image); } catch (e) { return refuse('frame', ref, 'not ' + l.etc + ': ' + e.message); }
+            l.etcSent = true;
+            l.sentWhole = true;
+            sendPixels(l);
+            return;
+        }
         if (n === 0) {
             if (px.length !== l.image.length) return bad('whole frame for ref ' + ref + ' is ' + px.length + ' bytes, layer needs ' + l.image.length);
             px.copy(l.image);

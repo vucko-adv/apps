@@ -281,6 +281,26 @@ void main() {
 }
 `;
 
+const TEXPIC = `// A compressed picture (Zeiger 0.38.0), a cluster-render "effect" layer (GLSL ES 1.00) sampling an ETC2 asset
+// (u_tex, bound by hud.js) over the layer: u_shift px to the right (the theme position; the edge column repeats, as the
+// texture is clamped), u_alpha the start animation's fade, u_cut a see-through rect in layer px (BMW's strip; w 0: none).
+precision mediump float;
+varying vec2 v_uv;
+uniform sampler2D u_tex;
+uniform vec2 u_size;
+uniform float u_shift;
+uniform float u_alpha;
+uniform vec4 u_cut;
+
+void main() {
+    vec2 p = vec2(v_uv.x * u_size.x, v_uv.y * u_size.y);
+    vec4 c = texture2D(u_tex, vec2((p.x - u_shift) / u_size.x, v_uv.y));
+    float a = c.a * u_alpha;
+    if (u_cut.z > 0.0 && p.x >= u_cut.x && p.x < u_cut.x + u_cut.z && p.y >= u_cut.y && p.y < u_cut.y + u_cut.w) a = 0.0;
+    gl_FragColor = vec4(c.rgb, a);
+}
+`;
+
 const CURTAIN = `// The curtain between two themes (Zeiger 0.37.0), a cluster-render "effect" layer (GLSL ES 1.00): black at
 // u_alpha over the whole panel, and a thin line in the middle that fills from the left as the new theme's layers come
 // (u_p 0..1), so the wait reads as loading, not as a fault. u_size the layer in px, u_line the line's middle (x, y) and
@@ -1355,4 +1375,4 @@ void main() {
 }
 `;
 
-module.exports = { curtain: CURTAIN, bandflash: BANDFLASH, shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, dial: DIAL, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES };
+module.exports = { texpic: TEXPIC, curtain: CURTAIN, bandflash: BANDFLASH, shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, dial: DIAL, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES };

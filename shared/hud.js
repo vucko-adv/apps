@@ -895,6 +895,7 @@ class HudApp {
             const key = ci + ':' + ref;
             const old = this.layerStates.get(key);
             this.layerStates.set(key, { state, reason });
+            if (state === 'error' && /etc2/.test(String(reason))) this._etcRefused(String(reason));
             if (state === 'error' || ((state === 'waiting' || state === 'stalled') && (!old || old.state !== state))) {
                 const w = this._widgetOf(ci, ref);
                 this.log.warn('layer ' + ref + tag + (w ? ' (' + w + ')' : '') + ' ' + state + (reason ? ': ' + reason : ''));
@@ -916,6 +917,11 @@ class HudApp {
             }
             const w = this._widgetOf(ci, ref);
             this.log.warn('refused ' + op + ' on ' + ref + tag + (w ? ' (' + w + ')' : '') + ': ' + reason);
+            if ((op === 'asset' && /etc2|format/.test(String(reason))) || /etc2/.test(String(reason))) {
+                // the refused asset was never made: nothing to drop later
+                if (op === 'asset') this.widgets.forEach((x) => { if (x.c === c && x.asset === ref) x.asset = 0; });
+                this._etcRefused(op + ': ' + reason);
+            }
             if (!this.refused) this.refused = (w || op) + ': ' + reason;   // the first one, until the next rebuild
             if (this.held && /pixel memory|too many layers/.test(String(reason))) {
                 this.noHold = true;
@@ -1423,7 +1429,7 @@ class HudApp {
         this.widgets.forEach((x) => {
             if (!x.c || !x.ref) return;
             let L = out.find((q) => q.c === x.c && q.ref === x.ref);
-            if (!L) { L = { c: x.c, ref: x.ref, image: !!IMAGE_TYPES[x.w.type], ids: [] }; out.push(L); }
+            if (!L) { L = { c: x.c, ref: x.ref, image: !!IMAGE_TYPES[x.w.type] && !x.asset, tex: !!x.asset, ids: [] }; out.push(L); }
             L.ids.push(x.w.id);
         });
         return out;
@@ -1452,13 +1458,13 @@ class HudApp {
         if (!I.layers) I.layers = this._introLayers();
         const t = now - I.at, fade = I.spec.fade || {}, num = (k) => Math.max(0, Math.min(1, Number(k[1]) || 0));
         I.layers.forEach((L) => {
-            if (!L.image) return;            // effect layers keep theirs: the black backdrop stays black
+            if (!L.image && !L.tex) return;  // effect layers keep theirs: the black backdrop stays black (a compressed picture fades)
             let a = Array.isArray(fade['*']) ? this._introAt(fade['*'], t, num) : 1, own = 1;
             L.ids.forEach((id) => { if (Array.isArray(fade[id])) own = Math.min(own, this._introAt(fade[id], t, num)); });
             a = Math.round(a * own * 100) / 100;
             if (a !== L.alpha && (L.alpha === undefined || Math.abs(a - L.alpha) >= 0.03 || a === 0 || a === 1)) {
                 L.alpha = a;
-                this._guard('intro fade', () => L.c.set(L.ref, { opacity: a }));
+                this._guard('intro fade', () => (L.tex ? L.c.uniform(L.ref, 'u_alpha', [a]) : L.c.set(L.ref, { opacity: a })));
             }
         });
         if (I.ready && !I.started) {        // the renderer's own clock runs a move: sent once the layers are shown
@@ -1481,7 +1487,7 @@ class HudApp {
         if (this.testUntil > Date.now()) this.testUntil = 0;
         if (!I || !I.layers) return;
         I.layers.forEach((L) => this._guard('intro end', () => {
-            if (L.alpha !== undefined && L.alpha !== 1) L.c.set(L.ref, { opacity: 1 });
+            if (L.alpha !== undefined && L.alpha !== 1) { if (L.tex) L.c.uniform(L.ref, 'u_alpha', [1]); else L.c.set(L.ref, { opacity: 1 }); }
             // a held zero move rather than a stop: a stopped animation may leave the layer where it was on the way
             if (L.moved) L.c.animate(L.ref, { anim: INTRO_ANIM, property: 'translate', keys: '0:0,0,0', loop: false, interp: 'step' });
         }));
@@ -1961,7 +1967,7 @@ class HudApp {
         let px = 0;
         plan.forEach((e) => {
             if (e.kind === 'sheet') px += e.w * e.h * 8;
-            else if (IMAGE_TYPES[e.w.type]) { const sp = e.w.stretch && pictures.get(e.w.picture); px += (sp ? sp.w * sp.h : e.w.w * e.w.h) * 8; }
+            else if (IMAGE_TYPES[e.w.type]) px += this._ownPx(e.w);
         });
         if ((oldPx || 0) + px + this._atlasBytes() > PIXEL_BYTES * HOLD_PX_FRAC) return false;
         const per = {};
@@ -2037,6 +2043,9 @@ class HudApp {
         const stay = {};
         if (keep) keep.forEach((s) => { stay[s.ci + ':' + s.ref] = true; });     // sheets and own layers that stay
         old.refs.forEach((r) => { if (!stay[r.key]) r.c.drop(r.ref); });
+        // a compressed picture's asset after the layer that sampled it (cluster-render refuses to drop one in use)
+        (old.assets || []).forEach((a) => a.c.drop(a.ref));
+        old.assets = [];
         this.oldPending = null;
     }
 
@@ -2073,10 +2082,28 @@ class HudApp {
         return keep;
     }
 
+    /** An own image layer's cost in cluster-render's pixel memory: twice its RGBA (a stretched picture's own size), or
+     *  a compressed picture's blocks once. */
+    _ownPx(w) {
+        const p = w.type === 'picture' ? pictures.get(w.picture) : null;
+        if (p && p.etc && !this.noEtc) return p.etc.length;
+        return (w.stretch && p ? p.w * p.h : w.w * w.h) * 8;
+    }
+
+    /** cluster-render refused a compressed picture (older than 0.5.8, or its renderer said no): from now on this run the
+     *  pictures go decoded, as image layers, and the layout is made again. */
+    _etcRefused(why) {
+        if (this.noEtc) return;
+        this.noEtc = true;
+        this.log.warn('compressed pictures refused (' + why + '): sent decoded from now on');
+        setTimeout(() => this._rebuild(), 0);
+    }
+
     /** What makes an own layer the same layer: a still picture (its pixels), a fill or a band flash (their uniforms are
      *  all sent again in _create); else null. */
     _ownKey(w, conn, cut) {
         if (w.type !== 'picture' && w.type !== 'fill' && w.type !== 'bandflash') return null;
+        if (w.type === 'picture') { const p = pictures.get(w.picture); if (p && p.etc) return null; }   // its asset goes with it
         return [conn, w.class || 'content', w.z || 0, w.x, w.y, w.w, w.h, w.type, w.picture || '', w.stretch ? 1 : 0, w.pixelShift || 0, cut ? 1 : 0].join('|');
     }
 
@@ -2144,7 +2171,11 @@ class HudApp {
         // the layout shown until now: its layers are dropped before the new ones are made (cluster-render's pixel
         // memory), all but an image sheet the new layout has again, pixel for pixel (_keepable, _createSheet)
         const old = { refs: this._layerRefs(), sheets: this.sheets, plan: this.plan || [], states: this.layerStates, own: [], cut: !!this.cut };
-        this.widgets.forEach((x) => { if (!x.sheet && x.ref && x.c) old.own.push({ w: x.w, c: x.c, ci: x.ci, ref: x.ref }); });
+        old.assets = [];
+        this.widgets.forEach((x) => {
+            if (!x.sheet && x.ref && x.c) old.own.push({ w: x.w, c: x.c, ci: x.ci, ref: x.ref });
+            if (x.asset && x.c) old.assets.push({ c: x.c, ref: x.asset });
+        });
         this.oldPending = old;
         if (!this.retrying) this.retries = 0;
         this.retrying = false;
@@ -2303,7 +2334,7 @@ class HudApp {
         plan.forEach((e) => {
             if (e.kind === 'sheet') { sheets++; bytes += e.w * e.h * 4; px += e.w * e.h * 8; this._guard('sheet ' + e.members[0].id, () => this._createSheet(e)); }
             else {
-                if (IMAGE_TYPES[e.w.type]) { own++; const sp = e.w.stretch && pictures.get(e.w.picture); px += (sp ? sp.w * sp.h : e.w.w * e.w.h) * 8; } else effects++;
+                if (IMAGE_TYPES[e.w.type]) { own++; px += this._ownPx(e.w); } else effects++;
                 this._guard('widget ' + e.w.id, () => this._create(e.w, null));
             }
         });
@@ -2508,18 +2539,25 @@ class HudApp {
 
     /** A widget: on its own layer (sheet null: an effect, or an image widget with "own": true), or a member of a sheet. */
     _create(w, sheet) {
-        let ref, c, keptOwn = false;
+        let ref, c, keptOwn = false, etc = null, assetRef = 0;
         if (sheet) { ref = sheet.ref; c = sheet.c; }
         else {
             c = this._clientAt(this._connOf(w));
             const base = { target: this.target, klass: w.class || 'content', z: (w.z || 0) + (this.zLift || 0), x: w.x, y: w.y, w: w.w, h: w.h };
             // a stretched picture: its own image size, drawn over the widget's rect
             const sp = w.type === 'picture' && w.stretch ? pictures.get(w.picture) : null;
+            // a compressed picture (0.38.0): an ETC2 asset, drawn by an effect layer that samples it (shaders.js TEXPIC)
+            const ep = w.type === 'picture' && !this.noEtc ? pictures.get(w.picture) : null;
+            etc = ep && ep.etc ? ep : null;
             // the layout before had this very layer (_keepableOwn): it stays, a picture's pixels with it
             const ok = this.keepOwn ? this._ownKey(w, this._connOf(w), !!this.cut) : null, was = ok ? this.keepOwn.get(ok) : null;
             if (was && was.c === c) {
                 this.keepOwn.delete(ok); ref = was.ref; keptOwn = true;
                 if (was.state) this.layerStates.set(was.ci + ':' + ref, was.state);
+            } else if (etc) {
+                assetRef = c.asset({ target: this.target, format: etc.format, w: etc.w, h: etc.h, sampling: w.stretch ? 'bilinear' : 'nearest' });
+                ref = assetRef ? c.effect(Object.assign({ fs: shaders.texpic }, base)) : 0;
+                if (!ref && assetRef) { c.drop(assetRef); assetRef = 0; }
             } else if (IMAGE_TYPES[w.type]) ref = c.image(Object.assign({ iw: sp ? sp.w : w.w, ih: sp ? sp.h : w.h }, base));
             else ref = c.effect(Object.assign({ fs: w.type === 'swatch' ? calibration.SWATCH : shaders[w.type] }, base));
             if (!ref) { this.log.warn('widget "' + w.id + '": layer refused'); return; }
@@ -2527,6 +2565,7 @@ class HudApp {
         }
         const x = { w, ref, c, ci: sheet ? sheet.ci : this._connOf(w), sheet: sheet || null, last: null, lastPaint: 0, px: null };
         this.widgets.set(w.id, x);
+        if (assetRef) { x.asset = assetRef; c.pixels(assetRef, null, etc.etc); c.bind(ref, 'u_tex', assetRef); }
         const t = this.theme;
         if (w.type === 'atext') {
             const a = this._atlas(w.font, x.ci);
@@ -2542,10 +2581,17 @@ class HudApp {
                     ' px; the glyphs keep their shape at w ' + x.cells * a.cellW + ', h ' + a.cellH);
             }
         } else if (w.type === 'picture' || w.type === 'needle' || w.type === 'segments') {
-            const p = pictures.get(w.picture);
+            // a compressed picture in a sheet, or with compressed pictures refused: its pixels decoded
+            const p = x.asset ? pictures.get(w.picture) : pictures.rgbaOf(w.picture);
             if (!p) { this.log.warn('widget "' + w.id + '": no picture "' + w.picture + '" in hud/pictures'); return; }
             if (!(w.stretch && w.type === 'picture' && !sheet) && (p.w !== w.w || p.h !== w.h)) { this.log.warn('widget "' + w.id + '": picture "' + w.picture + '" is ' + p.w + 'x' + p.h + ', the widget ' + w.w + 'x' + w.h); return; }
-            if (w.type === 'segments') {
+            if (x.asset) {
+                const g = this.cut;
+                c.uniform(ref, 'u_size', [w.w, w.h]);
+                c.uniform(ref, 'u_shift', [w.pixelShift || 0]);
+                c.uniform(ref, 'u_alpha', [1]);
+                c.uniform(ref, 'u_cut', g ? [g[0] - w.x, g[1] - w.y, g[2], g[3]] : [0, 0, 0, 0]);
+            } else if (w.type === 'segments') {
                 // starts with nothing lit; _update lights what the value says
                 x.pic = p; x.lit = 0; x.value = null; x.t = 0; x.zoneSt = null; x.zoneInfo = null;
                 this._blit(x, null, Buffer.alloc(w.w * w.h * 4, 0));

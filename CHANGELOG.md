@@ -2,6 +2,10 @@
 
 Newest first. Dates are when the build was pushed.
 
+## Nov 16 2026
+
+- **Zeiger 0.38.0:** Peaks' photo goes to the cluster compressed (ETC2): the theme takes 2.3 MiB of the renderer's 16 MiB instead of 11.5, and a quarter of the upload, so it now changes to and from other themes without the black curtain. The look is nearly the same (46 dB; ridges and sky checked side by side). If the renderer can't take compressed pictures, the app sends it uncompressed as before. Checked on the bench (Peaks, its strip cut, theme position, start animation, the switches, the fallback); not yet on a car. The pixel watermark doesn't survive compression; Peaks' picture keeps its author fields.
+
 ## Nov 15 2026
 
 - **Zeiger 0.37.0:** smoother changes.

@@ -7,9 +7,14 @@
  * Made by cluster-design/speed_meter/theme_assets.html (next to the repo) from the artwork.
  *
  *   get(name) -> { w, h, px, py, rgba } or null when there is none (or it is damaged)
+ * Since Zeiger 0.38.0 a picture may be ETC2-compressed ({ w, h, format: 'etc2rgba' | 'etc2rgb', z }: z the deflated
+ * blocks, etc2.js): get() then gives { w, h, format, etc } (the blocks, sent to cluster-render as a compressed asset),
+ * and rgbaOf(name) its pixels decoded (for a cluster-render that refuses compressed textures, or a sheet).
  */
 const zlib = require('zlib');
 const data = require('./hud_data');
+const etc2 = require('./etc2');
+const ETC = { etc2rgba: 1, etc2rgb: 0.5 };
 
 const cache = new Map();
 
@@ -19,12 +24,26 @@ function get(name) {
     try {
         const p = data.json('pictures/' + name + '.json') || {};
         if (p.z && p.w > 0 && p.h > 0) {
-            const rgba = zlib.inflateSync(Buffer.from(p.z, 'base64'));
-            if (rgba.length === p.w * p.h * 4) out = { w: p.w, h: p.h, px: p.px, py: p.py, rgba };
+            const raw = zlib.inflateSync(Buffer.from(p.z, 'base64'));
+            if (ETC[p.format]) { if (raw.length === p.w * p.h * ETC[p.format]) out = { w: p.w, h: p.h, px: p.px, py: p.py, format: p.format, etc: raw }; }
+            else if (raw.length === p.w * p.h * 4) out = { w: p.w, h: p.h, px: p.px, py: p.py, rgba: raw };
         }
     } catch (e) { out = null; }
     cache.set(name, out);
     return out;
+}
+
+/** The picture with its RGBA pixels: a compressed one decoded (kept like the others), else get(name). */
+function rgbaOf(name) {
+    const p = get(name);
+    if (!p || !p.etc) return p;
+    const k = name + '#rgba';
+    if (!cache.has(k)) {
+        let out = null;
+        try { out = { w: p.w, h: p.h, px: p.px, py: p.py, rgba: etc2.decode(p.etc, p.w, p.h, p.format) }; } catch (e) { out = null; }
+        cache.set(k, out);
+    }
+    return cache.get(k);
 }
 
 /**
@@ -34,8 +53,8 @@ function get(name) {
  */
 function keepOnly(names) {
     const keep = Object.create(null);
-    (names || []).forEach((n) => { keep[n] = true; });
+    (names || []).forEach((n) => { keep[n] = true; keep[n + '#rgba'] = true; });
     Array.from(cache.keys()).forEach((k) => { if (!keep[k]) cache.delete(k); });
 }
 
-module.exports = { get, keepOnly };
+module.exports = { get, rgbaOf, keepOnly };
