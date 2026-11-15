@@ -231,6 +231,8 @@
  *   (the GT3 look); "round": true for dots;
  * "off" the alpha of an unlit light (0.14).
  * Text "warnFlash": false: no flash over the warning limit (a tile that turns red itself).
+ * Text "tyreLow": "FL" (FR, RL, RR): the text in "tyreLowColor" (default "accent") while that tyre is under "warnTyre" bar.
+ * "toggle": "key=a|b": shown while the setting is any of those values.
  * Text "colorBy": "verdict" colours it by the last shift's grade. Text "near": ["speed" | "rpm", i] turns it
  * "nearColor" (fg) while scale label i is the one nearest the value (BMW lights up the label by the needle).
  *
@@ -244,7 +246,7 @@
  * {{spd:<i>}} (speed scale label i of SPEED_SCALE: 0..200 mph, 0..320 km/h) {{range}} {{u:distLc}} (mi, km) {{u:dist}} (MI, KM) {{ambient}} (outside, signed: +75) {{u:speedLc}} (mph, km/h) {{ampmLc}} (am, pm) {{torque}} {{u:torque}} (lb-ft, Nm) {{torquePct}} {{powerPct}} (% of config.engine's peak) {{boostHi}} {{boostMid}}
  * (gauge labels for 1.4 / 0.7 bar in the display unit) {{stage}} (P R N, D / S / M by the shifter programme) {{gearInD}} (gear number while in D) {{mode}} (COMFORT, SPORT, SPORT PLUS, SPORT INDIVIDUAL, ECO PRO, ...)
  * {{temp:<deg C>}} (that temperature in the display unit, °F rounded to 10, for gauge labels) {{setup:engine|chassis|steering|gearbox}} (what that part is set to in the drive mode now)
- * {{time}} {{ampm}} {{u:temp}} (°F / °C) {{gLat}} {{gLong}} (g, 2 decimals) {{brakeG}} (braking g, 0.00 while not slowing;
+ * {{time}} {{ampm}} {{u:temp}} (°F / °C) {{gLat}} {{gLong}} (g, 2 decimals) {{brakeG}} (braking g, 0.00 while not slowing; {{accelG}} the same while speeding up;
  * also a needle's / segments' "measure") {{isnt:<token>:<value>[:<other>...]}} (the value unless the token shows it or
  * one of the others; {{is:...}}'s opposite) {{gSide}} ("0.42 L", "0.42 R")
  * {{gFwd}} ("0.31 ACC", "0.31 BRK") {{gBest}} (the most g this drive) {{gMax}} (the G-meter's range, "1.2") {{signal:<car.data() key>}} (raw, 1 decimal).
@@ -375,7 +377,7 @@ function shiftPixels(rgba, w, h, dx) {
     return out;
 }
 // settings that only change what a text shows (the next tick paints it), no rebuild
-const LIVE_KEYS = ['slotWatch', 'warnOil', 'warnCoolant', 'warnBoost', 'badge', 'badgeBMW', 'gFlipLat', 'gFlipLong', 'gRange', 'gTrail'];
+const LIVE_KEYS = ['slotWatch', 'warnOil', 'warnCoolant', 'warnBoost', 'warnTyre', 'badge', 'badgeBMW', 'gFlipLat', 'gFlipLong', 'gRange', 'gTrail'];
 // g (after cauliflowermossgrape's G-Force, MIT, idea only): a sample over G_BAD is a bad reading, not a corner;
 // the rest are averaged over G_AVG_MS so kerbs and potholes don't throw the dot about
 const G_BAD = 3;
@@ -1547,6 +1549,11 @@ class HudApp {
         return p === 'S' || p === 'M' ? p : 'D';
     }
 
+    /** That corner's pressure is under the "warnTyre" setting (bar; 0 or unset: never), not during the start animation. */
+    _tyreLow(corner) {
+        const lim = this.setting('warnTyre'), v = this._tyre('p', corner);
+        return !this.intro && isNum(lim) && lim > 0 && isNum(v) && v < lim;
+    }
     _tyre(kind, corner) {
         const v = this.tyres[kind][corner];
         if (isNum(v)) return v;
@@ -1663,6 +1670,8 @@ class HudApp {
         }
         // braking, g: the longitudinal g while it slows the car (as the G-meter's best braking), else 0 (Apex's BRAKE bar)
         if (name === 'brakeG') { const v = this._raw('gLong'); return isNum(v) ? Math.max(0, -v) : null; }
+        // accelerating, g: the longitudinal g while it speeds the car up, else 0 (Apex's ACCEL bar, Zeiger 0.36.0)
+        if (name === 'accelG') { const v = this._raw('gLong'); return isNum(v) ? Math.max(0, v) : null; }
         if (name === 'intake') {
             if (isNum(this.intakeDme) && Date.now() - this.intakeDmeAt < 10000) return this.intakeDme;
             return this.car.data().demo ? 31 : null;
@@ -1797,7 +1806,7 @@ class HudApp {
             case 'boostHi': return us ? '20' : '1.4';
             case 'boostMid': return us ? '10' : '0.7';
             case 'ampmLc': return this._token('ampm').toLowerCase();
-            case 'gLat': case 'gLong': case 'brakeG': { const v = this._raw(tok); return isNum(v) ? Math.abs(v).toFixed(2) : '--'; }
+            case 'gLat': case 'gLong': case 'brakeG': case 'accelG': { const v = this._raw(tok); return isNum(v) ? Math.abs(v).toFixed(2) : '--'; }
             case 'gSide': case 'gFwd': {
                 // the car's left / right (gFlipLat: its sign the other way round); brake on top doesn't change the words
                 const v = this._raw(tok === 'gSide' ? 'gLat' : 'gLong');
@@ -2345,7 +2354,8 @@ class HudApp {
         if (Array.isArray(t)) return t.every((k) => this._toggleOn(k));      // a list: every one on (Zeiger addition)
         const not = t.charAt(0) === '!';
         const k = not ? t.slice(1) : t, eq = k.indexOf('=');
-        const on = eq > 0 ? String(this.setting(k.slice(0, eq))) === k.slice(eq + 1) : this.setting(k) !== false;
+        // "key=a|b": the setting is one of those (Zeiger 0.36.0)
+        const on = eq > 0 ? k.slice(eq + 1).split('|').indexOf(String(this.setting(k.slice(0, eq)))) >= 0 : this.setting(k) !== false;
         return not ? !on : on;
     }
 
@@ -2966,6 +2976,8 @@ class HudApp {
             // over its warning limit: the value flashes in the shift red
             // ("warnFlash": false: not on a tile that turns red itself, the Dyno theme's)
             if (w.warnFlash !== false && this._warning(w) && Math.floor(now / WARN_FLASH_MS) % 2 === 0) role = 'hot';
+            // a tyre under "warnTyre" (bar; 0 = off): its pressure in the theme's accent, steady (Zeiger 0.36.0)
+            if (w.tyreLow && this._tyreLow(w.tyreLow)) role = w.tyreLowColor || 'accent';
             const key = s + '|' + role;
             if (!force && key === x.last) return;
             x.last = key; x.lastPaint = now;

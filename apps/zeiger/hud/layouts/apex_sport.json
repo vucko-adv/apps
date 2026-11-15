@@ -3226,10 +3226,7 @@
    "type": "picture",
    "picture": "apex_sport_top_track16",
    "own": false,
-   "toggle": [
-    "!apexSportTop=none",
-    "!apexSportTop=brake"
-   ],
+   "toggle": "apexSportLeft=boostBrake|oilWater|intakeBoost|torquePower",
    "class": "content",
    "z": 11,
    "conn": 1,
@@ -3243,7 +3240,7 @@
    "type": "picture",
    "picture": "apex_sport_top_track12",
    "own": false,
-   "toggle": "apexSportTop=brake",
+   "toggle": "apexSportLeft=gForce",
    "class": "content",
    "z": 11,
    "conn": 1,
@@ -3258,7 +3255,7 @@
    "own": false,
    "picture": "apex_sport_top_boost",
    "measure": "boost",
-   "toggle": "apexSportTop=boost",
+   "toggle": "apexSportLeft=boostBrake",
    "class": "content",
    "z": 13,
    "conn": 1,
@@ -3384,12 +3381,12 @@
    ]
   },
   {
-   "id": "top_brake_bar",
+   "id": "top_accel_bar",
    "type": "segments",
    "own": false,
-   "picture": "apex_sport_top_brake",
-   "measure": "brakeG",
-   "toggle": "apexSportTop=brake",
+   "picture": "apex_sport_top_accel",
+   "measure": "accelG",
+   "toggle": "apexSportLeft=gForce",
    "class": "content",
    "z": 13,
    "conn": 1,
@@ -3492,7 +3489,7 @@
    "own": false,
    "picture": "apex_sport_top_oil",
    "measure": "oil",
-   "toggle": "apexSportTop=oil",
+   "toggle": "apexSportLeft=oilWater",
    "class": "content",
    "z": 13,
    "conn": 1,
@@ -3618,143 +3615,12 @@
    ]
   },
   {
-   "id": "top_coolant_bar",
-   "type": "segments",
-   "own": false,
-   "picture": "apex_sport_top_coolant",
-   "measure": "coolant",
-   "toggle": "apexSportTop=coolant",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "x": 334,
-   "y": 343,
-   "w": 304,
-   "h": 28,
-   "segs": [
-    [
-     0,
-     0,
-     26,
-     28
-    ],
-    [
-     26,
-     0,
-     18,
-     28
-    ],
-    [
-     44,
-     0,
-     18,
-     28
-    ],
-    [
-     62,
-     0,
-     18,
-     28
-    ],
-    [
-     80,
-     0,
-     18,
-     28
-    ],
-    [
-     98,
-     0,
-     18,
-     28
-    ],
-    [
-     116,
-     0,
-     18,
-     28
-    ],
-    [
-     134,
-     0,
-     18,
-     28
-    ],
-    [
-     152,
-     0,
-     18,
-     28
-    ],
-    [
-     170,
-     0,
-     18,
-     28
-    ],
-    [
-     188,
-     0,
-     18,
-     28
-    ],
-    [
-     206,
-     0,
-     18,
-     28
-    ],
-    [
-     224,
-     0,
-     18,
-     28
-    ],
-    [
-     242,
-     0,
-     18,
-     28
-    ],
-    [
-     260,
-     0,
-     18,
-     28
-    ],
-    [
-     278,
-     0,
-     26,
-     28
-    ]
-   ],
-   "steps": [
-    42.813,
-    48.438,
-    54.063,
-    59.688,
-    65.313,
-    70.938,
-    76.563,
-    82.188,
-    87.813,
-    93.438,
-    99.063,
-    104.688,
-    110.313,
-    115.938,
-    121.563,
-    127.188
-   ]
-  },
-  {
    "id": "top_intake_bar",
    "type": "segments",
    "own": false,
    "picture": "apex_sport_top_intake",
    "measure": "intake",
-   "toggle": "apexSportTop=intake",
+   "toggle": "apexSportLeft=intakeBoost",
    "class": "content",
    "z": 13,
    "conn": 1,
@@ -3885,138 +3751,7 @@
    "own": false,
    "picture": "apex_sport_top_torque",
    "measure": "torquePct",
-   "toggle": "apexSportTop=torque",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "x": 334,
-   "y": 343,
-   "w": 304,
-   "h": 28,
-   "segs": [
-    [
-     0,
-     0,
-     26,
-     28
-    ],
-    [
-     26,
-     0,
-     18,
-     28
-    ],
-    [
-     44,
-     0,
-     18,
-     28
-    ],
-    [
-     62,
-     0,
-     18,
-     28
-    ],
-    [
-     80,
-     0,
-     18,
-     28
-    ],
-    [
-     98,
-     0,
-     18,
-     28
-    ],
-    [
-     116,
-     0,
-     18,
-     28
-    ],
-    [
-     134,
-     0,
-     18,
-     28
-    ],
-    [
-     152,
-     0,
-     18,
-     28
-    ],
-    [
-     170,
-     0,
-     18,
-     28
-    ],
-    [
-     188,
-     0,
-     18,
-     28
-    ],
-    [
-     206,
-     0,
-     18,
-     28
-    ],
-    [
-     224,
-     0,
-     18,
-     28
-    ],
-    [
-     242,
-     0,
-     18,
-     28
-    ],
-    [
-     260,
-     0,
-     18,
-     28
-    ],
-    [
-     278,
-     0,
-     26,
-     28
-    ]
-   ],
-   "steps": [
-    3.125,
-    9.375,
-    15.625,
-    21.875,
-    28.125,
-    34.375,
-    40.625,
-    46.875,
-    53.125,
-    59.375,
-    65.625,
-    71.875,
-    78.125,
-    84.375,
-    90.625,
-    96.875
-   ]
-  },
-  {
-   "id": "top_power_bar",
-   "type": "segments",
-   "own": false,
-   "picture": "apex_sport_top_power",
-   "measure": "powerPct",
-   "toggle": "apexSportTop=power",
+   "toggle": "apexSportLeft=torquePower",
    "class": "content",
    "z": 13,
    "conn": 1,
@@ -4146,10 +3881,7 @@
    "type": "picture",
    "picture": "apex_sport_low_track16",
    "own": false,
-   "toggle": [
-    "!apexSportLow=none",
-    "!apexSportLow=brake"
-   ],
+   "toggle": "apexSportLeft=oilWater|intakeBoost|torquePower",
    "class": "content",
    "z": 11,
    "conn": 1,
@@ -4163,7 +3895,7 @@
    "type": "picture",
    "picture": "apex_sport_low_track12",
    "own": false,
-   "toggle": "apexSportLow=brake",
+   "toggle": "apexSportLeft=boostBrake|gForce",
    "class": "content",
    "z": 11,
    "conn": 1,
@@ -4178,7 +3910,7 @@
    "own": false,
    "picture": "apex_sport_low_boost",
    "measure": "boost",
-   "toggle": "apexSportLow=boost",
+   "toggle": "apexSportLeft=intakeBoost",
    "class": "content",
    "z": 13,
    "conn": 1,
@@ -4309,7 +4041,7 @@
    "own": false,
    "picture": "apex_sport_low_brake",
    "measure": "brakeG",
-   "toggle": "apexSportLow=brake",
+   "toggle": "apexSportLeft=boostBrake|gForce",
    "class": "content",
    "z": 13,
    "conn": 1,
@@ -4407,143 +4139,12 @@
    ]
   },
   {
-   "id": "low_oil_bar",
-   "type": "segments",
-   "own": false,
-   "picture": "apex_sport_low_oil",
-   "measure": "oil",
-   "toggle": "apexSportLow=oil",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "x": 334,
-   "y": 431,
-   "w": 304,
-   "h": 28,
-   "segs": [
-    [
-     0,
-     0,
-     26,
-     28
-    ],
-    [
-     26,
-     0,
-     18,
-     28
-    ],
-    [
-     44,
-     0,
-     18,
-     28
-    ],
-    [
-     62,
-     0,
-     18,
-     28
-    ],
-    [
-     80,
-     0,
-     18,
-     28
-    ],
-    [
-     98,
-     0,
-     18,
-     28
-    ],
-    [
-     116,
-     0,
-     18,
-     28
-    ],
-    [
-     134,
-     0,
-     18,
-     28
-    ],
-    [
-     152,
-     0,
-     18,
-     28
-    ],
-    [
-     170,
-     0,
-     18,
-     28
-    ],
-    [
-     188,
-     0,
-     18,
-     28
-    ],
-    [
-     206,
-     0,
-     18,
-     28
-    ],
-    [
-     224,
-     0,
-     18,
-     28
-    ],
-    [
-     242,
-     0,
-     18,
-     28
-    ],
-    [
-     260,
-     0,
-     18,
-     28
-    ],
-    [
-     278,
-     0,
-     26,
-     28
-    ]
-   ],
-   "steps": [
-    43.438,
-    50.313,
-    57.188,
-    64.063,
-    70.938,
-    77.813,
-    84.688,
-    91.563,
-    98.438,
-    105.313,
-    112.188,
-    119.063,
-    125.938,
-    132.813,
-    139.688,
-    146.563
-   ]
-  },
-  {
    "id": "low_coolant_bar",
    "type": "segments",
    "own": false,
    "picture": "apex_sport_low_coolant",
    "measure": "coolant",
-   "toggle": "apexSportLow=coolant",
+   "toggle": "apexSportLeft=oilWater",
    "class": "content",
    "z": 13,
    "conn": 1,
@@ -4669,274 +4270,12 @@
    ]
   },
   {
-   "id": "low_intake_bar",
-   "type": "segments",
-   "own": false,
-   "picture": "apex_sport_low_intake",
-   "measure": "intake",
-   "toggle": "apexSportLow=intake",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "x": 334,
-   "y": 431,
-   "w": 304,
-   "h": 28,
-   "segs": [
-    [
-     0,
-     0,
-     26,
-     28
-    ],
-    [
-     26,
-     0,
-     18,
-     28
-    ],
-    [
-     44,
-     0,
-     18,
-     28
-    ],
-    [
-     62,
-     0,
-     18,
-     28
-    ],
-    [
-     80,
-     0,
-     18,
-     28
-    ],
-    [
-     98,
-     0,
-     18,
-     28
-    ],
-    [
-     116,
-     0,
-     18,
-     28
-    ],
-    [
-     134,
-     0,
-     18,
-     28
-    ],
-    [
-     152,
-     0,
-     18,
-     28
-    ],
-    [
-     170,
-     0,
-     18,
-     28
-    ],
-    [
-     188,
-     0,
-     18,
-     28
-    ],
-    [
-     206,
-     0,
-     18,
-     28
-    ],
-    [
-     224,
-     0,
-     18,
-     28
-    ],
-    [
-     242,
-     0,
-     18,
-     28
-    ],
-    [
-     260,
-     0,
-     18,
-     28
-    ],
-    [
-     278,
-     0,
-     26,
-     28
-    ]
-   ],
-   "steps": [
-    2.5,
-    7.5,
-    12.5,
-    17.5,
-    22.5,
-    27.5,
-    32.5,
-    37.5,
-    42.5,
-    47.5,
-    52.5,
-    57.5,
-    62.5,
-    67.5,
-    72.5,
-    77.5
-   ]
-  },
-  {
-   "id": "low_torque_bar",
-   "type": "segments",
-   "own": false,
-   "picture": "apex_sport_low_torque",
-   "measure": "torquePct",
-   "toggle": "apexSportLow=torque",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "x": 334,
-   "y": 431,
-   "w": 304,
-   "h": 28,
-   "segs": [
-    [
-     0,
-     0,
-     26,
-     28
-    ],
-    [
-     26,
-     0,
-     18,
-     28
-    ],
-    [
-     44,
-     0,
-     18,
-     28
-    ],
-    [
-     62,
-     0,
-     18,
-     28
-    ],
-    [
-     80,
-     0,
-     18,
-     28
-    ],
-    [
-     98,
-     0,
-     18,
-     28
-    ],
-    [
-     116,
-     0,
-     18,
-     28
-    ],
-    [
-     134,
-     0,
-     18,
-     28
-    ],
-    [
-     152,
-     0,
-     18,
-     28
-    ],
-    [
-     170,
-     0,
-     18,
-     28
-    ],
-    [
-     188,
-     0,
-     18,
-     28
-    ],
-    [
-     206,
-     0,
-     18,
-     28
-    ],
-    [
-     224,
-     0,
-     18,
-     28
-    ],
-    [
-     242,
-     0,
-     18,
-     28
-    ],
-    [
-     260,
-     0,
-     18,
-     28
-    ],
-    [
-     278,
-     0,
-     26,
-     28
-    ]
-   ],
-   "steps": [
-    3.125,
-    9.375,
-    15.625,
-    21.875,
-    28.125,
-    34.375,
-    40.625,
-    46.875,
-    53.125,
-    59.375,
-    65.625,
-    71.875,
-    78.125,
-    84.375,
-    90.625,
-    96.875
-   ]
-  },
-  {
    "id": "low_power_bar",
    "type": "segments",
    "own": false,
    "picture": "apex_sport_low_power",
    "measure": "powerPct",
-   "toggle": "apexSportLow=power",
+   "toggle": "apexSportLeft=torquePower",
    "class": "content",
    "z": 13,
    "conn": 1,
@@ -5060,6 +4399,20 @@
     90.625,
     96.875
    ]
+  },
+  {
+   "id": "tyre_car",
+   "type": "picture",
+   "picture": "apex_sport_tyre_car",
+   "own": false,
+   "toggle": "apexSportLeft=tyres",
+   "class": "content",
+   "z": 11,
+   "conn": 1,
+   "x": 453,
+   "y": 304,
+   "w": 66,
+   "h": 136
   },
   {
    "id": "coolant_bar",
@@ -7479,7 +6832,7 @@
    "y": 324,
    "w": 82,
    "h": 17,
-   "toggle": "apexSportTop=boost"
+   "toggle": "apexSportLeft=boostBrake"
   },
   {
    "id": "top_boost_val",
@@ -7495,7 +6848,7 @@
    "y": 313,
    "w": 114,
    "h": 29,
-   "toggle": "apexSportTop=boost"
+   "toggle": "apexSportLeft=boostBrake"
   },
   {
    "id": "top_boost_unit",
@@ -7511,31 +6864,31 @@
    "y": 317,
    "w": 35,
    "h": 26,
-   "toggle": "apexSportTop=boost"
+   "toggle": "apexSportLeft=boostBrake"
   },
   {
-   "id": "top_brake_label",
+   "id": "top_accel_label",
    "type": "text",
    "class": "content",
    "z": 13,
    "conn": 1,
-   "text": "BRAKE",
+   "text": "ACCEL",
    "font": "apex_label",
    "color": "dim",
    "align": "left",
    "x": 342,
    "y": 324,
-   "w": 80,
+   "w": 78,
    "h": 17,
-   "toggle": "apexSportTop=brake"
+   "toggle": "apexSportLeft=gForce"
   },
   {
-   "id": "top_brake_val",
+   "id": "top_accel_val",
    "type": "text",
    "class": "content",
    "z": 13,
    "conn": 1,
-   "text": "{{brakeG}}",
+   "text": "{{accelG}}",
    "font": "apex_val",
    "color": "fg",
    "align": "right",
@@ -7543,10 +6896,10 @@
    "y": 313,
    "w": 99,
    "h": 29,
-   "toggle": "apexSportTop=brake"
+   "toggle": "apexSportLeft=gForce"
   },
   {
-   "id": "top_brake_unit",
+   "id": "top_accel_unit",
    "type": "text",
    "class": "content",
    "z": 13,
@@ -7559,7 +6912,7 @@
    "y": 317,
    "w": 17,
    "h": 26,
-   "toggle": "apexSportTop=brake"
+   "toggle": "apexSportLeft=gForce"
   },
   {
    "id": "top_oil_label",
@@ -7575,7 +6928,7 @@
    "y": 324,
    "w": 38,
    "h": 17,
-   "toggle": "apexSportTop=oil"
+   "toggle": "apexSportLeft=oilWater"
   },
   {
    "id": "top_oil_val",
@@ -7591,7 +6944,7 @@
    "y": 313,
    "w": 92,
    "h": 29,
-   "toggle": "apexSportTop=oil"
+   "toggle": "apexSportLeft=oilWater"
   },
   {
    "id": "top_oil_unit",
@@ -7607,55 +6960,7 @@
    "y": 317,
    "w": 26,
    "h": 26,
-   "toggle": "apexSportTop=oil"
-  },
-  {
-   "id": "top_coolant_label",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "WATER",
-   "font": "apex_label",
-   "color": "dim",
-   "align": "left",
-   "x": 342,
-   "y": 324,
-   "w": 88,
-   "h": 17,
-   "toggle": "apexSportTop=coolant"
-  },
-  {
-   "id": "top_coolant_val",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "{{coolant}}",
-   "font": "apex_val",
-   "color": "fg",
-   "align": "right",
-   "x": 515,
-   "y": 313,
-   "w": 92,
-   "h": 29,
-   "toggle": "apexSportTop=coolant"
-  },
-  {
-   "id": "top_coolant_unit",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "{{u:temp}}",
-   "font": "apex_unit",
-   "color": "dim",
-   "align": "right",
-   "x": 608,
-   "y": 317,
-   "w": 26,
-   "h": 26,
-   "toggle": "apexSportTop=coolant"
+   "toggle": "apexSportLeft=oilWater"
   },
   {
    "id": "top_intake_label",
@@ -7671,7 +6976,7 @@
    "y": 324,
    "w": 85,
    "h": 17,
-   "toggle": "apexSportTop=intake"
+   "toggle": "apexSportLeft=intakeBoost"
   },
   {
    "id": "top_intake_val",
@@ -7687,7 +6992,7 @@
    "y": 313,
    "w": 92,
    "h": 29,
-   "toggle": "apexSportTop=intake"
+   "toggle": "apexSportLeft=intakeBoost"
   },
   {
    "id": "top_intake_unit",
@@ -7703,7 +7008,7 @@
    "y": 317,
    "w": 26,
    "h": 26,
-   "toggle": "apexSportTop=intake"
+   "toggle": "apexSportLeft=intakeBoost"
   },
   {
    "id": "top_torque_label",
@@ -7719,7 +7024,7 @@
    "y": 324,
    "w": 95,
    "h": 17,
-   "toggle": "apexSportTop=torque"
+   "toggle": "apexSportLeft=torquePower"
   },
   {
    "id": "top_torque_val",
@@ -7735,7 +7040,7 @@
    "y": 313,
    "w": 92,
    "h": 29,
-   "toggle": "apexSportTop=torque"
+   "toggle": "apexSportLeft=torquePower"
   },
   {
    "id": "top_torque_unit",
@@ -7751,55 +7056,7 @@
    "y": 317,
    "w": 24,
    "h": 26,
-   "toggle": "apexSportTop=torque"
-  },
-  {
-   "id": "top_power_label",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "POWER",
-   "font": "apex_label",
-   "color": "dim",
-   "align": "left",
-   "x": 342,
-   "y": 324,
-   "w": 89,
-   "h": 17,
-   "toggle": "apexSportTop=power"
-  },
-  {
-   "id": "top_power_val",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "{{powerPct}}",
-   "font": "apex_val",
-   "color": "fg",
-   "align": "right",
-   "x": 517,
-   "y": 313,
-   "w": 92,
-   "h": 29,
-   "toggle": "apexSportTop=power"
-  },
-  {
-   "id": "top_power_unit",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "%",
-   "font": "apex_unit",
-   "color": "dim",
-   "align": "right",
-   "x": 610,
-   "y": 317,
-   "w": 24,
-   "h": 26,
-   "toggle": "apexSportTop=power"
+   "toggle": "apexSportLeft=torquePower"
   },
   {
    "id": "low_boost_label",
@@ -7815,7 +7072,7 @@
    "y": 412,
    "w": 82,
    "h": 17,
-   "toggle": "apexSportLow=boost"
+   "toggle": "apexSportLeft=intakeBoost"
   },
   {
    "id": "low_boost_val",
@@ -7831,7 +7088,7 @@
    "y": 401,
    "w": 114,
    "h": 29,
-   "toggle": "apexSportLow=boost"
+   "toggle": "apexSportLeft=intakeBoost"
   },
   {
    "id": "low_boost_unit",
@@ -7847,7 +7104,7 @@
    "y": 405,
    "w": 35,
    "h": 26,
-   "toggle": "apexSportLow=boost"
+   "toggle": "apexSportLeft=intakeBoost"
   },
   {
    "id": "low_brake_label",
@@ -7863,7 +7120,7 @@
    "y": 412,
    "w": 80,
    "h": 17,
-   "toggle": "apexSportLow=brake"
+   "toggle": "apexSportLeft=boostBrake|gForce"
   },
   {
    "id": "low_brake_val",
@@ -7879,7 +7136,7 @@
    "y": 401,
    "w": 99,
    "h": 29,
-   "toggle": "apexSportLow=brake"
+   "toggle": "apexSportLeft=boostBrake|gForce"
   },
   {
    "id": "low_brake_unit",
@@ -7895,55 +7152,7 @@
    "y": 405,
    "w": 17,
    "h": 26,
-   "toggle": "apexSportLow=brake"
-  },
-  {
-   "id": "low_oil_label",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "OIL",
-   "font": "apex_label",
-   "color": "dim",
-   "align": "left",
-   "x": 342,
-   "y": 412,
-   "w": 38,
-   "h": 17,
-   "toggle": "apexSportLow=oil"
-  },
-  {
-   "id": "low_oil_val",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "{{oil}}",
-   "font": "apex_val",
-   "color": "fg",
-   "align": "right",
-   "x": 515,
-   "y": 401,
-   "w": 92,
-   "h": 29,
-   "toggle": "apexSportLow=oil"
-  },
-  {
-   "id": "low_oil_unit",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "{{u:temp}}",
-   "font": "apex_unit",
-   "color": "dim",
-   "align": "right",
-   "x": 608,
-   "y": 405,
-   "w": 26,
-   "h": 26,
-   "toggle": "apexSportLow=oil"
+   "toggle": "apexSportLeft=boostBrake|gForce"
   },
   {
    "id": "low_coolant_label",
@@ -7959,7 +7168,7 @@
    "y": 412,
    "w": 88,
    "h": 17,
-   "toggle": "apexSportLow=coolant"
+   "toggle": "apexSportLeft=oilWater"
   },
   {
    "id": "low_coolant_val",
@@ -7975,7 +7184,7 @@
    "y": 401,
    "w": 92,
    "h": 29,
-   "toggle": "apexSportLow=coolant"
+   "toggle": "apexSportLeft=oilWater"
   },
   {
    "id": "low_coolant_unit",
@@ -7991,103 +7200,7 @@
    "y": 405,
    "w": 26,
    "h": 26,
-   "toggle": "apexSportLow=coolant"
-  },
-  {
-   "id": "low_intake_label",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "INTAKE",
-   "font": "apex_label",
-   "color": "dim",
-   "align": "left",
-   "x": 342,
-   "y": 412,
-   "w": 85,
-   "h": 17,
-   "toggle": "apexSportLow=intake"
-  },
-  {
-   "id": "low_intake_val",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "{{intake}}",
-   "font": "apex_val",
-   "color": "fg",
-   "align": "right",
-   "x": 515,
-   "y": 401,
-   "w": 92,
-   "h": 29,
-   "toggle": "apexSportLow=intake"
-  },
-  {
-   "id": "low_intake_unit",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "{{u:temp}}",
-   "font": "apex_unit",
-   "color": "dim",
-   "align": "right",
-   "x": 608,
-   "y": 405,
-   "w": 26,
-   "h": 26,
-   "toggle": "apexSportLow=intake"
-  },
-  {
-   "id": "low_torque_label",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "TORQUE",
-   "font": "apex_label",
-   "color": "dim",
-   "align": "left",
-   "x": 342,
-   "y": 412,
-   "w": 95,
-   "h": 17,
-   "toggle": "apexSportLow=torque"
-  },
-  {
-   "id": "low_torque_val",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "{{torquePct}}",
-   "font": "apex_val",
-   "color": "fg",
-   "align": "right",
-   "x": 517,
-   "y": 401,
-   "w": 92,
-   "h": 29,
-   "toggle": "apexSportLow=torque"
-  },
-  {
-   "id": "low_torque_unit",
-   "type": "text",
-   "class": "content",
-   "z": 13,
-   "conn": 1,
-   "text": "%",
-   "font": "apex_unit",
-   "color": "dim",
-   "align": "right",
-   "x": 610,
-   "y": 405,
-   "w": 24,
-   "h": 26,
-   "toggle": "apexSportLow=torque"
+   "toggle": "apexSportLeft=oilWater"
   },
   {
    "id": "low_power_label",
@@ -8103,7 +7216,7 @@
    "y": 412,
    "w": 89,
    "h": 17,
-   "toggle": "apexSportLow=power"
+   "toggle": "apexSportLeft=torquePower"
   },
   {
    "id": "low_power_val",
@@ -8119,7 +7232,7 @@
    "y": 401,
    "w": 92,
    "h": 29,
-   "toggle": "apexSportLow=power"
+   "toggle": "apexSportLeft=torquePower"
   },
   {
    "id": "low_power_unit",
@@ -8135,7 +7248,107 @@
    "y": 405,
    "w": 24,
    "h": 26,
-   "toggle": "apexSportLow=power"
+   "toggle": "apexSportLeft=torquePower"
+  },
+  {
+   "id": "tyre_FL",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{tyreP:FL}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 374,
+   "y": 313,
+   "w": 70,
+   "h": 29,
+   "toggle": "apexSportLeft=tyres",
+   "tyreLow": "FL"
+  },
+  {
+   "id": "tyre_FR",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{tyreP:FR}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 525,
+   "y": 313,
+   "w": 70,
+   "h": 29,
+   "toggle": "apexSportLeft=tyres",
+   "tyreLow": "FR"
+  },
+  {
+   "id": "tyre_RL",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{tyreP:RL}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 374,
+   "y": 401,
+   "w": 70,
+   "h": 29,
+   "toggle": "apexSportLeft=tyres",
+   "tyreLow": "RL"
+  },
+  {
+   "id": "tyre_RR",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{tyreP:RR}}",
+   "font": "apex_val",
+   "color": "fg",
+   "align": "right",
+   "x": 525,
+   "y": 401,
+   "w": 70,
+   "h": 29,
+   "toggle": "apexSportLeft=tyres",
+   "tyreLow": "RR"
+  },
+  {
+   "id": "tyre_label",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "TYRES",
+   "font": "apex_label",
+   "color": "dim",
+   "align": "left",
+   "x": 429,
+   "y": 448,
+   "w": 80,
+   "h": 17,
+   "toggle": "apexSportLeft=tyres"
+  },
+  {
+   "id": "tyre_unit",
+   "type": "text",
+   "class": "content",
+   "z": 13,
+   "conn": 1,
+   "text": "{{u:pressure}}",
+   "font": "apex_unit",
+   "color": "dim",
+   "align": "right",
+   "x": 509,
+   "y": 441,
+   "w": 35,
+   "h": 29,
+   "toggle": "apexSportLeft=tyres"
   },
   {
    "id": "coolant",

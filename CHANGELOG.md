@@ -4,6 +4,8 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 15 2026
 
+- **Zeiger 0.36.0:** Apex's and Apex Sport's left block is now one pick, **Left block** (CUSTOMISE on their card), in pairs: boost and braking, oil and water, intake air and boost, accelerating and braking g, torque and power. Or the **tyres**: a car from above with each tyre's pressure beside its wheel; a tyre under the new **Warnings, Tyre pressure** setting (2.0 bar by default) turns orange. Checked on the bench (the tyres with a low pair, the g pair, at 8 layers); not yet on a car.
+
 - **Zeiger 0.35.0:** Apex's and Apex Sport's two bars can be customised (CUSTOMISE on their card): **Upper bar** and **Lower bar** each show boost, braking, oil, coolant, intake air, torque %, power %, or nothing. Their labels are now text, so they change with the pick. Checked on the bench (oil on the upper bar, the lower one empty, the M badge); not yet on a car.
 
 - **Zeiger 0.34.0:** Apex and Apex Sport can be customised.

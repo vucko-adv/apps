@@ -61,10 +61,11 @@ const GROUPS = [
         ['calib', 'Calibration', 'a grid or the map frame on the cluster, to measure what BMW hides'],
         ['slotWatch', 'Watch BMW\'s slots', 'test: every slot now, and what changed when'],
     ] },
-    { name: 'Warnings', about: 'Over its limit, the value flashes red on the cluster. Not during the start animation.', rows: [
+    { name: 'Warnings', about: 'Over its limit, the value flashes red on the cluster; a tyre under its pressure turns orange. Not during the start animation.', rows: [
         ['warnOil', 'Oil temperature', 'flashes from', 'OIL', '#ffb23e'],
         ['warnCoolant', 'Coolant temperature', 'flashes from', 'H₂O', '#59c7ff'],
         ['warnBoost', 'Boost', 'Apex, Vintage · flashes from', 'BAR', '#c58cff'],
+        ['warnTyre', 'Tyre pressure', 'Apex tyres · orange under', 'TPMS', '#7ee08a'],
     ] },
     { name: 'Rev range', about: 'The rev bars\' yellow and red zones, and the shift point.', rows: [
         ['engine', 'Engine', 'petrol: scale to 8000 · diesel: scale to 6000'],
@@ -90,8 +91,8 @@ const GROUPS = [
 // Customise (Zeiger 0.34.0): the themes whose places can show other things, the setting prefix and the rows (the
 // setting key's ending, label, the line under it); the layouts show a widget for its pick ("toggle": "<key>=<value>")
 const CUSTOM = {
-    apex: { key: 'apex', rows: [['Big', 'Big number', 'in the middle'], ['Top', 'Upper bar', 'left of the speed'], ['Low', 'Lower bar', 'under it'], ['Mid', 'Bottom middle', 'where the clock is']] },
-    apex_sport: { key: 'apexSport', rows: [['Big', 'Big number', 'in the middle'], ['Top', 'Upper bar', 'left of the speed'], ['Low', 'Lower bar', 'under it'], ['Mid', 'Bottom middle', 'where the clock is']] },
+    apex: { key: 'apex', rows: [['Big', 'Big number', 'in the middle'], ['Left', 'Left block', 'two bars, the tyres, or empty'], ['Mid', 'Bottom middle', 'where the clock is']] },
+    apex_sport: { key: 'apexSport', rows: [['Big', 'Big number', 'in the middle'], ['Left', 'Left block', 'two bars, the tyres, or empty'], ['Mid', 'Bottom middle', 'where the clock is']] },
 };
 // the slot watch (BMW's cluster group): while it is on, the group shows only its switch, the rest is the watch
 const WATCH_ROW = 64, WATCH_LH = 22;
@@ -233,7 +234,7 @@ class Page {
         if (k === 'calib') { const n = this.calibNow(); return CALIB.find((c) => c[0] === n)[1]; }
         const v = this.get(k), it = this.item(k);
         if (k === 'warnOil' || k === 'warnCoolant') return v ? (this.us() ? Math.round(v * 9 / 5 + 32) + ' °F' : v + ' °C') : 'Off';
-        if (k === 'warnBoost') return v ? (this.us() ? Math.round(v * 14.5) + ' psi' : v.toFixed(1) + ' bar') : 'Off';
+        if (k === 'warnBoost' || k === 'warnTyre') return v ? (this.us() ? Math.round(v * 14.5) + ' psi' : v.toFixed(1) + ' bar') : 'Off';
         if (k === 'shiftX') return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + ' px';
         if (k === 'engine') return v === 'diesel' ? 'Diesel' : 'Petrol';
         if (k === 'redFrom') return v > 0 ? num(v) + ' rpm' : 'Auto · ' + num(this.hud.setting('redline'));
@@ -249,7 +250,7 @@ class Page {
         const on = (k) => this.get(k) === true;
         if (g.name === 'Cluster') return 'start animation ' + (on('startAnim') ? 'on' : 'off') + ' · position ' + this.valueText('shiftX');
         if (g.name === 'Warnings') {
-            const s = [['warnOil', 'oil'], ['warnCoolant', 'coolant'], ['warnBoost', 'boost']].filter((x) => this.get(x[0])).map((x) => x[1] + ' ' + this.valueText(x[0]));
+            const s = [['warnOil', 'oil'], ['warnCoolant', 'coolant'], ['warnBoost', 'boost'], ['warnTyre', 'tyres']].filter((x) => this.get(x[0])).map((x) => x[1] + ' ' + this.valueText(x[0]));
             return s.length ? s.join(' · ') : 'all off';
         }
         if (g.name === 'Rev range') return this.valueText('engine') + ' · yellow ' + num(this.hud.setting('yellowLine')) + ' · red ' + num(this.hud.setting('redline'));
