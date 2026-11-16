@@ -4,8 +4,9 @@
  * cluster-design/app_ui/mock.html ?v=c and ?v=c2 next to this repo).
  *
  * Two tabs in the header:
- *   Themes    a gallery: the theme being looked at big in the middle, its neighbours beside it, a dot per theme
- *             under it, and under that the drive modes (with "Change with the drive mode" on: which theme each one
+ *   Themes    a gallery: the theme being looked at big in the middle, its neighbours beside it, under it the groups
+ *             (Vintage, Sport, Photo: THEME_GROUPS; a tap goes to the group, a dot per theme in each), and under that
+ *             the drive modes (with "Change with the drive mode" on: which theme each one
  *             shows; a tap on one picks it, and "Use for ..." on the big card gives it the theme looked at).
  *             Looking through the gallery changes nothing on the cluster; only "Use" does.
  *   Settings  the groups on the left (each with what it is set to now), the open group's rows on the right: a
@@ -98,6 +99,13 @@ const CUSTOM = {
 };
 // the slot watch (BMW's cluster group): while it is on, the group shows only its switch, the rest is the watch
 const WATCH_ROW = 64, WATCH_LH = 22;
+// the gallery's groups (0.44.0), in this order; a swipe goes on into the next group at a group's end. A theme in none
+// goes to MORE at the end, so a new theme shows before it is given a group. Groups with no theme don't show.
+const THEME_GROUPS = [
+    ['VINTAGE', ['vintage_green', 'vintage_cyan', 'vfd']],
+    ['SPORT', ['apex', 'apex_sport']],
+    ['PHOTO', ['map_mist', 'dark_moon', 'underpass', 'sunrise_hills', 'mist', 'peaks', 'ember']],
+];
 // the calibration layouts (hudLayout values), for the row in BMW's cluster
 const CALIB = [['', 'Off'], ['grid', 'Grid'], ['mapcal', 'Map frame']];
 const CREDITS = [
@@ -340,7 +348,14 @@ class Page {
 
     /* ---------- themes ---------- */
     /** the gallery's themes (BMW's own is the corner shortcut, not a card) */
-    looks() { return (this.item('inSport').options || []).map((o) => o[0]).filter((v) => v !== 'off'); }
+    looks() { return this.groups().reduce((a, g) => a.concat(g.list), []); }
+    /** the gallery's groups with their themes (THEME_GROUPS; MORE: themes in none), those with none left out */
+    groups() {
+        const all = (this.item('inSport').options || []).map((o) => o[0]).filter((v) => v !== 'off');
+        const gs = THEME_GROUPS.map(([name, vs]) => ({ name, list: vs.filter((v) => all.indexOf(v) >= 0) }));
+        gs.push({ name: 'MORE', list: all.filter((v) => !THEME_GROUPS.some((g) => g[1].indexOf(v) >= 0)) });
+        return gs.filter((g) => g.list.length);
+    }
     name(v) { return v === 'off' ? 'BMW\'s own' : this.optLabel('hudLayout', v); }
     shown() { return this.hud.activeName || this.hud._layoutName() || 'off'; }
     carMode() { const m = MODES.find((x) => x[2] === this.hud.driveMode); return m ? m[0] : null; }
@@ -467,10 +482,38 @@ class Page {
         cx = cx0;
         // plain arrows at the screen's edges; the taps are the whole left and right half (added last: the buttons win)
         arrow(cv, L + 26, cy + ch / 2, -1); arrow(cv, R - 26, cy + ch / 2, 1);
-        // a dot per theme
-        const dw = looks.reduce((a, v) => a + (v === this.at ? 30 : 9) + 10, -10);
-        let dx = (W - dw) / 2;
-        looks.forEach((v) => { const w = v === this.at ? 30 : 9; cv.roundRect(dx, cy + ch + 13, w, 9, 4.5, v === this.at ? C.acc : A('#ffffff', 0.22)); dx += w + 10; });
+        // the groups: a chip each with its name and a dot per theme; the one looked at lit. A tap goes to the group (the
+        // theme last looked at in it, else the one in use there, else its first)
+        const gy = cy + ch + 8, gh = 34, gs = this.groups();
+        if (!this.groupAt) this.groupAt = {};
+        const chips = gs.map((g) => {
+            const here = g.list.indexOf(this.at) >= 0;
+            if (here) this.groupAt[g.name] = this.at;
+            const tw = cv.textWidth(g.name, 15, { font: B, spacing: 2, literal: true });
+            const dots = g.list.reduce((a, v) => a + (v === this.at ? 22 : 7) + 6, -6);
+            return { g, here, tw, w: 22 + tw + 14 + dots + 20 };
+        });
+        let gx = (W - chips.reduce((a, c) => a + c.w + 12, -12)) / 2;
+        chips.forEach((c) => {
+            cv.roundRect(gx, gy, c.w, gh, gh / 2, c.here ? A('#ffffff', 0.10) : A('#ffffff', 0.04));
+            if (c.here) cv.strokeRoundRect(gx, gy, c.w, gh, gh / 2, 1, A(C.acc, 0.55));
+            cv.text(c.g.name, gx + 22, gy + 23, 15, c.here ? C.text : C.dim, { font: B, spacing: 2, literal: true });
+            let dx = gx + 22 + c.tw + 14;
+            c.g.list.forEach((v) => {
+                const w = v === this.at ? 22 : 7;
+                cv.roundRect(dx, gy + gh / 2 - 3.5, w, 7, 3.5, v === this.at ? C.acc : A('#ffffff', c.here ? 0.30 : 0.18));
+                dx += w + 6;
+            });
+            const to = () => {
+                if (c.here) return;
+                const l = c.g.list, last = this.groupAt[c.g.name];
+                const v = l.indexOf(last) >= 0 ? last : l.indexOf(cur) >= 0 ? cur : l[0];
+                const d = looks.indexOf(v) > i ? 1 : -1;
+                this.at = v; this.slide = { d, to: v, t: Date.now() }; this.kick();
+            };
+            cv.target(gx, gy - 4, c.w, gh + 8, to, 'group:' + c.g.name, gh / 2, true);
+            gx += c.w + 12;
+        });
         // the drive modes
         const y = bottom - 58, h = 54, byMode = this.get('byMode') === true;
         let x = 24;
@@ -729,7 +772,6 @@ function pill(cv, xr, y, s, c) {
     cv.circle(xr - w + 22, y + 20, 5, c);
     cv.text(s, xr - w + 36, y + 26, 17, c, { font: B, spacing: 2, literal: true });
 }
-/** a plain chevron at the screen's edge, pointing d (-1 left, 1 right) */
 /** small, quiet arrows on Customise's parts: up (d -1) or down (d 1); left (d -1) or right (d 1) */
 function smallChevron(cv, x, y, d, c) {
     cv.line(x - 11, y - 5 * d, x, y + 5 * d, 2.5, c);
@@ -739,6 +781,7 @@ function smallArrow(cv, x, y, d, c) {
     cv.line(x - 5 * d, y - 11, x + 5 * d, y, 2.5, c);
     cv.line(x + 5 * d, y, x - 5 * d, y + 11, 2.5, c);
 }
+/** a plain chevron at the screen's edge, pointing d (-1 left, 1 right) */
 function arrow(cv, x, y, d) {
     cv.line(x - 9 * d, y - 22, x + 9 * d, y, 4, A('#ffffff', 0.85));
     cv.line(x + 9 * d, y, x - 9 * d, y + 22, 4, A('#ffffff', 0.85));
