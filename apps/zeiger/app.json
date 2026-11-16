@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "Ember can now be customised (beta): pick the font of its readouts (Classic, Clean, Retro or Motor) and put the M badge under the car, now centred on it. A BETA mark shows on the page while Zeiger is still being developed.",
-  "version": "0.45.0",
+  "whatsNew": "A test for the next step: Settings, About, \"Look for cruise and speed limit\" lists what the car offers apps about the cruise control and the speed limit, so a later version can show them on the themes. Nothing on the cluster changes.",
+  "version": "0.46.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -1340,6 +1340,12 @@
       "label": "BMW lettering on the badge",
       "type": "bool",
       "default": true
+    },
+    {
+      "key": "probe",
+      "label": "Look for cruise and speed limit (test: the car's SOME/IP catalog searched, on the page)",
+      "type": "bool",
+      "default": false
     },
     {
       "key": "demo",

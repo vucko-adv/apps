@@ -204,6 +204,17 @@ BMW's KOMBI draws its gear box (about x 1406-1597, y 342-419) over every theme. 
 
 The first car test (0.29.0) saw the table change for three seconds right about when the gear box went at the gear change, in a slot the page didn't show then. The test for 0.29.1: start a theme in P (the box shows), shift to D (it goes), and photograph the watch; the same with the parking brake or Auto Hold for the small box at the right edge. If the box is a content in a slot, an empty scene of ours can hold that slot from the start, as for the guidance box; if no slot changes, the KOMBI draws it itself and it can't be kept away from here.
 
+## Cruise control and speed limit: the probe (0.46.0, a test)
+
+Can a theme show the cruise control and the speed limit? Only if the car offers them to apps. **Settings, About, "Look
+for cruise and speed limit"** reads the head unit's SOME/IP catalog (`/etc/oap/someip/someip-interfaces.json`, the
+interfaces an app may ask for in app.json "signals") and lists, on the page in place of the credits, every interface
+and field whose name says cruise control (cruise, tempomat, FGR, ACC, DCC, limiter, set speed) or a speed limit (speed
+limit, SLI, SLA, VZE, traffic sign, KAFAS), then the driver-assistance and guidance interfaces by name. A tap on the
+list shows the next page; the log and `data/probe.txt` have it all. Nothing is subscribed to or sent to the car, and
+nothing on the cluster changes (probe.js). Photograph every page: the next build asks for the fields found and shows
+their values while driving. `ZEIGER_PROBE_CATALOG` names another catalog file, for the emulator.
+
 ## Boost
 
 Boost (Apex's and Apex Sport's bar and readout, Vintage Green's and Cyan's TURBO bar) comes from two places:

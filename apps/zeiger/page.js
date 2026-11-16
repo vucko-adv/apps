@@ -24,6 +24,7 @@ const G = require('./kit/gauges');
 const rec = require('./kit/record');
 const data = require('./hud_data');
 const tz = require('./tz');
+const probe = require('./probe');
 
 const W = 1600, H = 520, L = 12, R = 1588;          // the part between L and R shows in the full-screen layout too
 const B = 'zsb', M = 'zsm', MI = 'zmi';              // fonts: bold, medium, Michroma
@@ -94,6 +95,7 @@ const GROUPS = [
         'community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.',
     ], rows: [
         ['demo', 'Demo data', 'made-up values while the car sends none'],
+        ['probe', 'Look for cruise and speed limit', 'test: what the car offers apps, listed here'],
     ] },
 ];
 // Customise (Zeiger 0.34.0): the themes whose places can show other things, the setting prefix and the rows (the
@@ -583,13 +585,17 @@ class Page {
         const credits = g.name === 'About', watch = g.name === 'BMW\'s cluster' && this.get('slotWatch') === true;
         const rows = watch ? g.rows.filter((r) => r[0] === 'slotWatch') : g.rows;
         const room = py + ph - 10 - y - (credits ? Math.max(CREDITS.length * 26 + 24, 196) : 0);
-        const rh = watch ? WATCH_ROW : Math.min(84, Math.floor(room / rows.length));
+        // the slot watch and the probe (0.46.0) give their lines the room: their rows as low as they go
+        const rh = watch || (credits && this.get('probe') === true) ? WATCH_ROW : Math.min(84, Math.floor(room / rows.length));
         rows.forEach((row, j) => this.row(cv, px + 32, y + j * rh, pw - 64, rh, row));
         if (watch) {
             const wy = y + rh + 18;
             this.watchLines(cv, px + 32, wy, pw - 64, Math.max(3, Math.floor((py + ph - 14 - wy - 18) / WATCH_LH)));
         }
-        if (credits) {
+        if (credits && this.get('probe') === true) {
+            this.probeLines(cv, px + 32, y + g.rows.length * rh + 18, pw - 64, py + ph - 14);
+        } else if (credits) {
+            if (this.get('probe') !== true) this.probeR = undefined;
             const cy = y + g.rows.length * rh + 18;
             cv.fillRect(px + 32, cy - 8, pw - 64, 1, C.faint);
             CREDITS.forEach((s, j) => cv.text(s, px + 32, cy + 22 + j * 26, 18, j ? C.dim : C.soft, { font: M, literal: true }));
@@ -601,6 +607,30 @@ class Page {
             cv.text(AUTHOR.handle, cx, ay + ph0 + 32, 23, C.text, { font: B, align: 'center', literal: true });
             cv.text(AUTHOR.link, cx, ay + ph0 + 56, 17, C.accSoft, { font: M, align: 'center', literal: true });
         }
+    }
+
+    /**
+     * The probe (0.46.0, a test, probe.js): the car's SOME/IP catalog searched for the cruise control and the speed
+     * limit, its lines in place of the credits; a tap on them shows the next page. Read once each time it is switched on.
+     */
+    probeLines(cv, x, y, w, bottom) {
+        const F = { font: M, literal: true }, LH = 22;
+        if (this.probeR === undefined) {
+            this.probeR = null; this.probePage = 0;
+            probe.run(this.ctx.log, this.ctx.dataDir, (r) => { this.probeR = r; this.kick(); });
+        }
+        cv.fillRect(x, y - 8, w, 1, C.faint);
+        // two columns side by side, the first line (how many) across both
+        const all = probe.lines(this.probeR), rows = Math.max(3, Math.floor((bottom - y - 12) / LH) - 1);
+        cv.text(fit(cv, all[0], 17, w, M), x, y + 18, 17, C.soft, F);
+        const rest = all.slice(1), cw = Math.floor((w - 24) / 2), per = (rows - 1) * 2;
+        const pages = Math.max(1, Math.ceil(rest.length / per)), page = (this.probePage || 0) % pages;
+        rest.slice(page * per, page * per + per).forEach((l, i) => {
+            const sub = /^ {4}/.test(l), cx = x + (i < rows - 1 ? 0 : cw + 24), cy = y + 18 + ((i % (rows - 1)) + 1) * LH;
+            cv.text(fit(cv, l.trim(), sub ? 16 : 17, cw - (sub ? 20 : 0), M), cx + (sub ? 20 : 0), cy, sub ? 16 : 17, sub ? C.text : C.accSoft, F);
+        });
+        if (pages > 1) cv.text('page ' + (page + 1) + ' of ' + pages + ' · tap for the next', x + w, y + 18 + rows * LH, 15, C.dim, Object.assign({ align: 'right' }, F));
+        cv.target(x, y - 8, w, bottom - y + 8, () => { this.probePage = (page + 1) % pages; this.kick(); }, 'probe', 0, true);
     }
 
     /**

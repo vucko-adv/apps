@@ -4,6 +4,8 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 16 2026
 
+- **Zeiger 0.46.0:** a test toward showing the cruise control and the speed limit on the themes. Settings, About, **Look for cruise and speed limit** lists what the car offers apps about them: every interface and field in the head unit's SOME/IP catalog whose name says cruise control (cruise, tempomat, FGR, ACC, DCC, limiter) or a speed limit (SLI, SLA, VZE, traffic sign, KAFAS), and the driver-assistance and guidance interfaces, in two columns on the page (a tap for the next page). Nothing is read from the car yet and nothing on the cluster changes; the next build reads the fields found.
+
 - **Sound Test removed** from this source and the Store: on the car the app found no way to play sound (the app has no access to the audio devices, and the head unit has no player or PulseAudio it may use). Parked for now.
 
 - **Zeiger 0.45.0:** **Ember can be customised (beta).** CUSTOMISE on Ember picks the font of its big readouts (Classic, Clean, Retro or Motor: Barlow, Inter Tight, Jost, Saira Condensed) and puts BMW's M badge under the car; the photo is framed so the car sits in the middle, under the speed and over the badge, and the gear letter with its number is centred over the drive mode, with the same preview and Apply as Apex. A change no longer shows the black curtain: when a setting makes a theme drop layers, the old picture now stays until the new one shows, as between themes. **Zeiger is in beta:** a BETA mark in the page's header, and About and the install text say so. Checked on the bench (every font and the badge, 2.3-2.6 MiB, no curtain, nothing over BMW's gear letter); the page in the emulator; not yet on a car.
