@@ -233,6 +233,8 @@
  * Text "warnFlash": false: no flash over the warning limit (a tile that turns red itself).
  * Text "tyreLow": "FL" (FR, RL, RR): the text in "tyreLowColor" (default "accent") while that tyre is under "warnTyre" bar.
  * "toggle": "key=a|b": shown while the setting is any of those values.
+ * "toggle": "@night" (Zeiger 0.43.0): shown after sunset (where _sunPlace says), "!@night" by day: a photo theme's day and
+ * night pictures. At sunrise and sunset the layout is made again, the old one held until the new shows (no curtain).
  * Text "colorBy": "verdict" colours it by the last shift's grade. Text "near": ["speed" | "rpm", i] turns it
  * "nearColor" (fg) while scale label i is the one nearest the value (BMW lights up the label by the needle).
  *
@@ -1021,7 +1023,8 @@ class HudApp {
         this.tickTimer = setInterval(() => this._guard('tick', () => this._tick()), TICK_MS);
         // Auto theme: check for sunrise / sunset once a minute; the status line too
         this.themeTimer = setInterval(() => this._guard('theme check', () => {
-            if (this._themeName() !== this.themeName || (this._nightDim() && !this.noDim) !== this.nightOn) this._rebuild();
+            if (this._themeName() !== this.themeName || (this._nightDim() && !this.noDim) !== this.nightOn
+                || (this.sunToggle && this._isNight() !== this.sunNight)) this._rebuild();
             this._status();
             if (this.client.ready) this.client.status();      // the scene ids (scenesApart) can change: guard, update
         }), 60000);
@@ -1382,6 +1385,9 @@ class HudApp {
         if (t !== 'auto') return t;
         return sun.isNight(Date.now(), ...this._sunPlace()) ? 'night' : this.setting('dayTheme');
     }
+
+    /** the sun down at the place _sunPlace() gives */
+    _isNight() { return sun.isNight(Date.now(), ...this._sunPlace()); }
 
     /** Night colours now: Cluster Themes' "nightDim" on Auto, a theme of the layout's own, and the sun down. */
     _nightDim() {
@@ -2280,6 +2286,9 @@ class HudApp {
         this.car.setRedline(this.setting('redline'));
         const name = this._layoutName(), before = this.activeName;
         const change = !!(before && before !== name);
+        // the same layout across sunset or sunrise with "@night" pictures (0.43.0): held as another theme would be, so the
+        // day picture stays until the night one shows (sunToggle / sunNight: what the layout before was built with)
+        const sunFlip = !!(before && before === name && this.sunToggle && this.sunNight !== this._isNight());
         // a change to "off" or to a layout that can't be made: the curtain as before (made or not below)
         if (change && name === 'off') this._guard('curtain', () => this._curtainUp());
         this.activeName = name;
@@ -2375,6 +2384,9 @@ class HudApp {
         this.noDim = layout.noNightDim === true;
         this.nightOn = this._nightDim() && !this.noDim;
         if (this.nightOn) this.theme = dimTheme(this.theme, NIGHT_DIM);
+        // "@night" toggles: _toggleOn sets sunToggle when the layout has one; sunNight is what it was built with
+        this.sunToggle = layout.widgets.some((w) => [].concat(w.toggle || []).some((t) => /^!?@night$/.test(t)));
+        this.sunNight = this._isNight();
         this.log.info('layout "' + layout.name + '", theme ' + this.theme.name + (this.layoutTheme ? '' : ' (' + this.setting('hudTheme') + ')'));
         // "Leave BMW's bottom strip clear": the theme cut at the strip (image pixels in _blit, fills and widgets here)
         this.cut = this._stripCut();
@@ -2403,14 +2415,13 @@ class HudApp {
         // the sheets' boxes the same whatever the Customise picks (0.37.0), so a pick keeps every layer (_steadySheets)
         this._steadySheets(plan, layout.widgets.filter((w) => w.toggle && !this._toggleOn(w.toggle) && !(w.themes && w.themes.indexOf(this.themeName) < 0)));
         // another theme: the old one held until the new one shows, if both fit; else the curtain over the change
-        const hold = change && this._canHold(old, plan, oldPx);
-        if (change && !hold) this._guard('curtain', () => this._curtainUp());
+        const hold = (change || sunFlip) && this._canHold(old, plan, oldPx);        if (change && !hold) this._guard('curtain', () => this._curtainUp());
         this.keep = hold ? new Map() : this._keepable(old, plan);
         this.keepOwn = hold ? new Map() : this._keepableOwn(old, plan);
         this.zLift = hold ? HOLD_Z : 0;
         // the same theme again (a setting): a layer that goes without one in its place would show BMW's own cluster
         // through the gap until the new one comes, so the curtain covers it
-        if (before === name && old.refs.length) {
+        if (before === name && !hold && old.refs.length) {
             const stay = {};
             this.keep.forEach((s) => { stay[s.ci + ':' + s.ref] = true; });
             this.keepOwn.forEach((o) => { stay[o.ci + ':' + o.ref] = true; });
@@ -2669,6 +2680,8 @@ class HudApp {
         if (Array.isArray(t)) return t.every((k) => this._toggleOn(k));      // a list: every one on (Zeiger addition)
         const not = t.charAt(0) === '!';
         const k = not ? t.slice(1) : t, eq = k.indexOf('=');
+        // "@night": the sun is down (Zeiger 0.43.0: a photo theme's day and night pictures); the theme check rebuilds when it flips
+        if (k === '@night') { this.sunToggle = true; const n = this._isNight(); return not ? !n : n; }
         // "key=a|b": the setting is one of those (Zeiger 0.36.0)
         const on = eq > 0 ? k.slice(eq + 1).split('|').indexOf(String(this.setting(k.slice(0, eq)))) >= 0 : this.setting(k) !== false;
         return not ? !on : on;
