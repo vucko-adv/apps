@@ -122,7 +122,7 @@ const CREDITS = [
     'Forked from bimmer-lab/apps (Cluster Themes), MIT.',
     'MGU App Kit by cauliflowermossgrape (MIT).',
     'cluster-render client by Robert Nisipeanu (MPL 2.0).',
-    'Fonts: Barlow, Michroma, Orbitron (SIL Open Font License). Details: NOTICE.',
+    'Fonts: Barlow, Michroma, Inter Tight, Jost, Saira (SIL Open Font License). Details: NOTICE.',
 ];
 
 // the author's card in About (0.31.0): the photo (hud/pictures/author_photo.json, a 128 px circle, baked by

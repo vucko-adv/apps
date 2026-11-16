@@ -2,7 +2,7 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "Ember can now be customised (beta): pick the font of its readouts (Classic, Tall, Wide or Tech) and put the M badge under the car. A BETA mark shows on the page while Zeiger is still being developed.",
+  "whatsNew": "Ember can now be customised (beta): pick the font of its readouts (Classic, Clean, Retro or Motor) and put the M badge under the car, now centred on it. A BETA mark shows on the page while Zeiger is still being developed.",
   "version": "0.45.0",
   "vendor": "custom",
   "loggingId": "OAZG",
@@ -920,16 +920,16 @@
           "Classic"
         ],
         [
-          "tall",
-          "Tall"
+          "clean",
+          "Clean"
         ],
         [
-          "wide",
-          "Wide"
+          "retro",
+          "Retro"
         ],
         [
-          "tech",
-          "Tech"
+          "motor",
+          "Motor"
         ]
       ]
     },
