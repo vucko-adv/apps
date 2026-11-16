@@ -170,6 +170,15 @@ With **Cold-engine rev guard** on (the default), the rev bars of Vintage Green, 
 
 With the switch on, BMW's own strip (from y 662) shows under the theme. Up to 0.31.1 every layer was squeezed to 662 / 720 of its height, so the whole theme moved up and got flatter. Since 0.32.0 the theme stays exactly as it is and is only cut at the strip (`STRIP_CUT` in shared/hud.js): every image layer's pixels in the strip are made see-through as they are sent (`_punch`), a fill over it gets the strip as its hole (`_cutLayout`), and a readout that sits mostly in the strip is left out. Turning it on or off rebuilds the layout.
 
+### Leave BMW's gear letter open (0.39.0, on by default)
+
+bimmer-lab found on a car (Cluster Themes 0.17.6-0.17.8, their issue #5) that BMW draws its black gear box over a theme whenever anything covers its gear letter (P R N D) in its bottom strip, and that a layer's rectangle counts even where its pixels are see-through. Zeiger 0.29.0 had only made the pixels see-through (a hole in the fills, the pictures' pixels cut), which changed nothing on the user's car. Since 0.39.0 no layer's rectangle reaches over the letter (x 1380-1460, y 660 down, bimmer-lab's window; `GEAR_LETTER` in shared/hud.js):
+- every widget over it is cut in pieces that go round it (`_gearCut`): above it, left and right of it; a fill keeps its colour and hole, a picture's piece shows its part (`crop`, a stretched one's scaled), a compressed one's pieces sample one texture (`u_src`);
+- a sheet's box never reaches over it (`_plan`, `_steadySheets`), and the curtain between themes is three pieces;
+- on the car BMW's strip shows in that small window, with its gear letter.
+
+The cut adds a layer or two to the themes with a full-panel background, so the planner now aims at 16 layers a connection (`LAYER_BUDGET`; cluster-render takes 64 a connection since its 0.4.2). Turn it off in Settings, BMW's cluster, Leave BMW's gear letter open.
+
 ### When BMW's gear box shows (car test, Nov 15 2026)
 
 On the user's G20 BMW draws its black gear box when a theme starts (the car started, or another theme picked) and takes it away at the first gear change (P to D, or N), on every theme: Sunrise, which leaves BMW's strip open, and themes that cover it alike. Once gone it stays gone until a theme starts again; settings changes don't bring it back. 0.29.0's **Leave BMW's gear letter open** (after bimmer-lab's Cluster Themes 0.17.6, issue #5) made no difference, so 0.29.1 took it out again: on their test car too the box most likely went with the gear change, not with the open strip.

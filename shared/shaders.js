@@ -283,7 +283,9 @@ void main() {
 
 const TEXPIC = `// A compressed picture (Zeiger 0.38.0), a cluster-render "effect" layer (GLSL ES 1.00) sampling an ETC2 asset
 // (u_tex, bound by hud.js) over the layer: u_shift px to the right (the theme position; the edge column repeats, as the
-// texture is clamped), u_alpha the start animation's fade, u_cut a see-through rect in layer px (BMW's strip; w 0: none).
+// texture is clamped), u_alpha the start animation's fade, u_cut a see-through rect in layer px (BMW's strip; w 0: none),
+// u_src the layer's place in the texture: its top-left (px) and the texture's size (0.39.0: a picture cut in pieces
+// round BMW's gear letter, the pieces sampling one texture).
 precision mediump float;
 varying vec2 v_uv;
 uniform sampler2D u_tex;
@@ -291,10 +293,11 @@ uniform vec2 u_size;
 uniform float u_shift;
 uniform float u_alpha;
 uniform vec4 u_cut;
+uniform vec4 u_src;
 
 void main() {
     vec2 p = vec2(v_uv.x * u_size.x, v_uv.y * u_size.y);
-    vec4 c = texture2D(u_tex, vec2((p.x - u_shift) / u_size.x, v_uv.y));
+    vec4 c = texture2D(u_tex, vec2((u_src.x + p.x - u_shift) / u_src.z, (u_src.y + p.y) / u_src.w));
     float a = c.a * u_alpha;
     if (u_cut.z > 0.0 && p.x >= u_cut.x && p.x < u_cut.x + u_cut.z && p.y >= u_cut.y && p.y < u_cut.y + u_cut.w) a = 0.0;
     gl_FragColor = vec4(c.rgb, a);

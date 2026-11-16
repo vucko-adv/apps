@@ -39,7 +39,7 @@
  * Sheet size vs layer count: a rebuild re-sends every sheet whole, through the car's upload budget (floor
  * 2000 KB/s, ceiling 5500, the HUD gets at most half), so sheets are kept small: the limit starts at a
  * quarter of the target area (345,600 px on the panel, 96,000 on the HUD). If that needs more than
- * LAYER_BUDGET (8) layers in all (effects + own + sheets), the limit is doubled and the layout re-planned,
+ * LAYER_BUDGET (16 since 0.39.0; 8 before) layers in all (effects + own + sheets), the limit is doubled and the layout re-planned,
  * up to unlimited; if even unlimited needs more than 8, a warning says so and the layout is drawn anyway.
  * The rebuild log line names the layout, widget and layer counts, the limit used and the bytes of the
  * whole-sheet writes; the status row names the layer count, not the widget count; and two seconds after a
@@ -310,7 +310,11 @@ const OWN_TYPES = { picture: true, needle: true, segments: true };
 // a face cut into pieces packs into a few sheets instead of one full-screen layer (pixel memory)
 const PACKABLE = { picture: true, segments: true };
 const STATUS_ASK_MS = 2000;      // after a rebuild: ask cluster-render for its own status text
-const LAYER_BUDGET = 8;          // cluster-render's limit per client connection (CompositorLimits.per_client; confirmed on the car Nov 5 2026)
+// the layers a connection's plan aims at: 8 was cluster-render's limit a client connection until its 0.4.2 (Nov 7 2026;
+// confirmed on the car Nov 5 2026); since then 64 (96 in all). Zeiger 0.39.0 plans for 16: over 8 the planner used to
+// merge sheets into big, mostly empty ones (pixel memory: Map Mist cut round BMW's gear letter needed 17.9 MiB)
+const LAYER_BUDGET = 16;
+const CONN_LAYERS = 64;          // cluster-render's limit a client connection (0.4.2 on): only warned about
 // the curtain (Zeiger 0.30.0): while the theme changes, a black fill over the whole panel on a connection no layout
 // uses, so BMW's own cluster doesn't show between the old theme's layers going and the new one's arriving; it fades
 // once every new layer is shown (CURTAIN_MAX_MS at most). An effect layer: no pixel memory. Since 0.37.0 a thin line in
@@ -322,6 +326,13 @@ const LAYER_BUDGET = 8;          // cluster-render's limit per client connection
 // 0.4.2), the new theme's layers are made above the old ones (z + HOLD_Z) while the old stay, and the old go once every
 // new layer is shown (HOLD_MAX_MS at most); then the new ones go back to their own z. No black between themes. Else
 // (the photo themes are big), or after cluster-render refused a layer once this run, the curtain as before.
+// BMW's gear letter (P R N D) in its bottom strip (Zeiger 0.39.0, setting "gearLetter"): no layer's rect may reach over
+// it. bimmer-lab found on a car (Cluster Themes 0.17.6-0.17.8, their issue #5) that BMW draws its black gear box over a
+// theme whenever something covers that letter, and that a layer's box counts even where its pixels are see-through;
+// Zeiger 0.29.0 had only made the pixels see-through, which changed nothing. So every widget over it is cut in pieces
+// that go round it (above, left, right; _gearCut), a sheet's box never reaches over it (_plan, _steadySheets), and the
+// curtain is three pieces too. Their window: x 1380-1460, y 660 down.
+const GEAR_LETTER = [1380, 660, 80, 60];
 const HOLD_Z = 200, HOLD_MAX_MS = 5000, HOLD_PX_FRAC = 0.96, HOLD_CONN_LAYERS = 64, HOLD_ALL_LAYERS = 90;
 const CURTAIN_CONN = 3, CURTAIN_Z = 90, CURTAIN_MAX_MS = 4000, CURTAIN_FADE_MS = 350, CURTAIN_LINE = [960, 360, 240, 3];
 const MAX_CONN = 4;              // connections a layout may ask for ("conn"): 32 layers service-wide / 8 per connection
@@ -535,6 +546,24 @@ function rgb(c) { return [c[0] / 255, c[1] / 255, c[2] / 255]; }
  * when they are the same (after idrive7-EVAHUD's eva_canvas.js, MIT). The link is what is short, not the CPU:
  * comparing a widget costs about a tenth of painting it.
  */
+/** The parts of rect r [x, y, w, h] outside g: above it, left and right of it (in its rows), below it; none empty. */
+function rectsOutside(r, g) {
+    const [x, y, w, h] = r, x1 = x + w, y1 = y + h, gx1 = g[0] + g[2], gy1 = g[1] + g[3], out = [];
+    if (y < g[1]) out.push([x, y, w, Math.min(y1, g[1]) - y]);
+    const ya = Math.max(y, g[1]), yb = Math.min(y1, gy1);
+    if (yb > ya) {
+        if (x < g[0]) out.push([x, ya, Math.min(x1, g[0]) - x, yb - ya]);
+        if (x1 > gx1) out.push([Math.max(x, gx1), ya, x1 - Math.max(x, gx1), yb - ya]);
+    }
+    if (y1 > gy1) out.push([x, Math.max(y, gy1), w, y1 - Math.max(y, gy1)]);
+    return out.filter((q) => q[2] > 0 && q[3] > 0);
+}
+/** The rect c [x, y, w, h] of an RGBA image iw px wide. */
+function cropRGBA(src, iw, c) {
+    const out = Buffer.alloc(c[2] * c[3] * 4);
+    for (let r = 0; r < c[3]; r++) src.copy(out, r * c[2] * 4, ((c[1] + r) * iw + c[0]) * 4, ((c[1] + r) * iw + c[0] + c[2]) * 4);
+    return out;
+}
 /** A sheet's place in the plan: connection, class, z, rect (a sheet of the layout before with the same key may stay) */
 function sheetKey(s) { return [s.conn, s.klass, s.z, s.x, s.y, s.w, s.h].join('|'); }
 
@@ -916,7 +945,10 @@ class HudApp {
             if (op === 'layer' || op === 'asset') {
                 if (!this.refusedRefs) this.refusedRefs = new Set();
                 this.refusedRefs.add(rk);
-                if (this.curtain && this.curtain.c === c && this.curtain.ref === ref) this.curtain = null;          // no curtain then
+                if (this.curtain && this.curtain.c === c && this.curtain.refs.indexOf(ref) >= 0) {                 // one piece less
+                    this.curtain.refs = this.curtain.refs.filter((r) => r !== ref);
+                    if (!this.curtain.refs.length) this.curtain = null;
+                }
                 if (this.guideRef && this.guideC === c && this.guideRef === ref) this.guideRef = 0;
             }
             // a cluster-render that refuses animations: the fail-safe off for this run, said once (not every renewal)
@@ -1445,6 +1477,7 @@ class HudApp {
             let L = out.find((q) => q.c === x.c && q.ref === x.ref);
             if (!L) { L = { c: x.c, ref: x.ref, image: !!IMAGE_TYPES[x.w.type] && !x.asset, tex: !!x.asset, ids: [] }; out.push(L); }
             L.ids.push(x.w.id);
+            if (x.w.pieceOf && L.ids.indexOf(x.w.pieceOf) < 0) L.ids.push(x.w.pieceOf);
         });
         return out;
     }
@@ -2021,18 +2054,24 @@ class HudApp {
         const k = this.curtain;
         if (k) {
             k.at = now; k.fade = 0;
-            if (k.alpha !== 1) { k.alpha = 1; c.uniform(k.ref, 'u_alpha', [1]); }
-            if (k.p !== 0) { k.p = 0; c.uniform(k.ref, 'u_prog', [0]); }
+            if (k.alpha !== 1) { k.alpha = 1; k.refs.forEach((r) => c.uniform(r, 'u_alpha', [1])); }
+            if (k.p !== 0) { k.p = 0; k.refs.forEach((r) => c.uniform(r, 'u_prog', [0])); }
             return;
         }
         const [w, h] = this.size;
-        const ref = c.effect({ fs: shaders.curtain, target: this.target, klass: 'content', z: CURTAIN_Z, x: 0, y: 0, w, h });
-        if (!ref) { this.log.warn('curtain: layer refused'); return; }
-        c.uniform(ref, 'u_size', [w, h]);
-        c.uniform(ref, 'u_alpha', [1]);
-        c.uniform(ref, 'u_prog', [0]);
-        c.uniform(ref, 'u_line', CURTAIN_LINE);
-        this.curtain = { c, ref, at: now, fade: 0, alpha: 1, p: 0 };
+        // round BMW's gear letter when it is left open (0.39.0): the pieces of the panel outside it
+        const g = this.gearWin, rects = g ? rectsOutside([0, 0, w, h], g) : [[0, 0, w, h]], refs = [];
+        rects.forEach(([x, y, rw, rh]) => {
+            const ref = c.effect({ fs: shaders.curtain, target: this.target, klass: 'content', z: CURTAIN_Z, x, y, w: rw, h: rh });
+            if (!ref) return;
+            c.uniform(ref, 'u_size', [rw, rh]);
+            c.uniform(ref, 'u_alpha', [1]);
+            c.uniform(ref, 'u_prog', [0]);
+            c.uniform(ref, 'u_line', [CURTAIN_LINE[0] - x, CURTAIN_LINE[1] - y, CURTAIN_LINE[2], CURTAIN_LINE[3]]);
+            refs.push(ref);
+        });
+        if (!refs.length) { this.log.warn('curtain: layer refused'); return; }
+        this.curtain = { c, ref: refs[0], refs, at: now, fade: 0, alpha: 1, p: 0 };
     }
 
     /** Each tick while the curtain is up: it fades once every layer of the new layout is shown (or none, or too long). */
@@ -2042,14 +2081,14 @@ class HudApp {
             const refs = this._layerRefs();
             const shown = refs.filter((r) => { const st = this.layerStates.get(r.key); return st && st.state === 'shown'; }).length;
             const p = refs.length ? Math.round(shown / refs.length * 20) / 20 : 1;
-            if (p !== k.p) { k.p = p; k.c.uniform(k.ref, 'u_prog', [p]); }
+            if (p !== k.p) { k.p = p; k.refs.forEach((r) => k.c.uniform(r, 'u_prog', [p])); }
             if (refs.length && shown < refs.length && now - k.at < CURTAIN_MAX_MS) return;
             k.fade = now;
             this.log.info('curtain: ' + shown + ' of ' + refs.length + ' layers shown ' + (now - k.at) + ' ms after the change');
         }
         const a = Math.round(Math.max(0, 1 - (now - k.fade) / CURTAIN_FADE_MS) * 20) / 20;
-        if (a <= 0) { this._guard('curtain drop', () => k.c.drop(k.ref)); this.curtain = null; return; }
-        if (a !== k.alpha) { k.alpha = a; k.c.uniform(k.ref, 'u_alpha', [a]); }
+        if (a <= 0) { k.refs.forEach((r) => this._guard('curtain drop', () => k.c.drop(r))); this.curtain = null; return; }
+        if (a !== k.alpha) { k.alpha = a; k.refs.forEach((r) => k.c.uniform(r, 'u_alpha', [a])); }
     }
 
     /** Drops the layers of the layout before (old: _rebuildInner's), all but the sheets in keep (a Map, or null). */
@@ -2100,8 +2139,8 @@ class HudApp {
      *  a compressed picture's blocks once. */
     _ownPx(w) {
         const p = w.type === 'picture' ? pictures.get(w.picture) : null;
-        if (p && p.etc && !this.noEtc) return p.etc.length;
-        return (w.stretch && p ? p.w * p.h : w.w * w.h) * 8;
+        if (p && p.etc && !this.noEtc) return w.crop && w.crop[0] + w.crop[1] > 0 ? 0 : p.etc.length;   // counted once, by its first piece
+        return (w.stretch && p ? (w.crop ? w.crop[2] * w.crop[3] : p.w * p.h) : w.w * w.h) * 8;
     }
 
     /** cluster-render refused a compressed picture (older than 0.5.8, or its renderer said no): from now on this run the
@@ -2118,7 +2157,7 @@ class HudApp {
     _ownKey(w, conn, cut) {
         if (w.type !== 'picture' && w.type !== 'fill' && w.type !== 'bandflash') return null;
         if (w.type === 'picture') { const p = pictures.get(w.picture); if (p && p.etc) return null; }   // its asset goes with it
-        return [conn, w.class || 'content', w.z || 0, w.x, w.y, w.w, w.h, w.type, w.picture || '', w.stretch ? 1 : 0, w.pixelShift || 0, cut ? 1 : 0].join('|');
+        return [conn, w.class || 'content', w.z || 0, w.x, w.y, w.w, w.h, w.type, w.picture || '', w.stretch ? 1 : 0, w.pixelShift || 0, cut ? 1 : 0, w.crop ? w.crop.join(',') : ''].join('|');
     }
 
     /**
@@ -2143,6 +2182,8 @@ class HudApp {
             // the growth kept within the target, the sheet's own box never cut (a member past the edge stays whole)
             x0 = Math.min(s.x, Math.max(0, x0)); y0 = Math.min(s.y, Math.max(0, y0));
             x1 = Math.max(s.x + s.w, Math.min(W, x1)); y1 = Math.max(s.y + s.h, Math.min(H, y1));
+            const gw = this.gearWin;
+            if (gw && x0 < gw[0] + gw[2] && gw[0] < x1 && y0 < gw[1] + gw[3] && gw[1] < y1) return;     // never over the gear letter
             s.x = x0; s.y = y0; s.w = x1 - x0; s.h = y1 - y0;
         });
     }
@@ -2306,6 +2347,10 @@ class HudApp {
         // "Leave BMW's bottom strip clear": the theme cut at the strip (image pixels in _blit, fills and widgets here)
         this.cut = this._stripCut();
         if (this.cut) layout = this._cutLayout(layout, this.cut);
+        // BMW's gear letter left open (0.39.0): every widget over it cut in pieces round it
+        this.gearWin = this.target === 'panel' && this.setting('gearLetter') !== false ? GEAR_LETTER : null;
+        if (this.gearWin) layout = this._gearCut(layout, this.gearWin);
+        this.assetFor = new Map();       // a compressed picture's asset, shared by its pieces: connection:picture -> ref
         const shown = layout.widgets.filter((w) => !(w.toggle && !this._toggleOn(w.toggle)) && !(w.themes && w.themes.indexOf(this.themeName) < 0));
         this._setNeeds(shown);
         // plan the layers first (a sheet's size is only known once every member is placed), then make them
@@ -2375,7 +2420,7 @@ class HudApp {
             ', pixel memory ' + mib(px) + ' of 16 MiB' +
             (atlasBytes ? ' (' + this.atlases.size + ' glyph atlas' + (this.atlases.size > 1 ? 'es' : '') + ' ' + mib(atlasBytes) + ')' : ''));
         counts.forEach((k, ci) => {
-            if (k > LAYER_BUDGET) this.log.warn('layout "' + layout.name + '" needs ' + k + ' layers on connection ' + (ci + 1) + ', cluster-render draws at most ' + LAYER_BUDGET + ' per connection');
+            if (k > CONN_LAYERS) this.log.warn('layout "' + layout.name + '" needs ' + k + ' layers on connection ' + (ci + 1) + ', cluster-render draws at most ' + CONN_LAYERS + ' per connection');
         });
         if (px > PIXEL_BYTES) this.log.warn('layout "' + layout.name + '" needs ' + mib(px) + ' of pixel memory; cluster-render has 16 MiB for every app together (each image counts twice)');
         this._guideHold(true);
@@ -2411,6 +2456,7 @@ class HudApp {
                 const s = plan[i];
                 if (s.kind !== 'sheet' || s.klass !== klass || s.z !== z || s.conn !== conn) continue;
                 const u = union(s, w);
+                if (this.gearWin && hit(u, { x: this.gearWin[0], y: this.gearWin[1], w: this.gearWin[2], h: this.gearWin[3] })) continue;
                 const own = s.members.reduce((a, m) => a + m.w * m.h, 0) + w.w * w.h;
                 if (u.w * u.h <= maxPx && u.w * u.h <= waste * own) { sheet = s; box = u; }
             }
@@ -2470,6 +2516,43 @@ class HudApp {
      * filled on create, else dirty rects translated by the sheet's offset.
      */
     /**
+     * The layout with nothing over BMW's gear letter g [x, y, w, h] (0.39.0, GEAR_LETTER above): every widget whose rect
+     * reaches over it is cut in pieces round it (rectsOutside: above, left, right, below), each a widget of its own with
+     * the same z, so they pack and stack as it did. A fill keeps its colour and hole; a picture's piece shows its part
+     * ("crop", in the picture's own px, a stretched one's scaled); a text or other image widget mostly in the window is
+     * left out, else left as it is (logged). "pieceOf" names the widget a piece came from (the start animation's fades).
+     */
+    _gearCut(layout, g) {
+        const over = (w) => w.x < g[0] + g[2] && g[0] < w.x + w.w && w.y < g[1] + g[3] && g[1] < w.y + w.h;
+        const widgets = [];
+        let cut = 0;
+        layout.widgets.forEach((w) => {
+            if (!over(w) || w.type === 'needle') { widgets.push(w); return; }
+            if (w.type === 'fill' || w.type === 'picture') {
+                const p = w.type === 'picture' ? pictures.get(w.picture) : null;
+                const kx = p && w.stretch ? p.w / w.w : 1, ky = p && w.stretch ? p.h / w.h : 1;
+                const c0 = w.crop || [0, 0];
+                rectsOutside([w.x, w.y, w.w, w.h], g).forEach(([x, y, rw, rh], i) => {
+                    const q = Object.assign({}, w, { id: w.id + '_g' + i, pieceOf: w.pieceOf || w.id, x, y, w: rw, h: rh });
+                    if (w.type === 'picture') {
+                        q.crop = [c0[0] + Math.round((x - w.x) * kx), c0[1] + Math.round((y - w.y) * ky), Math.max(1, Math.round(rw * kx)), Math.max(1, Math.round(rh * ky))];
+                        if (p && !w.stretch) { q.crop[2] = rw; q.crop[3] = rh; }
+                    }
+                    widgets.push(q);
+                });
+                cut++;
+                return;
+            }
+            const a = (Math.min(w.x + w.w, g[0] + g[2]) - Math.max(w.x, g[0])) * (Math.min(w.y + w.h, g[1] + g[3]) - Math.max(w.y, g[1]));
+            if (a > 0.5 * w.w * w.h) { this.log.info('gear letter: widget "' + w.id + '" left out (mostly over BMW\'s gear letter)'); return; }
+            this.log.warn('gear letter: widget "' + w.id + '" (' + w.type + ') reaches over BMW\'s gear letter');
+            widgets.push(w);
+        });
+        if (cut) this.log.info('gear letter: ' + cut + ' widget(s) cut round BMW\'s gear letter');
+        return Object.assign({}, layout, { widgets });
+    }
+
+    /**
      * The layout with the strip g [x, y, w, h] left clear: a fill over it gets it as its see-through hole (no inset,
      * square corners); one with a hole of its own (a map window) keeps that one above the strip, and the part beside
      * the strip becomes fills of their own. A widget that sits mostly in the strip (a readout of the bottom row) is
@@ -2499,7 +2582,7 @@ class HudApp {
         if (w.x >= g[0] + g[2] || w.x + w.w <= g[0] || w.y >= g[1] + g[3] || w.y + w.h <= g[1]) return buf;
         // a "stretch" picture's image is smaller than the widget: its px per screen px
         const p = w.stretch && w.type === 'picture' && !x.sheet ? pictures.get(w.picture) : null;
-        const iw = p ? p.w : w.w, ih = p ? p.h : w.h, kx = iw / w.w, ky = ih / w.h;
+        const iw = p ? (w.crop ? w.crop[2] : p.w) : w.w, ih = p ? (w.crop ? w.crop[3] : p.h) : w.h, kx = iw / w.w, ky = ih / w.h;
         const rs = rects && rects.length ? rects : [{ x: 0, y: 0, w: iw, h: ih }];
         let off = 0, out = null;
         rs.forEach((r) => {
@@ -2555,7 +2638,7 @@ class HudApp {
 
     /** A widget: on its own layer (sheet null: an effect, or an image widget with "own": true), or a member of a sheet. */
     _create(w, sheet) {
-        let ref, c, keptOwn = false, etc = null, assetRef = 0;
+        let ref, c, keptOwn = false, etc = null, assetRef = 0, usedAsset = 0;
         if (sheet) { ref = sheet.ref; c = sheet.c; }
         else {
             c = this._clientAt(this._connOf(w));
@@ -2565,23 +2648,32 @@ class HudApp {
             // a compressed picture (0.38.0): an ETC2 asset, drawn by an effect layer that samples it (shaders.js TEXPIC)
             const ep = w.type === 'picture' && !this.noEtc ? pictures.get(w.picture) : null;
             etc = ep && ep.etc ? ep : null;
+            const ak = etc ? this._connOf(w) + ':' + w.picture : null, shared = ak && this.assetFor ? this.assetFor.get(ak) : 0;
             // the layout before had this very layer (_keepableOwn): it stays, a picture's pixels with it
             const ok = this.keepOwn ? this._ownKey(w, this._connOf(w), !!this.cut) : null, was = ok ? this.keepOwn.get(ok) : null;
             if (was && was.c === c) {
                 this.keepOwn.delete(ok); ref = was.ref; keptOwn = true;
                 if (was.state) this.layerStates.set(was.ci + ':' + ref, was.state);
             } else if (etc) {
-                assetRef = c.asset({ target: this.target, format: etc.format, w: etc.w, h: etc.h, sampling: w.stretch ? 'bilinear' : 'nearest' });
-                ref = assetRef ? c.effect(Object.assign({ fs: shaders.texpic }, base)) : 0;
-                if (!ref && assetRef) { c.drop(assetRef); assetRef = 0; }
-            } else if (IMAGE_TYPES[w.type]) ref = c.image(Object.assign({ iw: sp ? sp.w : w.w, ih: sp ? sp.h : w.h }, base));
+                // the pieces of one picture (round BMW's gear letter) sample one asset, made by the first
+                if (shared) usedAsset = shared;
+                else {
+                    assetRef = c.asset({ target: this.target, format: etc.format, w: etc.w, h: etc.h, sampling: w.stretch ? 'bilinear' : 'nearest' });
+                    usedAsset = assetRef;
+                }
+                ref = usedAsset ? c.effect(Object.assign({ fs: shaders.texpic }, base)) : 0;
+                if (!ref && assetRef) { c.drop(assetRef); assetRef = 0; usedAsset = 0; }
+                if (assetRef && this.assetFor) this.assetFor.set(ak, assetRef);
+            } else if (IMAGE_TYPES[w.type]) ref = c.image(Object.assign({ iw: sp ? (w.crop ? w.crop[2] : sp.w) : w.w, ih: sp ? (w.crop ? w.crop[3] : sp.h) : w.h }, base));
             else ref = c.effect(Object.assign({ fs: w.type === 'swatch' ? calibration.SWATCH : shaders[w.type] }, base));
             if (!ref) { this.log.warn('widget "' + w.id + '": layer refused'); return; }
             this.placed.push({ c, ref, x: w.x, y: w.y, w: w.w, h: w.h });
         }
         const x = { w, ref, c, ci: sheet ? sheet.ci : this._connOf(w), sheet: sheet || null, last: null, lastPaint: 0, px: null };
         this.widgets.set(w.id, x);
-        if (assetRef) { x.asset = assetRef; c.pixels(assetRef, null, etc.etc); c.bind(ref, 'u_tex', assetRef); }
+        // x.asset: the asset this widget made (dropped with it); a piece using another's has x.texRef only
+        if (assetRef) { x.asset = assetRef; c.pixels(assetRef, null, etc.etc); }
+        if (usedAsset) { x.texRef = usedAsset; c.bind(ref, 'u_tex', usedAsset); }
         const t = this.theme;
         if (w.type === 'atext') {
             const a = this._atlas(w.font, x.ci);
@@ -2598,20 +2690,26 @@ class HudApp {
             }
         } else if (w.type === 'picture' || w.type === 'needle' || w.type === 'segments') {
             // a compressed picture in a sheet, or with compressed pictures refused: its pixels decoded
-            const p = x.asset ? pictures.get(w.picture) : pictures.rgbaOf(w.picture);
+            const p = x.texRef ? pictures.get(w.picture) : pictures.rgbaOf(w.picture);
             if (!p) { this.log.warn('widget "' + w.id + '": no picture "' + w.picture + '" in hud/pictures'); return; }
-            if (!(w.stretch && w.type === 'picture' && !sheet) && (p.w !== w.w || p.h !== w.h)) { this.log.warn('widget "' + w.id + '": picture "' + w.picture + '" is ' + p.w + 'x' + p.h + ', the widget ' + w.w + 'x' + w.h); return; }
-            if (x.asset) {
+            // a piece of a picture (round BMW's gear letter): crop [x, y, w, h] in the picture's px
+            const cw = w.crop ? w.crop[2] : p.w, chh = w.crop ? w.crop[3] : p.h;
+            if (!(w.stretch && w.type === 'picture' && !sheet) && (cw !== w.w || chh !== w.h)) { this.log.warn('widget "' + w.id + '": picture "' + w.picture + '" is ' + cw + 'x' + chh + ', the widget ' + w.w + 'x' + w.h); return; }
+            if (x.texRef) {
                 const g = this.cut;
                 c.uniform(ref, 'u_size', [w.w, w.h]);
                 c.uniform(ref, 'u_shift', [w.pixelShift || 0]);
                 c.uniform(ref, 'u_alpha', [1]);
                 c.uniform(ref, 'u_cut', g ? [g[0] - w.x, g[1] - w.y, g[2], g[3]] : [0, 0, 0, 0]);
+                c.uniform(ref, 'u_src', w.crop ? [w.crop[0], w.crop[1], p.w, p.h] : [0, 0, p.w, p.h]);
             } else if (w.type === 'segments') {
                 // starts with nothing lit; _update lights what the value says
                 x.pic = p; x.lit = 0; x.value = null; x.t = 0; x.zoneSt = null; x.zoneInfo = null;
                 this._blit(x, null, Buffer.alloc(w.w * w.h * 4, 0));
-            } else if (!keptOwn) this._blit(x, null, w.pixelShift ? shiftPixels(p.rgba, w.w, w.h, w.pixelShift) : p.rgba);
+            } else if (!keptOwn) {
+                const full = w.pixelShift ? shiftPixels(p.rgba, p.w, p.h, w.pixelShift) : p.rgba;
+                this._blit(x, null, w.crop ? cropRGBA(full, p.w, w.crop) : full);
+            }
             if (w.type === 'needle') {
                 // the pivot, in px from the layer's top-left (the layout's, else the picture's own); the turn follows in _update
                 const pv = Array.isArray(w.pivot) ? w.pivot : [p.px, p.py];

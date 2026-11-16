@@ -57,6 +57,7 @@ const GROUPS = [
     ] },
     { name: 'BMW\'s cluster', about: 'What BMW draws under and over the themes.', rows: [
         ['hideBoxes', 'Hide BMW\'s black boxes', 'test'],
+        ['gearLetter', 'Leave BMW\'s gear letter open', 'keeps BMW\'s black gear box away (bimmer-lab\'s car test)'],
         ['stripClear', 'Leave BMW\'s bottom strip clear', 'the theme stays as it is, cut above the strip'],
         ['calib', 'Calibration', 'a grid or the map frame on the cluster, to measure what BMW hides'],
         ['slotWatch', 'Watch BMW\'s slots', 'test: every slot now, and what changed when'],
