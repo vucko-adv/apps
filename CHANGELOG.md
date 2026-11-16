@@ -4,6 +4,8 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 16 2026
 
+- **Zeiger 0.41.0:** **Customise with a preview.** CUSTOMISE on Apex or Apex Sport opens the theme big on the centre screen; your picks change only the preview, and **Apply to the cluster** puts them all on the cluster at once. Reset goes back, Back leaves without applying. A pick no longer redraws the whole cluster: since 0.39.0 the pieces round BMW's gear letter had made Apex drop six layers (and show the curtain) at every pick; now it keeps them all and sends only what changed. Checked in the emulator (the preview follows the picks, Apply saves them) and on the bench (picks keep every layer); not yet on a car.
+
 - **Zeiger 0.40.0:** **every photo theme compressed** (Dark Moon, Mist, Underpass, Map Mist and Sunrise's hills, as Peaks since 0.38.0): each takes 2.3-3.1 MiB of the renderer's memory instead of 6-12.4, so changing between any two themes but Apex and Apex Sport now keeps the old one up until the new one shows, with no black. **Their bottoms fade softly to black**, so the photo meets BMW's black strip and the small window over its gear letter without a hard edge. Checked on the bench (every photo theme, the switches, nothing over the gear letter); not yet on a car.
   - **0.39.0 on the car (G20, Nov 16 2026): BMW's black gear box is gone.** Leaving its gear letter uncovered by every layer's rectangle works.
 

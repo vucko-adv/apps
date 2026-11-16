@@ -333,6 +333,7 @@ const CONN_LAYERS = 64;          // cluster-render's limit a client connection (
 // that go round it (above, left, right; _gearCut), a sheet's box never reaches over it (_plan, _steadySheets), and the
 // curtain is three pieces too. Their window: x 1380-1460, y 660 down.
 const GEAR_LETTER = [1380, 660, 80, 60];
+const REBUILD_SOON_MS = 30;      // setting changes this close together make one rebuild (_rebuildSoon)
 const HOLD_Z = 200, HOLD_MAX_MS = 5000, HOLD_PX_FRAC = 0.96, HOLD_CONN_LAYERS = 64, HOLD_ALL_LAYERS = 90;
 const CURTAIN_CONN = 3, CURTAIN_Z = 90, CURTAIN_MAX_MS = 4000, CURTAIN_FADE_MS = 350, CURTAIN_LINE = [960, 360, 240, 3];
 const MAX_CONN = 4;              // connections a layout may ask for ("conn"): 32 layers service-wide / 8 per connection
@@ -687,7 +688,7 @@ class HudApp {
             if (['hudLayout', 'inComfort', 'inSport', 'inEco', 'byMode'].indexOf(key) >= 0 && this.screen.yielded) this.screen.release();
             if (PLACE_KEYS.indexOf(key) >= 0) this._guard('place', () => this._place());
             else if (LIVE_KEYS.indexOf(key) >= 0) this.widgets.forEach((x) => { x.last = null; });
-            else if (key !== 'demo') this._rebuild(); else this._status();
+            else if (key !== 'demo') this._rebuildSoon(); else this._status();
         });
     }
 
@@ -1108,6 +1109,7 @@ class HudApp {
     }
 
     stop() {
+        clearTimeout(this.rebuildT); this.rebuildT = null;
         clearInterval(this.tickTimer);
         clearInterval(this.themeTimer);
         clearInterval(this.statusTimer);
@@ -2000,6 +2002,12 @@ class HudApp {
 
     /* ---------------- layers ---------------- */
 
+    /** A rebuild REBUILD_SOON_MS from now (Zeiger 0.41.0): settings changed together (Customise's Apply) make one. */
+    _rebuildSoon() {
+        if (this.rebuildT) return;
+        this.rebuildT = setTimeout(() => { this.rebuildT = null; this._rebuild(); }, REBUILD_SOON_MS);
+    }
+
     _rebuild() {
         this._guard('rebuild', () => this._rebuildInner());
         // a rebuild that failed half way: nothing of the layout before left on cluster-render
@@ -2120,16 +2128,40 @@ class HudApp {
      * old one, kept when it is the only layer of its (connection, class, z) group in both plans, as for sheets. Apex's
      * glow (the whole background) then stays through a Customise pick instead of going and coming back.
      */
+    /**
+     * The (connection, class, z) groups that are the very same layers in the same order in both plans, every one of them
+     * one that can stay (a sheet by its place, an own still picture, fill or band flash by _ownKey): keeping them all
+     * keeps their stacking (0.41.0; the pieces round BMW's gear letter put three layers in Apex's glow group). group -> true.
+     */
+    _sameGroups(old, plan) {
+        const grp = (e) => e.conn + '|' + e.klass + '|' + e.z;
+        const sigs = (list, cut) => {
+            const g = {};
+            list.forEach((e) => {
+                const k = grp(e), sig = e.kind === 'sheet' ? 'S' + sheetKey(e) : (this._ownKey(e.w, e.conn, cut) ? 'L' + this._ownKey(e.w, e.conn, cut) : null);
+                if (!g[k]) g[k] = [];
+                g[k].push(sig);
+            });
+            return g;
+        };
+        const a = sigs(old.plan || [], old.cut), b = sigs(plan, !!this.cut), out = {};
+        Object.keys(b).forEach((k) => {
+            const x = a[k], y = b[k];
+            if (x && x.length === y.length && y.every((v, i) => v && v === x[i])) out[k] = true;
+        });
+        return out;
+    }
+
     _keepableOwn(old, plan) {
         const keep = new Map();
         if (this.noKeepOwnOnce) { this.noKeepOwnOnce = false; return keep; }
         const grp = (e) => e.conn + '|' + e.klass + '|' + e.z;
         const tally = (list) => { const n = {}; list.forEach((e) => { n[grp(e)] = (n[grp(e)] || 0) + 1; }); return n; };
-        const was = tally(old.plan), now = tally(plan), wanted = {};
-        plan.forEach((e) => { if (e.kind === 'layer' && now[grp(e)] === 1) { const k = this._ownKey(e.w, e.conn, !!this.cut); if (k) wanted[k] = true; } });
+        const was = tally(old.plan), now = tally(plan), wanted = {}, same = this._sameGroups(old, plan);
+        plan.forEach((e) => { if (e.kind === 'layer' && (now[grp(e)] === 1 || same[grp(e)])) { const k = this._ownKey(e.w, e.conn, !!this.cut); if (k) wanted[k] = true; } });
         old.own.forEach((o) => {
             const k = this._ownKey(o.w, o.ci, old.cut), g = o.ci + '|' + (o.w.class || 'content') + '|' + (o.w.z || 0);
-            if (!k || was[g] !== 1 || !wanted[k] || keep.has(k)) return;
+            if (!k || (was[g] !== 1 && !same[g]) || !wanted[k] || keep.has(k)) return;
             keep.set(k, { c: o.c, ci: o.ci, ref: o.ref, state: old.states.get(o.ci + ':' + o.ref) || null });
         });
         return keep;
@@ -2193,10 +2225,10 @@ class HudApp {
         if (this.noKeepOnce) { this.noKeepOnce = false; return keep; }
         const grp = (e) => e.conn + '|' + e.klass + '|' + e.z;
         const tally = (list) => { const n = {}; list.forEach((e) => { n[grp(e)] = (n[grp(e)] || 0) + 1; }); return n; };
-        const was = tally(old.plan), now = tally(plan), wanted = {};
-        plan.forEach((e) => { if (e.kind === 'sheet' && now[grp(e)] === 1) wanted[sheetKey(e)] = true; });
+        const was = tally(old.plan), now = tally(plan), wanted = {}, same = this._sameGroups(old, plan);
+        plan.forEach((e) => { if (e.kind === 'sheet' && (now[grp(e)] === 1 || same[grp(e)])) wanted[sheetKey(e)] = true; });
         old.sheets.forEach((s) => {
-            if (!s.ref || !s.c || was[grp(s)] !== 1 || !wanted[sheetKey(s)]) return;
+            if (!s.ref || !s.c || (was[grp(s)] !== 1 && !same[grp(s)]) || !wanted[sheetKey(s)]) return;
             s.keptState = old.states.get(s.ci + ':' + s.ref) || null;
             keep.set(sheetKey(s), s);
         });
@@ -2383,7 +2415,13 @@ class HudApp {
             this.keep.forEach((s) => { stay[s.ci + ':' + s.ref] = true; });
             this.keepOwn.forEach((o) => { stay[o.ci + ':' + o.ref] = true; });
             const going = old.refs.filter((r) => !stay[r.key]).length;
-            if (going) { this.log.info('same theme again: ' + going + ' layer(s) go, the curtain over the change'); this._guard('curtain', () => this._curtainUp()); }
+            if (going) {
+                // which: a sheet by its first member, an own layer by its widget
+                const names = old.sheets.filter((x) => x.ref && !stay[x.ci + ':' + x.ref]).map((x) => x.members[0].id)
+                    .concat(old.own.filter((o) => !stay[o.ci + ':' + o.ref]).map((o) => o.w.id));
+                this.log.info('same theme again: ' + going + ' layer(s) go (' + names.slice(0, 8).join(', ') + '), the curtain over the change');
+                this._guard('curtain', () => this._curtainUp());
+            }
         }
         if (hold) {
             this.held = { old, at: Date.now() };

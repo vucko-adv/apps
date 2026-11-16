@@ -152,6 +152,36 @@ const HERO_IDS = 0x5a5f0000, HERO_SLOTS = 4;
 // sees at once that it did something; its neighbours' pictures are sent ahead PRELOAD_MS after it lands, and the one
 // after next in the swipe's direction too
 const SLIDE_MS = 260, SLIDE_PX = 170, PRELOAD_MS = 300;
+// Customise's preview (0.41.0): hud/previews/<theme>_custom.json (cluster-design/apex/build.html "Customise previews"):
+// the theme with its defaults, and for each Customise setting its rect drawn once per pick; the page lays the picks being
+// tried over the base, so the theme shows as it will on the cluster before Apply sends them. Each its own image.
+const CUSTOM_IDS = 0x5a5e0000;
+const customPics = Object.create(null);
+function customPreview(theme) {
+    if (customPics[theme] !== undefined) return customPics[theme];
+    let out = null;
+    try {
+        const j = data.json('previews/' + theme + '_custom.json');
+        if (j && j.base && j.keys) {
+            let id = CUSTOM_IDS + Object.keys(customPics).length * 0x100;
+            const img = (o) => {
+                const px = zlib.inflateSync(Buffer.from(o.z, 'base64'));
+                if (px.length !== o.w * o.h * 4) throw new Error('bad piece');
+                const me = id++;
+                rec.setImage(me, o.w, o.h, px);
+                return { id: me, w: o.w, h: o.h };
+            };
+            out = { scale: j.scale, base: img(j.base), keys: {} };
+            Object.keys(j.keys).forEach((k) => {
+                const r = j.keys[k], opts = {};
+                Object.keys(r.opts).forEach((v) => { opts[v] = img(r.opts[v]); });
+                out.keys[k] = { x: r.x, y: r.y, w: r.w, h: r.h, opts };
+            });
+        }
+    } catch (e) { out = null; }
+    customPics[theme] = out;
+    return out;
+}
 const heroes = [], noHero = new Set();
 function hero(name) {
     if (name === 'off' || noHero.has(name)) return null;
@@ -197,6 +227,31 @@ class Page {
     }
     kick() { if (this.loop && this.loop.kick) this.loop.kick(); }
     openTab(i) { if (i === 0 || i === 1) { this.tab = i; this.custom = null; this.kick(); } }
+    /** Customise for theme v: the picks start as they are set (the draft), and change only the preview until Apply */
+    openCustom(v) {
+        const c = CUSTOM[v];
+        if (!c) return;
+        this.custom = v; this.draft = {}; this.applied = null;
+        c.rows.forEach(([end]) => { this.draft[c.key + end] = this.get(c.key + end); });
+        this.kick();
+    }
+    /** the draft's keys whose pick differs from what is set */
+    draftChanges() { return Object.keys(this.draft || {}).filter((k) => this.draft[k] !== this.get(k)); }
+    stepDraft(k, d) {
+        const list = this.steps(k);
+        if (!list.length) return;
+        const i = Math.max(0, list.indexOf(this.draft[k]));
+        this.draft[k] = list[(i + d + list.length) % list.length];
+        this.kick();
+    }
+    /** every pick of the draft to the cluster at once (one rebuild: hud.js _rebuildSoon) */
+    applyDraft() {
+        const ch = this.draftChanges();
+        if (!ch.length) return;
+        ch.forEach((k) => this.set(k, this.draft[k]));
+        this.applied = Date.now();
+        [150, 400, 800, 1300, 1700].forEach((ms) => setTimeout(() => this.kick(), ms));
+    }
 
     /* ---------- settings ---------- */
     get(k) { return this.hud.setting(k); }
@@ -364,7 +419,7 @@ class Page {
             cv.roundRect(x, y, w, 40, 20, A('#000000', 0.66));
             cv.strokeRoundRect(x, y, w, 40, 20, 1.5, A(C.acc, 0.9));
             cv.text(s, x + w / 2, y + 27, 17, C.accSoft, { font: B, spacing: 2, align: 'center', literal: true });
-            cv.target(x, y, w, 40, () => { this.custom = this.at; this.kick(); }, 'customise', 20);
+            cv.target(x, y, w, 40, () => this.openCustom(this.at), 'customise', 20);
         }
         // just picked (a tap on the card): the card lights up in the accent, then a frame stays a little longer
         const pk = this.picked && this.picked.v === this.at ? Date.now() - this.picked.t : Infinity;
@@ -509,23 +564,67 @@ class Page {
         out.slice(0, n).forEach((l, i) => cv.text(fit(cv, l, 16, rw - 12, M), rx + 12, y + 18 + (i + 1) * LH, 16, C.text, F));
     }
 
-    /** Customise: the theme's picture and a way back on the left, its places on the right (rows as in Settings). */
+    /**
+     * Customise (0.41.0): the theme big on the left as it will look with the picks being tried (customPreview: its
+     * pieces laid over the base), the picks on the right, and Apply, which sends them to the cluster together. Until then
+     * the cluster stays as it is; Reset goes back to what is set, Back leaves without sending.
+     */
     customise(cv, bottom) {
-        const v = this.custom, c = CUSTOM[v], gx = 24, gw = 476, gy = 48;
-        this.picture(cv, v, 'hero', gx, gy, gw, Math.round(gw * 3 / 8), 16);
-        cv.text(this.name(v), gx + 6, gy + 230, 34, C.text, { font: B, literal: true });
-        cv.text('What each place shows', gx + 6, gy + 260, 19, C.dim, { font: M, literal: true });
-        const bw = 220, by = gy + 286;
-        cv.roundRect(gx + 6, by, bw, 52, 26, A('#ffffff', 0.10));
-        cv.text('Back to the themes', gx + 6 + bw / 2, by + 33, 21, C.soft, { font: B, align: 'center', literal: true });
-        cv.target(gx + 6, by, bw, 52, () => { this.custom = null; this.kick(); }, 'customBack', 26);
-        const px = 524, pw = R - 12 - px, py = gy, ph = bottom - 6 - py;
-        cv.roundRect(px, py, pw, ph, 20, A(C.panel, 0.92));
-        cv.strokeRoundRect(px, py, pw, ph, 20, 1, C.faint);
-        cv.text('Customise ' + this.name(v), px + 32, py + 52, 38, C.text, { font: B, literal: true });
-        cv.text('Other themes keep theirs. The cluster changes as you pick.', px + 32, py + 86, 19, C.dim, { font: M, literal: true });
-        const y = py + 104, rh = Math.min(84, Math.floor((py + ph - 10 - y) / Math.max(1, c.rows.length)));
-        c.rows.forEach(([end, label, sub], j) => this.row(cv, px + 32, y + j * rh, pw - 64, rh, [c.key + end, label, sub]));
+        const v = this.custom, c = CUSTOM[v], gx = 24, gy = 48;
+        const pw = 960, ph = 360, prev = customPreview(v);
+        if (prev) {
+            const k = pw / prev.base.w;
+            cv.roundRect(gx - 2, gy - 2, pw + 4, ph + 4, 18, '#000000');
+            cv.image(prev.base.id, gx, gy, pw, ph);
+            Object.keys(prev.keys).forEach((key) => {
+                const r = prev.keys[key], pick = this.draft[key], o = r.opts[pick] || r.opts.none;
+                if (o) cv.image(o.id, gx + Math.round(r.x * k), gy + Math.round(r.y * k), Math.round(r.w * k), Math.round(r.h * k));
+            });
+            cv.strokeRoundRect(gx - 2, gy - 2, pw + 4, ph + 4, 18, 1, A('#ffffff', 0.14));
+        } else this.picture(cv, v, 'hero', gx, gy, pw, ph, 18);
+        const ch = this.draftChanges(), live = v === this.shown();
+        cv.text(this.name(v), gx + 4, gy + ph + 44, 32, C.text, { font: B, literal: true });
+        cv.text(ch.length ? 'A preview of your picks: the cluster changes when you press Apply.' : (live ? 'As on the cluster now.' : 'As it will look when this theme is on.'),
+            gx + 4, gy + ph + 74, 19, ch.length ? C.accSoft : C.dim, { font: M, literal: true });
+        // the picks
+        const px = pw + 24 + 22, pwid = R - 12 - px, py = gy - 2, phh = bottom - 6 - py;
+        cv.roundRect(px, py, pwid, phh, 20, A(C.panel, 0.92));
+        cv.strokeRoundRect(px, py, pwid, phh, 20, 1, C.faint);
+        cv.text('Customise', px + 24, py + 44, 32, C.text, { font: B, literal: true });
+        const rows = c.rows, rh = 74, ry = py + 64;
+        rows.forEach(([end, label], j) => {
+            const k = c.key + end, y = ry + j * rh, mid = y + rh / 2, changed = this.draft[k] !== this.get(k);
+            cv.fillRect(px + 24, y, pwid - 48, 1, C.faint);
+            cv.text(label, px + 24, mid - 6, 21, C.text, { font: B, literal: true });
+            cv.text(changed ? 'changed' : 'as set', px + 24, mid + 18, 15, changed ? C.acc : C.dim, { font: M, literal: true });
+            const sw = 300, sh = 50, sx = px + pwid - 24 - sw, sy = mid - sh / 2, val = this.optLabel(k, this.draft[k]);
+            cv.roundRect(sx, sy, sw, sh, sh / 2, A('#ffffff', 0.07));
+            cv.strokeRoundRect(sx, sy, sw, sh, sh / 2, 1, changed ? A(C.acc, 0.8) : A('#ffffff', 0.12));
+            cv.text('−', sx + 36, mid + 10, 30, C.text, { font: B, align: 'center', literal: true });
+            cv.text('+', sx + sw - 36, mid + 10, 30, C.text, { font: B, align: 'center', literal: true });
+            let fs = 22;
+            while (fs > 17 && cv.textWidth(val, fs, { font: B, literal: true }) > sw - 150) fs -= 1;
+            cv.text(fit(cv, val, fs, sw - 150, B), sx + sw / 2, mid + 8, fs, C.acc, { font: B, align: 'center', literal: true });
+            cv.target(sx, sy, 76, sh, () => this.stepDraft(k, -1), 'cdec:' + k, sh / 2);
+            cv.target(sx + sw - 76, sy, 76, sh, () => this.stepDraft(k, 1), 'cinc:' + k, sh / 2);
+        });
+        // Apply, Reset, Back
+        const by = py + phh - 74, bw = pwid - 48, half = (bw - 12) / 2;
+        const ap = this.applied ? Date.now() - this.applied : Infinity;
+        if (ch.length) {
+            cv.roundRect(px + 24, by - 66, bw, 54, 27, C.acc);
+            cv.text('Apply to the cluster', px + 24 + bw / 2, by - 31, 23, '#ffffff', { font: B, align: 'center', literal: true });
+            cv.target(px + 24, by - 66, bw, 54, () => this.applyDraft(), 'capply', 27);
+        } else {
+            cv.roundRect(px + 24, by - 66, bw, 54, 27, ap < 1600 ? A(C.ok, 0.22) : A('#ffffff', 0.06));
+            cv.text(ap < 1600 ? 'Applied' : 'Nothing to apply', px + 24 + bw / 2, by - 31, 22, ap < 1600 ? C.ok : C.dim, { font: B, align: 'center', literal: true });
+        }
+        cv.roundRect(px + 24, by, half, 50, 25, A('#ffffff', 0.10));
+        cv.text('Reset', px + 24 + half / 2, by + 33, 20, ch.length ? C.soft : C.dim, { font: B, align: 'center', literal: true });
+        cv.target(px + 24, by, half, 50, () => { this.openCustom(v); }, 'creset', 25);
+        cv.roundRect(px + 36 + half, by, half, 50, 25, A('#ffffff', 0.10));
+        cv.text(ch.length ? 'Back, not applied' : 'Back', px + 36 + half + half / 2, by + 33, 20, C.soft, { font: B, align: 'center', literal: true });
+        cv.target(px + 36 + half, by, half, 50, () => { this.custom = null; this.draft = null; this.kick(); }, 'customBack', 25);
     }
 
     /** one setting: label and line under it on the left, a switch or - value + on the right */
