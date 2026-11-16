@@ -4,6 +4,8 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 16 2026
 
+- **Sound Test 0.1.0** (new app, a test): can an app play sound through the car's speakers? It shows what the head unit has for sound (cards, devices the app may open, players, PulseAudio, ALSA's PCM names) and plays a short, quiet tone or a made-up engine sweep through aplay (to a device you pick), paplay or GStreamer, telling how each ended. The first step toward an engine sound app; it changes nothing on the head unit. Checked in the emulator (the page, a probe and a failed play on Windows); not yet on a car.
+
 - **Zeiger 0.38.2:** a test pattern for the home-screen widget (Settings, Home-screen widget, Shows: Test pattern), to see on the car how sharp the HMI shows the widget's picture: stripes 1, 2 and 3 px wide of the 1152 x 768 picture sent since 0.30.0 (A, B, C, upright and lying), text at three sizes, and a 1 px frame round the part the HMI keeps. Stripes the HMI can't show turn to an even grey: if only C keeps its stripes, the HMI shows the picture at about 384 x 256 whatever size it gets, and the widgets must be drawn for that.
 
 - **Zeiger 0.38.1:** fixes from a check of the whole app (every theme and the diesel versions on the bench, every page in the emulator, the home-screen widget, and a code review of 0.35-0.38).

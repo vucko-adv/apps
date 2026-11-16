@@ -50,6 +50,10 @@ Installing apps that don't come from BMW on your head unit is done at your own r
 
 Settings, the start animation, the home-screen widget and black boxes on the cluster: [apps/zeiger/README.md](apps/zeiger/README.md).
 
+## Also in this source
+
+- **Sound Test** (a test, [apps/soundtest](apps/soundtest/README.md)): can an app play sound through the car's speakers? The first step toward an engine sound app.
+
 ## Author
 
 <img src="docs/images/vucko-adv.jpg" width="96" align="left" alt="vucko-adv">
