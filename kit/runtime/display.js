@@ -424,12 +424,16 @@ class Display {
             const tgt = !bar && !tab && !this.sheet ? (this.pageTargets || []).find(inside) : null;
             const key = bar ? 'bar:' + bar.id : tab ? 'tab:' + tab.i : tgt ? 'tgt:' + tgt.key : this.sheet ? 'sheet:' + (this.sheetTargets || []).findIndex(inside) : null;
             if (phase === 3 && this.dragging && !this.sheet) {
-                // a sideways swipe on the page (Zeiger addition): ctx.onSwipe(1) for right to left, -1 for left to right
+                // a sideways swipe on the page (Zeiger addition): ctx.onSwipe(1) for right to left, -1 for left to right;
+                // with display.swipeV on (Zeiger 0.41.0) an upward swipe is 1, a downward one -1. The second argument says
+                // which way and where the finger went down: { axis: 'x' | 'y', x, y } in the page's px
                 const dx = this.downAt ? x - this.downAt.x : 0, dy = this.downAt ? y - this.downAt.y : 0;
-                if (this.swiping && this.onSwipe && Math.abs(dx) >= 60 && Math.abs(dx) > Math.abs(dy)) {
-                    const d = dx < 0 ? 1 : -1;
-                    Promise.resolve().then(() => this.onSwipe(d)).catch((e) => this.log.error('swipe', e));
-                }
+                const fire = (d, axis) => {
+                    const at = { axis, x: this.downAt.x, y: this.downAt.y };
+                    Promise.resolve().then(() => this.onSwipe(d, at)).catch((e) => this.log.error('swipe', e));
+                };
+                if (this.swiping && this.onSwipe && Math.abs(dx) >= 60 && Math.abs(dx) > Math.abs(dy)) fire(dx < 0 ? 1 : -1, 'x');
+                else if (this.swiping && this.onSwipe && this.swipeV && Math.abs(dy) >= 50 && Math.abs(dy) > Math.abs(dx)) fire(dy < 0 ? 1 : -1, 'y');
                 this.dragging = false; this.swiping = false; this.ownDown = null; return;
             }
             if (phase === 3 && !this.dragging && key && key === this.ownDown && (tab || tgt)) {
@@ -446,6 +450,7 @@ class Display {
                 if (!this.sheet && this.onSwipe && !bar && !tab && this.downAt && !this.dragging) {
                     const dx = Math.abs(x - this.downAt.x), dy = Math.abs(y - this.downAt.y);
                     if (dx > 24 && dx > dy * 1.5) { this.dragging = true; this.swiping = true; }
+                    else if (this.swipeV && dy > 24 && dy > dx * 1.5) { this.dragging = true; this.swiping = true; }
                 }
                 if (!this.sheet && !this.swiping && this.pageScroll && this.onScroll && !bar && !tab && this.downAt) {
                     if (!this.dragging && Math.abs(y - this.downAt.y) > 14) this.dragging = true;

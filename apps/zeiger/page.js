@@ -156,6 +156,11 @@ const SLIDE_MS = 260, SLIDE_PX = 170, PRELOAD_MS = 300;
 // the theme with its defaults, and for each Customise setting its rect drawn once per pick; the page lays the picks being
 // tried over the base, so the theme shows as it will on the cluster before Apply sends them. Each its own image.
 const CUSTOM_IDS = 0x5a5e0000;
+// a part changing on the preview: the new pick fades in over the old one, sliding PART_SLIDE px from the side it came
+// from, in PART_MS; its name shows over it a moment (PART_NAME_MS)
+const PART_MS = 240, PART_SLIDE = 26, PART_NAME_MS = 1100;
+// which way a part changes: up and down for the left block and the big number, sideways for the bottom middle
+const partAxis = (key) => (/Mid$/.test(key) ? 'x' : 'y');
 const customPics = Object.create(null);
 function customPreview(theme) {
     if (customPics[theme] !== undefined) return customPics[theme];
@@ -218,10 +223,14 @@ class Page {
         Object.assign(ctx.theme(), { sel: C.acc, selText: '#ffffff', accent2: C.accSoft, bg: C.bg });
         if (ctx.onTab) ctx.onTab((i) => this.openTab(i));
         // a finger swiped sideways goes through the gallery (Themes tab only)
-        if (ctx.onSwipe) ctx.onSwipe((d) => {
+        if (ctx.onSwipe) ctx.onSwipe((d, at) => {
             if (this.tab !== 0) return;
-            // in Customise a swipe changes the part picked on the preview; else it goes through the gallery
-            if (this.custom && this.draft) { if (this.cSel) this.stepDraft(this.cSel, d); return; }
+            // in Customise a swipe changes the part it started on, in that part's direction; else it goes through the gallery
+            if (this.custom && this.draft) {
+                const r = at && (this.cParts || []).find((q) => at.x >= q.x && at.x < q.x + q.w && at.y >= q.y && at.y < q.y + q.h);
+                if (r && at.axis === r.axis) this.stepDraft(r.key, d);
+                return;
+            }
             if (this.goBy) this.goBy(d);
         });
         this.loop = ctx.loop('MAIN', 10, () => this.render());
@@ -238,7 +247,7 @@ class Page {
         if (!c) return;
         this.custom = v; this.draft = {}; this.applied = null;
         c.rows.forEach(([end]) => { this.draft[c.key + end] = this.get(c.key + end); });
-        if (!this.cSel || !(this.cSel in this.draft)) this.cSel = c.key + (c.rows.some((r) => r[0] === 'Left') ? 'Left' : c.rows[0][0]);
+        this.cAnim = {};
         this.kick();
     }
     /** the draft's keys whose pick differs from what is set */
@@ -246,8 +255,10 @@ class Page {
     stepDraft(k, d) {
         const list = this.steps(k);
         if (!list.length) return;
-        const i = Math.max(0, list.indexOf(this.draft[k]));
+        const i = Math.max(0, list.indexOf(this.draft[k])), from = this.draft[k];
         this.draft[k] = list[(i + d + list.length) % list.length];
+        if (!this.cAnim) this.cAnim = {};
+        this.cAnim[k] = { from, d, t: Date.now() };
         this.kick();
     }
     /** every pick of the draft to the cluster at once (one rebuild: hud.js _rebuildSoon) */
@@ -365,6 +376,7 @@ class Page {
         ]);
         // the header drawn on the page itself (not the kit's full-screen one): its tabs take taps here
         if (!cv.chrome && cv.tabRects) cv.tabRects.forEach((r) => cv.target(r.x, r.y, r.w, r.h, () => this.openTab(r.i), 'tab:' + r.i, 0));
+        if (this.ctx.display) this.ctx.display.swipeV = !!(this.tab === 0 && this.custom && this.draft);
         if (this.tab === 0 && this.custom && CUSTOM[this.custom]) this.customise(cv, bottom);
         else if (this.tab === 0) this.gallery(cv, bottom); else this.settings(cv, bottom);
         return this.ctx.ui.image('MAIN_GFX', cv);
@@ -572,61 +584,78 @@ class Page {
 
     /**
      * Customise (0.41.0): the theme as big as the page takes, as it will look with the picks being tried (customPreview:
-     * its pieces laid over the base). Each part that can change has a frame and the name of its pick; a tap picks the
-     * part, and it gets arrows (up and down for the left block, left and right for the others); the arrows or a sideways
-     * swipe go through its picks. Beside it: Apply (every pick to the cluster at once), Reset, Back. Until Apply the
-     * cluster stays as it is.
+     * its pieces laid over the base). Every part that can change is live at once: small arrows on its edges (up and down
+     * for the left block and the big number, left and right for the bottom middle), a swipe that starts on it in that
+     * direction, or a tap on it (the next pick). The new pick fades in, sliding from the side it came from, and its name
+     * shows over it a moment. Beside it: Apply (every pick to the cluster at once), Reset, Back.
      */
     customise(cv, bottom) {
-        const v = this.custom, c = CUSTOM[v], prev = customPreview(v);
+        const v = this.custom, c = CUSTOM[v], prev = customPreview(v), now = Date.now();
         const colW = 330, gy = 48;
         let ph = bottom - gy - 10, pw = Math.round(ph * 8 / 3);
         if (pw > R - L - colW - 24) { pw = R - L - colW - 24; ph = Math.round(pw * 3 / 8); }
         const gx = L + 6;
+        this.cParts = [];
+        let moving = false;
         cv.roundRect(gx - 2, gy - 2, pw + 4, ph + 4, 18, '#000000');
         if (prev) {
             const k = pw / prev.base.w;
             cv.image(prev.base.id, gx, gy, pw, ph);
-            const keys = Object.keys(prev.keys);
-            keys.forEach((key) => {
-                const r = prev.keys[key], o = r.opts[this.draft[key]] || r.opts.none;
-                if (o) cv.image(o.id, gx + Math.round(r.x * k), gy + Math.round(r.y * k), Math.round(r.w * k), Math.round(r.h * k));
+            Object.keys(prev.keys).forEach((key) => {
+                const r = prev.keys[key], x = gx + Math.round(r.x * k), y = gy + Math.round(r.y * k), w = Math.round(r.w * k), h = Math.round(r.h * k);
+                const pick = (p) => r.opts[p] || r.opts.none;
+                const an = this.cAnim && this.cAnim[key], age = an ? now - an.t : Infinity;
+                const o = pick(this.draft[key]);
+                if (an && age < PART_MS && pick(an.from)) {
+                    // the old pick under, the new one fading in from the side it came from
+                    moving = true;
+                    const e = 1 - Math.pow(1 - age / PART_MS, 3), off = Math.round((1 - e) * PART_SLIDE) * an.d, ax = partAxis(key);
+                    cv.image(pick(an.from).id, x, y, w, h);
+                    cv.clip(x, y, w, h);
+                    if (cv.alpha) cv.alpha(e);
+                    if (o) cv.image(o.id, x + (ax === 'x' ? off : 0), y + (ax === 'y' ? off : 0), w, h);
+                    if (cv.alpha) cv.alpha(1);
+                    cv.noclip();
+                } else if (o) cv.image(o.id, x, y, w, h);
             });
-            // the parts: a frame, the pick's name, the arrows on the one picked
-            keys.forEach((key) => {
+            // the parts: a quiet frame, small arrows, taps and swipes
+            Object.keys(prev.keys).forEach((key) => {
                 if (!(key in this.draft)) return;
-                const r = prev.keys[key], x = gx + Math.round(r.x * k) - 8, y = gy + Math.round(r.y * k) - 8, w = Math.round(r.w * k) + 16, h = Math.round(r.h * k) + 16;
-                const sel = this.cSel === key, changed = this.draft[key] !== this.get(key), vert = /Left$/.test(key);
-                cv.strokeRoundRect(x, y, w, h, 14, sel ? 2.5 : 1, sel ? C.acc : A('#ffffff', changed ? 0.5 : 0.22));
-                const name = this.optLabel(key, this.draft[key]), nw = cv.textWidth(name, 16, { font: B, literal: true }) + 28;
-                // the name: beside a tall part (to its left), above a wide one
-                const nx = vert ? Math.max(gx + 6, x - nw - 14) : x + (w - nw) / 2, ny = vert ? y + h / 2 - 15 : y - 38;
-                cv.roundRect(nx, ny, nw, 30, 15, A('#000000', 0.78));
-                cv.strokeRoundRect(nx, ny, nw, 30, 15, 1, sel || changed ? A(C.acc, 0.9) : A('#ffffff', 0.18));
-                cv.text(name, nx + nw / 2, ny + 21, 16, sel ? C.accSoft : C.soft, { font: B, align: 'center', literal: true });
-                cv.target(x, y, w, h, () => { this.cSel = key; this.kick(); }, 'cpart:' + key, 14);
-                if (!sel) return;
-                if (vert) {
-                    const ax = x + w / 2;
-                    chevron(cv, ax, y - 22, -1); chevron(cv, ax, y + h + 22, 1);
-                    cv.target(ax - 40, y - 48, 80, 46, () => this.stepDraft(key, -1), 'cup:' + key, 14);
-                    cv.target(ax - 40, y + h + 2, 80, 46, () => this.stepDraft(key, 1), 'cdown:' + key, 14);
+                const r = prev.keys[key], x = gx + Math.round(r.x * k) - 6, y = gy + Math.round(r.y * k) - 6, w = Math.round(r.w * k) + 12, h = Math.round(r.h * k) + 12;
+                const changed = this.draft[key] !== this.get(key), ax = partAxis(key);
+                this.cParts.push({ key, x, y, w, h, axis: ax });
+                cv.strokeRoundRect(x, y, w, h, 12, 1, changed ? A(C.acc, 0.75) : A('#ffffff', 0.16));
+                const col = A('#ffffff', 0.5);
+                if (ax === 'y') {
+                    smallChevron(cv, x + w / 2, y - 12, -1, col); smallChevron(cv, x + w / 2, y + h + 12, 1, col);
+                    cv.target(x + w / 2 - 44, y - 34, 88, 32, () => this.stepDraft(key, -1), 'cup:' + key, 12, true);
+                    cv.target(x + w / 2 - 44, y + h + 2, 88, 32, () => this.stepDraft(key, 1), 'cdown:' + key, 12, true);
                 } else {
-                    const ay = y + h / 2;
-                    arrow(cv, x - 24, ay, -1); arrow(cv, x + w + 24, ay, 1);
-                    cv.target(x - 50, ay - 34, 46, 68, () => this.stepDraft(key, -1), 'cprev:' + key, 14);
-                    cv.target(x + w + 4, ay - 34, 46, 68, () => this.stepDraft(key, 1), 'cnext:' + key, 14);
+                    smallArrow(cv, x - 14, y + h / 2, -1, col); smallArrow(cv, x + w + 14, y + h / 2, 1, col);
+                    cv.target(x - 40, y + h / 2 - 30, 38, 60, () => this.stepDraft(key, -1), 'cprev:' + key, 12, true);
+                    cv.target(x + w + 2, y + h / 2 - 30, 38, 60, () => this.stepDraft(key, 1), 'cnext:' + key, 12, true);
+                }
+                cv.target(x, y, w, h, () => this.stepDraft(key, 1), 'cpart:' + key, 12, true);
+                // the pick's name a moment after it changed
+                const an = this.cAnim && this.cAnim[key], age = an ? now - an.t : Infinity;
+                if (age < PART_NAME_MS) {
+                    moving = true;
+                    const a = age < PART_NAME_MS - 300 ? 1 : (PART_NAME_MS - age) / 300;
+                    const name = this.optLabel(key, this.draft[key]), nw = cv.textWidth(name, 17, { font: B, literal: true }) + 30;
+                    cv.roundRect(x + (w - nw) / 2, y + h / 2 - 17, nw, 34, 17, A('#000000', 0.78 * a));
+                    cv.text(name, x + w / 2, y + h / 2 + 7, 17, A(C.accSoft, a), { font: B, align: 'center', literal: true });
                 }
             });
         } else this.picture(cv, v, 'hero', gx, gy, pw, ph, 18);
+        if (moving) setTimeout(() => this.kick(), 16);
         cv.strokeRoundRect(gx - 2, gy - 2, pw + 4, ph + 4, 18, 1, A('#ffffff', 0.14));
         // beside it: the name, what to do, Apply, Reset, Back
-        const ch = this.draftChanges(), cx = gx + pw + 20, cw = R - cx, ap = this.applied ? Date.now() - this.applied : Infinity;
+        const ch = this.draftChanges(), cx = gx + pw + 20, cw = R - cx, ap = this.applied ? now - this.applied : Infinity;
         cv.roundRect(cx, gy - 2, cw, ph + 4, 18, A(C.panel, 0.92));
         cv.strokeRoundRect(cx, gy - 2, cw, ph + 4, 18, 1, C.faint);
         cv.text('Customise', cx + 22, gy + 38, 30, C.text, { font: B, literal: true });
         cv.text(this.name(v), cx + 22, gy + 66, 20, C.dim, { font: B, literal: true });
-        const hint = ch.length ? ['A preview: the cluster', 'changes when you Apply.'] : ['Tap a part, then the arrows', 'or swipe sideways.'];
+        const hint = ch.length ? ['A preview: the cluster', 'changes when you Apply.'] : ['Swipe a part, or tap', 'it or its arrows.'];
         hint.forEach((l, i) => cv.text(l, cx + 22, gy + 104 + i * 24, 18, ch.length ? C.accSoft : C.dim, { font: M, literal: true }));
         const bw = cw - 44, bx = cx + 22, by = gy + ph - 2 - 22 - 50 - 12 - 50 - 12 - 58;
         if (ch.length) {
@@ -710,10 +739,14 @@ function pill(cv, xr, y, s, c) {
     cv.text(s, xr - w + 36, y + 26, 17, c, { font: B, spacing: 2, literal: true });
 }
 /** a plain chevron at the screen's edge, pointing d (-1 left, 1 right) */
-/** an up (d -1) or down (d 1) chevron centred on x, y */
-function chevron(cv, x, y, d) {
-    cv.line(x - 22, y - 9 * d, x, y + 9 * d, 4, A('#ffffff', 0.85));
-    cv.line(x, y + 9 * d, x + 22, y - 9 * d, 4, A('#ffffff', 0.85));
+/** small, quiet arrows on Customise's parts: up (d -1) or down (d 1); left (d -1) or right (d 1) */
+function smallChevron(cv, x, y, d, c) {
+    cv.line(x - 11, y - 5 * d, x, y + 5 * d, 2.5, c);
+    cv.line(x, y + 5 * d, x + 11, y - 5 * d, 2.5, c);
+}
+function smallArrow(cv, x, y, d, c) {
+    cv.line(x - 5 * d, y - 11, x + 5 * d, y, 2.5, c);
+    cv.line(x + 5 * d, y, x - 5 * d, y + 11, 2.5, c);
 }
 function arrow(cv, x, y, d) {
     cv.line(x - 9 * d, y - 22, x + 9 * d, y, 4, A('#ffffff', 0.85));
