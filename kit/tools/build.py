@@ -415,8 +415,13 @@ def build(app_id, language='en'):
         strings.update(tbl)
 
     # --- source/ (the npm package) ---
+    # the text the head unit shows when the app is installed. Zeiger addition: app.json "whatsNew" (this version's
+    # changes, written new for every release) comes first, then "description" (what the app is, the same every time)
+    desc = spec.get('description', spec['title'])
+    if spec.get('whatsNew'):
+        desc = 'New in ' + ver + ': ' + spec['whatsNew'] + '\n\n' + desc
     pkg = {
-        'name': app_id, 'version': ver, 'description': spec.get('description', spec['title']),
+        'name': app_id, 'version': ver, 'description': desc,
         'main': 'javascript/app.js', 'private': False, 'author': spec.get('vendor', 'custom'), 'license': 'UNLICENSED',
         'engines': {'node': '>=8.7.0'},
         'oapAppSettings': {

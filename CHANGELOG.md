@@ -4,7 +4,7 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 16 2026
 
-- **Zeiger 0.44.0:** **the gallery in groups:** Vintage (Vintage Green, Vintage Cyan, VFD), Sport (Apex, Apex Sport) and Photo (Map Mist, Dark Moon, Underpass, Sunrise, Mist, Peaks, Ember), ready for more themes of each kind. Under the big card a chip per group with a dot per theme; a tap goes to that group, and swiping runs on from one group into the next. Checked in the emulator; not yet on a car.
+- **Zeiger 0.44.0:** **the gallery in groups:** Vintage (Vintage Green, Vintage Cyan, VFD), Sport (Apex, Apex Sport) and Photo (Map Mist, Dark Moon, Underpass, Sunrise, Mist, Peaks, Ember), ready for more themes of each kind. Under the big card a chip per group with a dot per theme; a tap goes to that group, and swiping runs on from one group into the next. **About** now says what Zeiger is (a hobby project by an enthusiast, for nicer drives and the custom-app community), and **the text shown when the app is installed** starts with what is new in that version (app.json `whatsNew`, written for every release; the kit's build.py puts it before `description`). Checked in the emulator; not yet on a car.
 
 - **Zeiger 0.43.0:** **Peaks by day and by night.** Its photo was darkened so the readouts stand out, which suits the night but looked a little dim in daylight. Now it has a day picture, a little brighter, and the night one as before; it changes by itself at sunrise and sunset (worked out from the time zone setting), keeping the old picture up until the new one shows, so there is no black. Layouts can do the same with the toggle `@night`. Checked on the bench (both pictures, the change both ways without the curtain, 2.3 MiB); not yet on a car.
 

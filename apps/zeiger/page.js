@@ -87,7 +87,12 @@ const GROUPS = [
     { name: 'Home-screen widget', about: 'Hold a finger on an iDrive home-screen tile and pick Zeiger to place it.', rows: [
         ['widgetShows', 'Shows', 'oil, water and turbo; the weather; or the cluster\'s theme'],
     ] },
-    { name: 'About', about: null, rows: [
+    // About (0.44.0): what Zeiger is, as app.json "description" says it at install (lines: the panel's width)
+    { name: 'About', about: [
+        'Custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by',
+        'an enthusiast, made to make every drive a little nicer and to give back to the community that keeps',
+        'custom iDrive apps going. Not made by or connected with BMW. Improved all the time.',
+    ], rows: [
         ['demo', 'Demo data', 'made-up values while the car sends none'],
     ] },
 ];
@@ -565,7 +570,11 @@ class Page {
         cv.strokeRoundRect(px, py, pw, ph, 20, 1, C.faint);
         cv.text(g.name, px + 32, py + 52, 38, C.text, { font: B, literal: true });
         let y = py + 70;
-        if (g.about) { cv.text(g.about, px + 32, py + 86, 19, C.dim, { font: M, literal: true }); y = py + 104; }
+        if (g.about) {
+            const lines = [].concat(g.about);
+            lines.forEach((l, j) => cv.text(l, px + 32, py + 86 + j * 24, 19, C.dim, { font: M, literal: true }));
+            y = py + 104 + (lines.length - 1) * 24;
+        }
         const credits = g.name === 'About', watch = g.name === 'BMW\'s cluster' && this.get('slotWatch') === true;
         const rows = watch ? g.rows.filter((r) => r[0] === 'slotWatch') : g.rows;
         const room = py + ph - 10 - y - (credits ? Math.max(CREDITS.length * 26 + 24, 196) : 0);

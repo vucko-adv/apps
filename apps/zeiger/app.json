@@ -1,7 +1,8 @@
 {
   "id": "zeiger",
   "title": "Zeiger",
-  "description": "Instrument cluster themes drawn by hand: Vintage Green and Vintage Cyan (an 80s LCD dash with TURBO and ECON bars), VFD (a late-80s fluorescent dash, mint on black with teal windows), Apex and Apex Sport (a racing cluster with boost and braking bars), Dark Moon (a sunrise seen from orbit, the speed under the sun, today's weather), Underpass and Mist (photos, with Dark Moon's readouts), and Map Mist (the phone's map in the middle of the Mist photo)",
+  "description": "Custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
+  "whatsNew": "The themes in groups: Vintage, Sport and Photo, a tap on one goes to it. About now says what Zeiger is. From this version on, installing shows what changed.",
   "version": "0.44.0",
   "vendor": "custom",
   "loggingId": "OAZG",

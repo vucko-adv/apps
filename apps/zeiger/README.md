@@ -157,7 +157,8 @@ With **Cold-engine rev guard** on (the default), the rev bars of Vintage Green, 
 - **Not during** the start animation or the self-test (their values are made up).
   - **Units and time:** units (metric: km/h and °C are part of the drawing), clock, time zone, fuel tank size.
   - **Home-screen widget:** Weather, Mist (default), Weather, Sunrise, or The cluster's theme.
-  - **About:** demo data, the version and the credits.
+  - **About:** what Zeiger is (the same text as app.json `description`), demo data, the version and the credits.
+- **Install text (0.44.0):** what the head unit shows when Zeiger is installed: "New in <version>: " and app.json `whatsNew`, then `description`. `whatsNew` is written new for every release (kit/tools/build.py).
 - **Pictures:** the gallery's big card uses `hero` (1152x432) from `hud/previews/<layout>.json`, made from the bench captures in `docs/images` by `cluster-design/app_ui/make_hero.js`; the rest `big` and `small`. One big picture is kept in memory at a time.
 - **Fonts:** Barlow Semi Condensed (SemiBold `zsb`, Medium `zsm`) and Michroma (`zmi`) in the kit's atlas format (`kit/runtime/fonts/`), baked by `cluster-design/app_ui/bake_fonts.html`.
 - **Steppers:** a list of choices (the widget, units, clock, ...) goes round: past the last, the first again. Numbers (redline, limits, position) stop at their ends.
