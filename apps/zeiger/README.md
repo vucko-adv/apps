@@ -61,7 +61,8 @@ Peaks' photo goes to the cluster ETC2-compressed: 1.32 MiB of cluster-render's p
 - **On the cluster:** an `etc2rgba` asset (cluster-render 0.5.8 or later; the car has 0.6.0) drawn by an effect layer that samples it (shaders.js `TEXPIC`: the theme position as a shift, the start animation's fade, BMW's strip cut as a see-through rect). The asset is dropped after its layer.
 - **Older renderer:** if cluster-render refuses the format or the texture, the app decodes the picture itself (`pictures.rgbaOf`, Node 8 has no BigInt, so etc2.js does without) and sends it as an image layer, as before, for the rest of the run. The bench imitates that with `BENCH_NO_ETC2=1`.
 - **Watermark:** the pixel mark does not survive the compression; a compressed picture keeps only its `author` and `copyright` fields (the watermark tool leaves its blocks alone).
-- **Not yet:** `etc2rgb` (0.5 byte a pixel, opaque) is not checked on an iDrive 7 cluster upstream; Dark Moon, Mist, Underpass and Map Mist are still RGBA.
+- **Since 0.40.0 every photo theme:** Dark Moon, Mist, Underpass, Map Mist and Sunrise's hills too (each theme now 2.3-3.1 MiB instead of 6-12.4), so every change between themes can hold the old one. Their bottoms fade to black from row 560 to 716 (`--fade 560,716,0.95`), so the photo meets BMW's black strip and the small window left open over its gear letter without an edge. Sunrise's hills got two see-through rows on top (ETC2 is 4x4 blocks), their widget starts at 428. The themes' installers in cluster-design run the tool with the same fade.
+- **Not yet:** `etc2rgb` (0.5 byte a pixel, opaque) is not checked on an iDrive 7 cluster upstream.
 
 ## Underpass and Mist
 
