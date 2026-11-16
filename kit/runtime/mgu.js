@@ -334,6 +334,7 @@ class Widget {
         this._img = Object.create(null);
         this._change = [];
         this._tap = [];
+        this.tapOpens = true;                // a tap opens the app (the kit); false: only the app's onTap
         this.timing = { png: 0, push: 0 };
     }
     get ready() { return !!this.comp; }
@@ -679,8 +680,8 @@ async function runInner(impl) {
             });
         return opening;
     };
-    // a tap on the home-screen widget opens the app
-    widget.onTap(() => { if (entryUuids[0]) openEntry(entryUuids[0]); });
+    // a tap on the home-screen widget opens the app (unless the app set ctx.widget.tapOpens = false: it handles taps itself)
+    widget.onTap(() => { if (widget.tapOpens !== false && entryUuids[0]) openEntry(entryUuids[0]); });
     app.on('entryPointExecute', (uuid, reason, name) => {
         log.info('entry point ' + name + ' (' + reason + ')');
         openEntry(uuid);

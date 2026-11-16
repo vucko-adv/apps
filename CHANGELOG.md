@@ -2,6 +2,11 @@
 
 Newest first. Dates are when the build was pushed.
 
+## Nov 17 2026
+
+- **Zeiger 0.47.0:** an overview on the home screen. Each Zeiger widget can show its own view: place two or three side by side and tap one to change only that one (engine, weather Mist, weather Sunrise, the cluster's theme), next to BMW's menu. The picks come back after a restart; **Shows** in the settings sets every widget again. Settings, Home-screen widget, **Tap on a widget**: the next view (the default) or open Zeiger, as before. The widget's and the probe's settings no longer rebuild the cluster's theme.
+- **Kit:** `ctx.widget.tapOpens = false` lets an app handle a tap on its home-screen widget itself (the kit opens the app otherwise, as before).
+
 ## Nov 16 2026
 
 - **Zeiger 0.46.0:** a test toward showing the cruise control and the speed limit on the themes. Settings, About, **Look for cruise and speed limit** lists what the car offers apps about them: every interface and field in the head unit's SOME/IP catalog whose name says cruise control (cruise, tempomat, FGR, ACC, DCC, limiter) or a speed limit (SLI, SLA, VZE, traffic sign, KAFAS), and the driver-assistance and guidance interfaces, in two columns on the page (a tap for the next page). Nothing is read from the car yet and nothing on the cluster changes; the next build reads the fields found.

@@ -85,8 +85,9 @@ const GROUPS = [
         ['timeZone', 'Time zone', 'the head unit\'s clock runs on UTC'],
         ['tankLitres', 'Fuel tank', 'for the fuel level, where the engine unit doesn\'t give it'],
     ] },
-    { name: 'Home-screen widget', about: 'Hold a finger on an iDrive home-screen tile and pick Zeiger to place it.', rows: [
-        ['widgetShows', 'Shows', 'oil, water and turbo; the weather; or the cluster\'s theme'],
+    { name: 'Home-screen widget', about: 'Hold a finger on an iDrive home-screen tile and pick Zeiger to place it. Place a few for an overview: a tap on one changes only that one.', rows: [
+        ['widgetShows', 'Shows', 'every widget: oil, water and turbo; the weather; or the cluster\'s theme'],
+        ['widgetTap', 'Tap on a widget', 'the next view on that widget, or open Zeiger'],
     ] },
     // About (0.44.0): what Zeiger is, as app.json "description" says it at install (lines: the panel's width)
     { name: 'About', about: [
@@ -339,6 +340,7 @@ class Page {
         if (k === 'shiftBefore') return v ? num(v) + ' rpm' : 'At the redline';
         if (k === 'tankLitres') return v + ' L';
         if (k === 'timeZone') return tz.name(v);
+        if (k === 'widgetTap') return v === 'open' ? 'Opens Zeiger' : 'Next view';
         if (k === 'widgetShows') return { engine: 'Engine', mist: 'Weather, Mist', sunrise: 'Weather, Sunrise', theme: 'Cluster theme', test: 'Test pattern' }[v] || this.optLabel(k, v);
         if (it.type === 'bool') return v ? 'On' : 'Off';
         return this.optLabel(k, v);
@@ -352,7 +354,7 @@ class Page {
         }
         if (g.name === 'Rev range') return this.valueText('engine') + ' · yellow ' + num(this.hud.setting('yellowLine')) + ' · red ' + num(this.hud.setting('redline'));
         if (g.name === 'Units and time') return (this.us() ? 'mph' : 'km/h') + ' · ' + this.valueText('clock') + ' · ' + this.valueText('timeZone');
-        if (g.name === 'Home-screen widget') return this.valueText('widgetShows');
+        if (g.name === 'Home-screen widget') return this.valueText('widgetShows') + ' · tap: ' + (this.get('widgetTap') === 'open' ? 'opens Zeiger' : 'next view');
         if (g.name === 'BMW\'s cluster') return 'black boxes ' + (on('hideBoxes') ? 'hidden' : 'shown') + ' · bottom strip ' + (on('stripClear') ? 'clear' : 'covered') + (this.calibNow() ? ' · calibrating' : '');
         return 'version ' + ((this.ctx.spec && this.ctx.spec.version) || '?') + ' · credits';
     }

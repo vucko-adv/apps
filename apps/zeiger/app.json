@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "A test for the next step: Settings, About, \"Look for cruise and speed limit\" lists what the car offers apps about the cruise control and the speed limit, so a later version can show them on the themes. Nothing on the cluster changes.",
-  "version": "0.46.0",
+  "whatsNew": "Home-screen widgets: each Zeiger widget can now show its own view. Place two or three side by side and tap one to change what it shows (engine, weather, the cluster's theme), for an overview next to BMW's menu. Settings, Home-screen widget, \"Tap on a widget\" can make a tap open Zeiger again, as before.",
+  "version": "0.47.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -91,7 +91,7 @@
     }
   ],
   "startWidget": {
-    "comment": "Home-screen widget (widget.js): the weather in Mist's look or the first Sunrise theme's (the theme itself left in 0.22.0), or the theme the cluster shows now (setting widgetShows). The layout and cells are BMW's Drive Recorder widget on this firmware, as the kit's Live Data's (checked on a G05): the big widget's picture goes into BackgroundImage1 (drawn as 384 x 256, sent 3 times as big since 0.30.0), which the HMI scales up, crops (safe: the share of each edge it cuts) and fades at the edges; the small widget shows only the text lines.",
+    "comment": "Home-screen widget (widget.js): the weather in Mist's look or the first Sunrise theme's (the theme itself left in 0.22.0), or the theme the cluster shows now (setting widgetShows; since 0.47.0 each placed widget its own, a tap for the next: widgetPicks, widgetTap). The layout and cells are BMW's Drive Recorder widget on this firmware, as the kit's Live Data's (checked on a G05): the big widget's picture goes into BackgroundImage1 (drawn as 384 x 256, sent 3 times as big since 0.30.0), which the HMI scales up, crops (safe: the share of each edge it cuts) and fades at the edges; the small widget shows only the text lines.",
     "name": "Zeiger",
     "layout": "LT_Table_OnlineApps_DriveRecorderWidget",
     "image": "BackgroundImage1",
@@ -414,6 +414,22 @@
         [
           "test",
           "Test pattern (sharpness)"
+        ]
+      ]
+    },
+    {
+      "key": "widgetTap",
+      "label": "Tap on a home-screen widget",
+      "type": "choice",
+      "default": "next",
+      "options": [
+        [
+          "next",
+          "Shows the next view (that widget only)"
+        ],
+        [
+          "open",
+          "Opens Zeiger"
         ]
       ]
     },

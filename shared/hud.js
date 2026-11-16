@@ -370,6 +370,8 @@ const TYRE_CORNERS = ['FL', 'FR', 'RL', 'RR'];
 const DIAL_SPEED = { us: { max: 160, ticks: 8 }, metric: { max: 240, ticks: 8 } };
 // the HUD's place (the page's Position tab): settings that move / scale the layers already there, no rebuild
 const PLACE_KEYS = ['hudX', 'hudY', 'hudScale'];
+// settings that change nothing on the cluster (the home-screen widget's, Zeiger's probe): no rebuild
+const QUIET_KEYS = ['widgetShows', 'widgetPicks', 'widgetTap', 'probe'];
 // "Leave BMW's bottom strip clear" (cluster, issues #5 / #1): BMW's own strip (range, clock, belt light, P) starts at
 // y 662. Since Zeiger 0.32.0 the theme stays as it is and is cut there (it used to be squeezed to 662 / 720 of its
 // height): every image layer's pixels in the strip see-through as they are sent (_punch), a fill over it given the
@@ -690,6 +692,7 @@ class HudApp {
             if (['hudLayout', 'inComfort', 'inSport', 'inEco', 'byMode'].indexOf(key) >= 0 && this.screen.yielded) this.screen.release();
             if (PLACE_KEYS.indexOf(key) >= 0) this._guard('place', () => this._place());
             else if (LIVE_KEYS.indexOf(key) >= 0) this.widgets.forEach((x) => { x.last = null; });
+            else if (QUIET_KEYS.indexOf(key) >= 0) { /* the home-screen widget's, the probe's: not the cluster's */ }
             else if (key !== 'demo') this._rebuildSoon(); else this._status();
         });
     }

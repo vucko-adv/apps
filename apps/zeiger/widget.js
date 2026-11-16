@@ -15,6 +15,13 @@
  *   theme    the theme the cluster shows now: ZEIGER, that theme's picture (the one the page's gallery shows,
  *            hud/previews), its name and, while the theme changes with the drive mode, the mode.
  *
+ * Each placed widget its own view (0.47.0): the setting is what every widget shows; a tap on one moves that one on to
+ * the next view (VIEWS: engine, Mist, Sunrise, theme), so a few widgets side by side make an overview (engine next to
+ * the weather). The picks are kept by the widget's place among the placed ones (the HMI's spawn ids, lowest first:
+ * setting "widgetPicks", [view or null per place]), so they come back after a restart; a new "Home-screen widget"
+ * setting is every widget's again. With "Tap on a widget: opens Zeiger" (widgetTap) a tap opens the app instead, as
+ * before 0.47.0 (the kit's ctx.widget.tapOpens).
+ *
  * weather.js fetches while a widget is placed and shows the weather (its "widget" want, apart from the themes').
  *
  * The small widget shows no picture, only the layout's text lines (the same words). Drawn again when what it shows
@@ -59,12 +66,18 @@ const RANGE = { oil: [40, 150], coolant: [40, 130], boost: [0, 1.6] };
 const PEAK_MS = 5000, WARM_OIL = 80, WARM_COOLANT = 70;
 // the margin inside the part of the picture the HMI shows (px of the 384 x 256 picture)
 const PAD = 14;
+// the views a tap goes through, in order (the test pattern only from the setting)
+const VIEWS = ['engine', 'mist', 'sunrise', 'theme'];
+// the pictures kept, one per view shown now (a few widgets with different views)
+const KEEP = 6;
 // the weather's looks: the background (hud/pictures) and the theme's colours (shared/hud_themes.js: fg, dim; rev.from
 // for the rain; bar.mid for OFFLINE); shadow: how dark the soft shadow under the text is
 const LOOKS = {
     mist: { bg: 'mist_widget', fg: [255, 255, 255], dim: [200, 208, 216], rain: [127, 212, 255], warn: [255, 154, 60], shadow: 0.55 },
     sunrise: { bg: 'sunrise_widget', fg: [255, 255, 255], dim: [196, 208, 220], rain: [127, 212, 255], warn: [255, 154, 60], shadow: 0.35 },
 };
+
+const valid = (v) => v === 'theme' || v === 'engine' || v === 'test' || !!LOOKS[v];
 
 /** RGBA rows sw x sh shrunk to tw x th by averaging each target pixel's area (a clean picture, no stair steps) */
 function shrink(px, sw, sh, tw, th) {
@@ -144,7 +157,7 @@ class ZeigerWidget {
     constructor(ctx, hud) {
         this.ctx = ctx; this.hud = hud;
         this.pics = Object.create(null);     // theme -> its shrunk picture (or null: none)
-        this.cv = null; this.key = null;     // the big widget's picture, and what it shows
+        this.cvs = new Map();                // what a big widget shows (JSON) -> its picture, the last KEEP
         this.sent = Object.create(null);     // spawnId -> { key, at }: the last picture handed to the kit
         this.cells = Object.create(null);    // spawnId -> { cell: value }: the text cells written
         this.bg = Object.create(null);       // a look's background -> RGBA (W x H), or null: none
@@ -167,29 +180,81 @@ class ZeigerWidget {
             if (why !== 'hidden') { this.sent = Object.create(null); this.cells = Object.create(null); }
             this._want();
         });
+        if (w.onTap) w.onTap((e) => this.tap(e));
+        const st = this.ctx.settings;
+        this._tapMode();
+        if (st && st.onChange) st.onChange((k) => {
+            if (k === 'widgetTap') this._tapMode();
+            // a new pick in the settings is every widget's again
+            else if (k === 'widgetShows' && this._picks().some((p) => p)) st.set('widgetPicks', []);
+            else if (k !== 'widgetPicks') return;
+            this.sent = Object.create(null);
+            this._want();
+        });
         this._want();
     }
 
-    /** 'engine', 'theme', or the weather's look: 'mist' or 'sunrise' (the setting) */
-    shows() {
+    /** A tap on a widget: the next view (setting widgetTap 'next'), or the kit opens the app ('open') */
+    _tapMode() {
+        let m = 'next';
+        try { m = this.hud.setting('widgetTap'); } catch (e) { m = 'next'; }
+        m = m === 'open' ? 'open' : 'next';
+        if (this.ctx.widget) this.ctx.widget.tapOpens = m === 'open';
+        return m;
+    }
+
+    /** The view picked for each place (setting widgetPicks): [view or null] */
+    _picks() {
+        let p = null;
+        try { p = this.ctx.settings.get('widgetPicks'); } catch (e) { p = null; }
+        return Array.isArray(p) ? p : [];
+    }
+
+    /** A placed widget's place: its spawn id's rank among the placed ones (0 = the lowest id) */
+    _rank(spawnId) {
+        return this.ctx.widget.instances().map((i) => i.spawnId).sort((a, b) => a - b).indexOf(Number(spawnId));
+    }
+
+    tap(e) {
+        if (this._tapMode() !== 'next' || !e) return;
+        const inst = this.ctx.widget.instances().find((i) => i.spawnId === Number(e.spawnId));
+        if (!inst) return;
+        const rank = this._rank(inst.spawnId), cur = this.shows(inst), next = VIEWS[(VIEWS.indexOf(cur) + 1) % VIEWS.length];
+        const picks = this._picks().slice(0, 16);
+        for (let k = 0; k < rank; k++) if (!valid(picks[k])) picks[k] = null;
+        picks[rank] = next;
+        this.ctx.log.info('widget ' + inst.spawnId + ' (place ' + (rank + 1) + '): ' + cur + ' -> ' + next);
+        delete this.sent[inst.spawnId];
+        this.ctx.settings.set('widgetPicks', picks);
+    }
+
+    /**
+     * 'engine', 'theme', 'test', or the weather's look: 'mist' or 'sunrise'. With inst: what that widget shows (its
+     * pick, else the setting); without: the setting.
+     */
+    shows(inst) {
         let v = 'engine';
         try { v = this.hud.setting('widgetShows'); } catch (e) { v = 'engine'; }
-        return v === 'theme' || v === 'engine' || v === 'test' || LOOKS[v] ? v : 'engine';
+        if (!valid(v)) v = 'engine';
+        if (!inst) return v;
+        const p = this._picks()[this._rank(inst.spawnId)];
+        return valid(p) ? p : v;
     }
 
-    // the weather is fetched while a widget is placed and shows it
+    // the weather is fetched while a placed widget shows it; the boost read while one shows the engine
     _want() {
         const wx = this.hud.wx, w = this.ctx.widget;
-        const placed = !!w && w.instances().length > 0;
-        if (wx) wx.want(placed && !!LOOKS[this.shows()], 'widget');
-        this.hud.widgetBoost = placed && this.shows() === 'engine';
+        const views = w ? w.instances().map((i) => this.shows(i)) : [];
+        if (wx) wx.want(views.some((v) => !!LOOKS[v]), 'widget');
+        this.hud.widgetBoost = views.indexOf('engine') >= 0;
     }
 
-    /** What the widget says now: { kind: 'theme', name ('off' or a layout), title, mode } or { kind: 'weather', ... } */
-    state() {
-        if (this.shows() === 'test') return { kind: 'test', size: this.W * this.S + 'x' + this.H * this.S };
-        if (this.shows() === 'engine') return this.engine();
-        if (this.shows() !== 'theme') return this.weather(this.shows());
+    /** What the widget inst says now: { kind: 'theme', name ('off' or a layout), title, mode } or { kind: 'weather', ... } */
+    state(inst) {
+        const v = this.shows(inst);
+        if (v === 'test') return { kind: 'test', size: this.W * this.S + 'x' + this.H * this.S };
+        if (v === 'engine') return this.engine();
+        if (v !== 'theme') return this.weather(v);
         const h = this.hud, name = h.activeName && h.activeName !== 'off' ? h.activeName : 'off';
         let title = '', mode = '';
         if (name !== 'off') { try { title = (data.json('layouts/' + name + '.json') || {}).name || name; } catch (e) { title = name; } }
@@ -229,14 +294,19 @@ class ZeigerWidget {
 
     draw(inst) {
         this._want();
-        const s = this.state(), key = JSON.stringify(s), now = Date.now();
+        const s = this.state(inst), key = JSON.stringify(s), now = Date.now();
         this._text(inst, s);
         if (!inst.big) return null;
         const last = this.sent[inst.spawnId];
         if (last && last.key === key && now - last.at < REDRAW_MS) return null;
-        if (this.key !== key) { this.cv = (s.kind === 'test' ? this.renderTest() : s.kind === 'weather' ? this.renderWeather(s) : s.kind === 'engine' ? this.renderEngine(s) : this.render(s)).cv; this.key = key; }
+        let cv = this.cvs.get(key);
+        if (!cv) {
+            cv = (s.kind === 'test' ? this.renderTest() : s.kind === 'weather' ? this.renderWeather(s) : s.kind === 'engine' ? this.renderEngine(s) : this.render(s)).cv;
+            this.cvs.set(key, cv);
+            while (this.cvs.size > KEEP) this.cvs.delete(this.cvs.keys().next().value);
+        }
         this.sent[inst.spawnId] = { key, at: now };
-        return this.cv;
+        return cv;
     }
 
     /** The small widget's lines (the big one leaves them empty: its picture says it). ASCII only (the kit's widgetText). */
