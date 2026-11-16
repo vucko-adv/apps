@@ -218,7 +218,12 @@ class Page {
         Object.assign(ctx.theme(), { sel: C.acc, selText: '#ffffff', accent2: C.accSoft, bg: C.bg });
         if (ctx.onTab) ctx.onTab((i) => this.openTab(i));
         // a finger swiped sideways goes through the gallery (Themes tab only)
-        if (ctx.onSwipe) ctx.onSwipe((d) => { if (this.tab === 0 && this.goBy) this.goBy(d); });
+        if (ctx.onSwipe) ctx.onSwipe((d) => {
+            if (this.tab !== 0) return;
+            // in Customise a swipe changes the part picked on the preview; else it goes through the gallery
+            if (this.custom && this.draft) { if (this.cSel) this.stepDraft(this.cSel, d); return; }
+            if (this.goBy) this.goBy(d);
+        });
         this.loop = ctx.loop('MAIN', 10, () => this.render());
         ctx.settings.onChange(() => this.kick());
         ctx.onLayout(() => this.kick());
@@ -233,6 +238,7 @@ class Page {
         if (!c) return;
         this.custom = v; this.draft = {}; this.applied = null;
         c.rows.forEach(([end]) => { this.draft[c.key + end] = this.get(c.key + end); });
+        if (!this.cSel || !(this.cSel in this.draft)) this.cSel = c.key + (c.rows.some((r) => r[0] === 'Left') ? 'Left' : c.rows[0][0]);
         this.kick();
     }
     /** the draft's keys whose pick differs from what is set */
@@ -565,66 +571,79 @@ class Page {
     }
 
     /**
-     * Customise (0.41.0): the theme big on the left as it will look with the picks being tried (customPreview: its
-     * pieces laid over the base), the picks on the right, and Apply, which sends them to the cluster together. Until then
-     * the cluster stays as it is; Reset goes back to what is set, Back leaves without sending.
+     * Customise (0.41.0): the theme as big as the page takes, as it will look with the picks being tried (customPreview:
+     * its pieces laid over the base). Each part that can change has a frame and the name of its pick; a tap picks the
+     * part, and it gets arrows (up and down for the left block, left and right for the others); the arrows or a sideways
+     * swipe go through its picks. Beside it: Apply (every pick to the cluster at once), Reset, Back. Until Apply the
+     * cluster stays as it is.
      */
     customise(cv, bottom) {
-        const v = this.custom, c = CUSTOM[v], gx = 24, gy = 48;
-        const pw = 960, ph = 360, prev = customPreview(v);
+        const v = this.custom, c = CUSTOM[v], prev = customPreview(v);
+        const colW = 330, gy = 48;
+        let ph = bottom - gy - 10, pw = Math.round(ph * 8 / 3);
+        if (pw > R - L - colW - 24) { pw = R - L - colW - 24; ph = Math.round(pw * 3 / 8); }
+        const gx = L + 6;
+        cv.roundRect(gx - 2, gy - 2, pw + 4, ph + 4, 18, '#000000');
         if (prev) {
             const k = pw / prev.base.w;
-            cv.roundRect(gx - 2, gy - 2, pw + 4, ph + 4, 18, '#000000');
             cv.image(prev.base.id, gx, gy, pw, ph);
-            Object.keys(prev.keys).forEach((key) => {
-                const r = prev.keys[key], pick = this.draft[key], o = r.opts[pick] || r.opts.none;
+            const keys = Object.keys(prev.keys);
+            keys.forEach((key) => {
+                const r = prev.keys[key], o = r.opts[this.draft[key]] || r.opts.none;
                 if (o) cv.image(o.id, gx + Math.round(r.x * k), gy + Math.round(r.y * k), Math.round(r.w * k), Math.round(r.h * k));
             });
-            cv.strokeRoundRect(gx - 2, gy - 2, pw + 4, ph + 4, 18, 1, A('#ffffff', 0.14));
+            // the parts: a frame, the pick's name, the arrows on the one picked
+            keys.forEach((key) => {
+                if (!(key in this.draft)) return;
+                const r = prev.keys[key], x = gx + Math.round(r.x * k) - 8, y = gy + Math.round(r.y * k) - 8, w = Math.round(r.w * k) + 16, h = Math.round(r.h * k) + 16;
+                const sel = this.cSel === key, changed = this.draft[key] !== this.get(key), vert = /Left$/.test(key);
+                cv.strokeRoundRect(x, y, w, h, 14, sel ? 2.5 : 1, sel ? C.acc : A('#ffffff', changed ? 0.5 : 0.22));
+                const name = this.optLabel(key, this.draft[key]), nw = cv.textWidth(name, 16, { font: B, literal: true }) + 28;
+                // the name: beside a tall part (to its left), above a wide one
+                const nx = vert ? Math.max(gx + 6, x - nw - 14) : x + (w - nw) / 2, ny = vert ? y + h / 2 - 15 : y - 38;
+                cv.roundRect(nx, ny, nw, 30, 15, A('#000000', 0.78));
+                cv.strokeRoundRect(nx, ny, nw, 30, 15, 1, sel || changed ? A(C.acc, 0.9) : A('#ffffff', 0.18));
+                cv.text(name, nx + nw / 2, ny + 21, 16, sel ? C.accSoft : C.soft, { font: B, align: 'center', literal: true });
+                cv.target(x, y, w, h, () => { this.cSel = key; this.kick(); }, 'cpart:' + key, 14);
+                if (!sel) return;
+                if (vert) {
+                    const ax = x + w / 2;
+                    chevron(cv, ax, y - 22, -1); chevron(cv, ax, y + h + 22, 1);
+                    cv.target(ax - 40, y - 48, 80, 46, () => this.stepDraft(key, -1), 'cup:' + key, 14);
+                    cv.target(ax - 40, y + h + 2, 80, 46, () => this.stepDraft(key, 1), 'cdown:' + key, 14);
+                } else {
+                    const ay = y + h / 2;
+                    arrow(cv, x - 24, ay, -1); arrow(cv, x + w + 24, ay, 1);
+                    cv.target(x - 50, ay - 34, 46, 68, () => this.stepDraft(key, -1), 'cprev:' + key, 14);
+                    cv.target(x + w + 4, ay - 34, 46, 68, () => this.stepDraft(key, 1), 'cnext:' + key, 14);
+                }
+            });
         } else this.picture(cv, v, 'hero', gx, gy, pw, ph, 18);
-        const ch = this.draftChanges(), live = v === this.shown();
-        cv.text(this.name(v), gx + 4, gy + ph + 44, 32, C.text, { font: B, literal: true });
-        cv.text(ch.length ? 'A preview of your picks: the cluster changes when you press Apply.' : (live ? 'As on the cluster now.' : 'As it will look when this theme is on.'),
-            gx + 4, gy + ph + 74, 19, ch.length ? C.accSoft : C.dim, { font: M, literal: true });
-        // the picks
-        const px = pw + 24 + 22, pwid = R - 12 - px, py = gy - 2, phh = bottom - 6 - py;
-        cv.roundRect(px, py, pwid, phh, 20, A(C.panel, 0.92));
-        cv.strokeRoundRect(px, py, pwid, phh, 20, 1, C.faint);
-        cv.text('Customise', px + 24, py + 44, 32, C.text, { font: B, literal: true });
-        const rows = c.rows, rh = 74, ry = py + 64;
-        rows.forEach(([end, label], j) => {
-            const k = c.key + end, y = ry + j * rh, mid = y + rh / 2, changed = this.draft[k] !== this.get(k);
-            cv.fillRect(px + 24, y, pwid - 48, 1, C.faint);
-            cv.text(label, px + 24, mid - 6, 21, C.text, { font: B, literal: true });
-            cv.text(changed ? 'changed' : 'as set', px + 24, mid + 18, 15, changed ? C.acc : C.dim, { font: M, literal: true });
-            const sw = 300, sh = 50, sx = px + pwid - 24 - sw, sy = mid - sh / 2, val = this.optLabel(k, this.draft[k]);
-            cv.roundRect(sx, sy, sw, sh, sh / 2, A('#ffffff', 0.07));
-            cv.strokeRoundRect(sx, sy, sw, sh, sh / 2, 1, changed ? A(C.acc, 0.8) : A('#ffffff', 0.12));
-            cv.text('−', sx + 36, mid + 10, 30, C.text, { font: B, align: 'center', literal: true });
-            cv.text('+', sx + sw - 36, mid + 10, 30, C.text, { font: B, align: 'center', literal: true });
-            let fs = 22;
-            while (fs > 17 && cv.textWidth(val, fs, { font: B, literal: true }) > sw - 150) fs -= 1;
-            cv.text(fit(cv, val, fs, sw - 150, B), sx + sw / 2, mid + 8, fs, C.acc, { font: B, align: 'center', literal: true });
-            cv.target(sx, sy, 76, sh, () => this.stepDraft(k, -1), 'cdec:' + k, sh / 2);
-            cv.target(sx + sw - 76, sy, 76, sh, () => this.stepDraft(k, 1), 'cinc:' + k, sh / 2);
-        });
-        // Apply, Reset, Back
-        const by = py + phh - 74, bw = pwid - 48, half = (bw - 12) / 2;
-        const ap = this.applied ? Date.now() - this.applied : Infinity;
+        cv.strokeRoundRect(gx - 2, gy - 2, pw + 4, ph + 4, 18, 1, A('#ffffff', 0.14));
+        // beside it: the name, what to do, Apply, Reset, Back
+        const ch = this.draftChanges(), cx = gx + pw + 20, cw = R - cx, ap = this.applied ? Date.now() - this.applied : Infinity;
+        cv.roundRect(cx, gy - 2, cw, ph + 4, 18, A(C.panel, 0.92));
+        cv.strokeRoundRect(cx, gy - 2, cw, ph + 4, 18, 1, C.faint);
+        cv.text('Customise', cx + 22, gy + 38, 30, C.text, { font: B, literal: true });
+        cv.text(this.name(v), cx + 22, gy + 66, 20, C.dim, { font: B, literal: true });
+        const hint = ch.length ? ['A preview: the cluster', 'changes when you Apply.'] : ['Tap a part, then the arrows', 'or swipe sideways.'];
+        hint.forEach((l, i) => cv.text(l, cx + 22, gy + 104 + i * 24, 18, ch.length ? C.accSoft : C.dim, { font: M, literal: true }));
+        const bw = cw - 44, bx = cx + 22, by = gy + ph - 2 - 22 - 50 - 12 - 50 - 12 - 58;
         if (ch.length) {
-            cv.roundRect(px + 24, by - 66, bw, 54, 27, C.acc);
-            cv.text('Apply to the cluster', px + 24 + bw / 2, by - 31, 23, '#ffffff', { font: B, align: 'center', literal: true });
-            cv.target(px + 24, by - 66, bw, 54, () => this.applyDraft(), 'capply', 27);
+            cv.roundRect(bx, by, bw, 58, 29, C.acc);
+            cv.text('Apply', bx + bw / 2, by + 38, 25, '#ffffff', { font: B, align: 'center', literal: true });
+            cv.target(bx, by, bw, 58, () => this.applyDraft(), 'capply', 29);
         } else {
-            cv.roundRect(px + 24, by - 66, bw, 54, 27, ap < 1600 ? A(C.ok, 0.22) : A('#ffffff', 0.06));
-            cv.text(ap < 1600 ? 'Applied' : 'Nothing to apply', px + 24 + bw / 2, by - 31, 22, ap < 1600 ? C.ok : C.dim, { font: B, align: 'center', literal: true });
+            cv.roundRect(bx, by, bw, 58, 29, ap < 1600 ? A(C.ok, 0.22) : A('#ffffff', 0.06));
+            cv.text(ap < 1600 ? 'Applied' : 'Nothing to apply', bx + bw / 2, by + 37, 21, ap < 1600 ? C.ok : C.dim, { font: B, align: 'center', literal: true });
         }
-        cv.roundRect(px + 24, by, half, 50, 25, A('#ffffff', 0.10));
-        cv.text('Reset', px + 24 + half / 2, by + 33, 20, ch.length ? C.soft : C.dim, { font: B, align: 'center', literal: true });
-        cv.target(px + 24, by, half, 50, () => { this.openCustom(v); }, 'creset', 25);
-        cv.roundRect(px + 36 + half, by, half, 50, 25, A('#ffffff', 0.10));
-        cv.text(ch.length ? 'Back, not applied' : 'Back', px + 36 + half + half / 2, by + 33, 20, C.soft, { font: B, align: 'center', literal: true });
-        cv.target(px + 36 + half, by, half, 50, () => { this.custom = null; this.draft = null; this.kick(); }, 'customBack', 25);
+        const ry = by + 58 + 12;
+        cv.roundRect(bx, ry, bw, 50, 25, A('#ffffff', 0.10));
+        cv.text('Reset', bx + bw / 2, ry + 33, 20, ch.length ? C.soft : C.dim, { font: B, align: 'center', literal: true });
+        cv.target(bx, ry, bw, 50, () => this.openCustom(v), 'creset', 25);
+        cv.roundRect(bx, ry + 62, bw, 50, 25, A('#ffffff', 0.10));
+        cv.text(ch.length ? 'Back, not applied' : 'Back', bx + bw / 2, ry + 95, 20, C.soft, { font: B, align: 'center', literal: true });
+        cv.target(bx, ry + 62, bw, 50, () => { this.custom = null; this.draft = null; this.kick(); }, 'customBack', 25);
     }
 
     /** one setting: label and line under it on the left, a switch or - value + on the right */
@@ -691,6 +710,11 @@ function pill(cv, xr, y, s, c) {
     cv.text(s, xr - w + 36, y + 26, 17, c, { font: B, spacing: 2, literal: true });
 }
 /** a plain chevron at the screen's edge, pointing d (-1 left, 1 right) */
+/** an up (d -1) or down (d 1) chevron centred on x, y */
+function chevron(cv, x, y, d) {
+    cv.line(x - 22, y - 9 * d, x, y + 9 * d, 4, A('#ffffff', 0.85));
+    cv.line(x, y + 9 * d, x + 22, y - 9 * d, 4, A('#ffffff', 0.85));
+}
 function arrow(cv, x, y, d) {
     cv.line(x - 9 * d, y - 22, x + 9 * d, y, 4, A('#ffffff', 0.85));
     cv.line(x + 9 * d, y, x - 9 * d, y + 22, 4, A('#ffffff', 0.85));
