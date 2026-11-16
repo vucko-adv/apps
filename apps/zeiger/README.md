@@ -176,7 +176,7 @@ With the switch on, BMW's own strip (from y 662) shows under the theme. Up to 0.
 bimmer-lab found on a car (Cluster Themes 0.17.6-0.17.8, their issue #5) that BMW draws its black gear box over a theme whenever anything covers its gear letter (P R N D) in its bottom strip, and that a layer's rectangle counts even where its pixels are see-through. Zeiger 0.29.0 had only made the pixels see-through (a hole in the fills, the pictures' pixels cut), which changed nothing on the user's car. Since 0.39.0 no layer's rectangle reaches over the letter (x 1380-1460, y 660 down, bimmer-lab's window; `GEAR_LETTER` in shared/hud.js):
 - every widget over it is cut in pieces that go round it (`_gearCut`): above it, left and right of it; a fill keeps its colour and hole, a picture's piece shows its part (`crop`, a stretched one's scaled), a compressed one's pieces sample one texture (`u_src`);
 - a sheet's box never reaches over it (`_plan`, `_steadySheets`), and the curtain between themes is three pieces;
-- on the car BMW's strip shows in that small window, with its gear letter.
+- on the car BMW's strip shows in that small window, with its gear letter. **Confirmed on the user's G20 (Nov 16 2026): no black box.**
 
 The cut adds a layer or two to the themes with a full-panel background, so the planner now aims at 16 layers a connection (`LAYER_BUDGET`; cluster-render takes 64 a connection since its 0.4.2). Turn it off in Settings, BMW's cluster, Leave BMW's gear letter open.
 
