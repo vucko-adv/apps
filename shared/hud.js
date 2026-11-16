@@ -2415,12 +2415,13 @@ class HudApp {
         // the sheets' boxes the same whatever the Customise picks (0.37.0), so a pick keeps every layer (_steadySheets)
         this._steadySheets(plan, layout.widgets.filter((w) => w.toggle && !this._toggleOn(w.toggle) && !(w.themes && w.themes.indexOf(this.themeName) < 0)));
         // another theme: the old one held until the new one shows, if both fit; else the curtain over the change
-        const hold = (change || sunFlip) && this._canHold(old, plan, oldPx);        if (change && !hold) this._guard('curtain', () => this._curtainUp());
+        let hold = (change || sunFlip) && this._canHold(old, plan, oldPx);
+        if (change && !hold) this._guard('curtain', () => this._curtainUp());
         this.keep = hold ? new Map() : this._keepable(old, plan);
         this.keepOwn = hold ? new Map() : this._keepableOwn(old, plan);
-        this.zLift = hold ? HOLD_Z : 0;
         // the same theme again (a setting): a layer that goes without one in its place would show BMW's own cluster
-        // through the gap until the new one comes, so the curtain covers it
+        // through the gap until the new one comes. Held as another theme would be when both fit (0.45.0: Ember's font
+        // moves every readout, and the background's pieces with them), else the curtain covers it
         if (before === name && !hold && old.refs.length) {
             const stay = {};
             this.keep.forEach((s) => { stay[s.ci + ':' + s.ref] = true; });
@@ -2430,10 +2431,13 @@ class HudApp {
                 // which: a sheet by its first member, an own layer by its widget
                 const names = old.sheets.filter((x) => x.ref && !stay[x.ci + ':' + x.ref]).map((x) => x.members[0].id)
                     .concat(old.own.filter((o) => !stay[o.ci + ':' + o.ref]).map((o) => o.w.id));
-                this.log.info('same theme again: ' + going + ' layer(s) go (' + names.slice(0, 8).join(', ') + '), the curtain over the change');
-                this._guard('curtain', () => this._curtainUp());
+                hold = this._canHold(old, plan, oldPx);
+                this.log.info('same theme again: ' + going + ' layer(s) go (' + names.slice(0, 8).join(', ') + '), '
+                    + (hold ? 'the old held until the new shows' : 'the curtain over the change'));
+                if (hold) { this.keep = new Map(); this.keepOwn = new Map(); } else this._guard('curtain', () => this._curtainUp());
             }
         }
+        this.zLift = hold ? HOLD_Z : 0;
         if (hold) {
             this.held = { old, at: Date.now() };
             this.oldPending = null;

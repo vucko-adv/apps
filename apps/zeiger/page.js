@@ -89,9 +89,9 @@ const GROUPS = [
     ] },
     // About (0.44.0): what Zeiger is, as app.json "description" says it at install (lines: the panel's width)
     { name: 'About', about: [
-        'Custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by',
-        'an enthusiast, made to make every drive a little nicer and to give back to the community that keeps',
-        'custom iDrive apps going. Not made by or connected with BMW. Improved all the time.',
+        'Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes.',
+        'A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the',
+        'community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.',
     ], rows: [
         ['demo', 'Demo data', 'made-up values while the car sends none'],
     ] },
@@ -101,7 +101,11 @@ const GROUPS = [
 const CUSTOM = {
     apex: { key: 'apex', rows: [['Big', 'Big number', 'in the middle'], ['Left', 'Left block', 'two bars, the tyres, or empty'], ['Mid', 'Bottom middle', 'where the clock is']] },
     apex_sport: { key: 'apexSport', rows: [['Big', 'Big number', 'in the middle'], ['Left', 'Left block', 'two bars, the tyres, or empty'], ['Mid', 'Bottom middle', 'where the clock is']] },
+    // 0.45.0, a beta: the photo themes' Customise starts here (the readouts' font, the M badge under the car)
+    ember: { key: 'ember', beta: true, rows: [['Font', 'Font', 'the readouts\' lettering'], ['Mid', 'Bottom middle', 'under the car']] },
 };
+// Zeiger is in beta (0.45.0): a BETA mark in the header, and on a Customise that is newer still ("beta" above)
+const BETA = true;
 // the slot watch (BMW's cluster group): while it is on, the group shows only its switch, the rest is the watch
 const WATCH_ROW = 64, WATCH_LH = 22;
 // the gallery's groups (0.44.0), in this order; a swipe goes on into the next group at a group's end. A theme in none
@@ -118,7 +122,7 @@ const CREDITS = [
     'Forked from bimmer-lab/apps (Cluster Themes), MIT.',
     'MGU App Kit by cauliflowermossgrape (MIT).',
     'cluster-render client by Robert Nisipeanu (MPL 2.0).',
-    'Fonts: Barlow, Michroma (SIL Open Font License). Details: NOTICE.',
+    'Fonts: Barlow, Michroma, Orbitron (SIL Open Font License). Details: NOTICE.',
 ];
 
 // the author's card in About (0.31.0): the photo (hud/pictures/author_photo.json, a 128 px circle, baked by
@@ -392,6 +396,7 @@ class Page {
         cv.gradientRect(0, 0, W, bottom + 8, [[0, '#0b0e13'], [0.6, C.bg], [1, C.bg]]);
         const on = this.hud.activeName && this.hud.activeName !== 'off', demo = this.hud.car && this.hud.car.data().demo;
         G.frame(cv, this.ctx.theme(), ['Themes', 'Settings'], this.tab, [
+            BETA ? { text: 'BETA', color: C.accSoft } : null,
             demo ? { text: 'DEMO DATA', color: C.warn } : null,
             { text: on ? 'CLUSTER ON' : 'CLUSTER OFF', color: on ? C.ok : C.dim },
         ]);
@@ -454,7 +459,7 @@ class Page {
         if (this.at === shown) pill(cv, cx + cw - 22, cy + 20, 'ON THE CLUSTER', C.ok);
         // a theme whose places can show other things: Customise, top left on the card
         if (CUSTOM[this.at]) {
-            const s = 'CUSTOMISE', w = cv.textWidth(s, 17, { font: B, spacing: 2, literal: true }) + 56, x = cx + 22, y = cy + 20;
+            const s = CUSTOM[this.at].beta ? 'CUSTOMISE · BETA' : 'CUSTOMISE', w = cv.textWidth(s, 17, { font: B, spacing: 2, literal: true }) + 56, x = cx + 22, y = cy + 20;
             cv.roundRect(x, y, w, 40, 20, A('#000000', 0.66));
             cv.strokeRoundRect(x, y, w, 40, 20, 1.5, A(C.acc, 0.9));
             cv.text(s, x + w / 2, y + 27, 17, C.accSoft, { font: B, spacing: 2, align: 'center', literal: true });

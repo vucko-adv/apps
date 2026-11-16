@@ -1,9 +1,9 @@
 {
   "id": "zeiger",
   "title": "Zeiger",
-  "description": "Custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "The themes in groups: Vintage, Sport and Photo, a tap on one goes to it. About now says what Zeiger is. From this version on, installing shows what changed.",
-  "version": "0.44.0",
+  "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
+  "whatsNew": "Ember can now be customised (beta): pick the font of its readouts (Classic, Tall, Wide or Tech) and put the M badge under the car. A BETA mark shows on the page while Zeiger is still being developed.",
+  "version": "0.45.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -906,6 +906,46 @@
         [
           "none",
           "Empty"
+        ]
+      ]
+    },
+    {
+      "key": "emberFont",
+      "label": "Ember: font",
+      "type": "choice",
+      "default": "barlow",
+      "options": [
+        [
+          "barlow",
+          "Classic"
+        ],
+        [
+          "tall",
+          "Tall"
+        ],
+        [
+          "wide",
+          "Wide"
+        ],
+        [
+          "tech",
+          "Tech"
+        ]
+      ]
+    },
+    {
+      "key": "emberMid",
+      "label": "Ember: bottom middle",
+      "type": "choice",
+      "default": "none",
+      "options": [
+        [
+          "none",
+          "Empty"
+        ],
+        [
+          "mbadge",
+          "M badge"
         ]
       ]
     },
