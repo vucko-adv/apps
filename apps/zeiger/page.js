@@ -42,6 +42,7 @@ const ABOUT = {
     underpass: 'A photo · low sun on a tiled wall · today\'s weather',
     mist: 'A photo · a misty valley · today\'s weather',
     peaks: 'Ridges under a deep blue sky · minimal',
+    ember: 'An old BMW at night, its cabin glowing red',
     sunrise_hills: 'Hills at sunrise · today\'s weather',
     map_mist: 'The phone\'s map in the middle of Mist\'s photo',
     off: 'No theme: BMW\'s own cluster shows',
@@ -157,8 +158,8 @@ const SLIDE_MS = 260, SLIDE_PX = 170, PRELOAD_MS = 300;
 // tried over the base, so the theme shows as it will on the cluster before Apply sends them. Each its own image.
 const CUSTOM_IDS = 0x5a5e0000;
 // a part changing on the preview: the new pick fades in over the old one, sliding PART_SLIDE px from the side it came
-// from, in PART_MS; its name shows over it a moment (PART_NAME_MS)
-const PART_MS = 240, PART_SLIDE = 26, PART_NAME_MS = 1100;
+// from, in PART_MS (no name over it: the preview shows what it is)
+const PART_MS = 240, PART_SLIDE = 26;
 // which way a part changes: up and down for the left block and the big number, sideways for the bottom middle
 const partAxis = (key) => (/Mid$/.test(key) ? 'x' : 'y');
 const customPics = Object.create(null);
@@ -586,8 +587,7 @@ class Page {
      * Customise (0.41.0): the theme as big as the page takes, as it will look with the picks being tried (customPreview:
      * its pieces laid over the base). Every part that can change is live at once: small arrows on its edges (up and down
      * for the left block and the big number, left and right for the bottom middle), a swipe that starts on it in that
-     * direction, or a tap on it (the next pick). The new pick fades in, sliding from the side it came from, and its name
-     * shows over it a moment. Beside it: Apply (every pick to the cluster at once), Reset, Back.
+     * direction, or a tap on it (the next pick). The new pick fades in, sliding from the side it came from. Beside it: Apply (every pick to the cluster at once), Reset, Back.
      */
     customise(cv, bottom) {
         const v = this.custom, c = CUSTOM[v], prev = customPreview(v), now = Date.now();
@@ -636,15 +636,6 @@ class Page {
                     cv.target(x + w + 2, y + h / 2 - 30, 38, 60, () => this.stepDraft(key, 1), 'cnext:' + key, 12, true);
                 }
                 cv.target(x, y, w, h, () => this.stepDraft(key, 1), 'cpart:' + key, 12, true);
-                // the pick's name a moment after it changed
-                const an = this.cAnim && this.cAnim[key], age = an ? now - an.t : Infinity;
-                if (age < PART_NAME_MS) {
-                    moving = true;
-                    const a = age < PART_NAME_MS - 300 ? 1 : (PART_NAME_MS - age) / 300;
-                    const name = this.optLabel(key, this.draft[key]), nw = cv.textWidth(name, 17, { font: B, literal: true }) + 30;
-                    cv.roundRect(x + (w - nw) / 2, y + h / 2 - 17, nw, 34, 17, A('#000000', 0.78 * a));
-                    cv.text(name, x + w / 2, y + h / 2 + 7, 17, A(C.accSoft, a), { font: B, align: 'center', literal: true });
-                }
             });
         } else this.picture(cv, v, 'hero', gx, gy, pw, ph, 18);
         if (moving) setTimeout(() => this.kick(), 16);

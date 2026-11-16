@@ -34,6 +34,10 @@
 
 <p align="center"><img src="docs/images/zeiger-peaks.png" width="900" alt="The Peaks theme"></p>
 
+**Ember**: an old BMW at night in a field, its cabin glowing red; the speed with a hairline rev line that turns amber and red, the gear and drive mode, range, clock and outside temperature, in a warm white above the car.
+
+<p align="center"><img src="docs/images/zeiger-ember.png" width="900" alt="The Ember theme"></p>
+
 **Map Mist**: the phone's map (through waze-on-cluster) in the middle of Mist's photo.
 
 <p align="center"><img src="docs/images/zeiger-map-mist.png" width="900" alt="The Map Mist theme"></p>

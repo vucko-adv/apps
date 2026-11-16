@@ -183,6 +183,16 @@ const THEMES = {
         bg: [1, 1, 1, 255], panel: [12, 16, 24, 255], line: [244, 238, 244, 255], head: [176, 178, 190, 255],
         ink: [1, 1, 1, 255], accent: [255, 106, 85, 255], well: [12, 16, 24, 255],
     },
+    // Ember (layout ember.json, Zeiger 0.42.0): an old BMW at night in a field, its cabin lit red; warm white and a warm grey
+    ember: {
+        name: 'Ember',
+        fg: [242, 228, 216, 255], dim: [198, 172, 154, 255], track: [70, 44, 36, 255], arc: [255, 62, 46, 255],
+        glow: 0, stripe: false,
+        bar: { low: [242, 228, 216], mid: [255, 176, 80], high: [255, 62, 46], midAt: 'shift' },
+        rev: { from: [198, 172, 154], to: [242, 228, 216] },
+        bg: [1, 1, 1, 255], panel: [20, 10, 8, 255], line: [242, 228, 216, 255], head: [198, 172, 154, 255],
+        ink: [1, 1, 1, 255], accent: [255, 62, 46, 255], well: [20, 10, 8, 255],
+    },
     // Map Mist (layout map_mist.json, Zeiger): Map's readouts round the phone's map over Mist's photo, Mist's colours
     map_mist: {
         name: 'Map Mist',
