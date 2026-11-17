@@ -161,7 +161,9 @@
  *             amber); "zoneTrack": [r, g, b], an unlit normal segment over a face drawn in a zone colour, and every
  *             unlit yellow or red one in its colour at "zoneDark" (0.25), opaque, so the face's own dark orange and red
  *             never show where the zones moved (the cold-engine guard). "zoneFaint": true (Zeiger 0.33.0, Peaks' hairline):
- *             every unlit yellow and red segment in its zone's colour at "dim" opacity, ahead of the rpm, always.
+ *             every unlit yellow and red segment in its zone's colour at "dim" opacity, ahead of the rpm, always; a list
+ *             ([1]: Vintage, 0.50.4) only those zones (its face has no yellow ghost dots: an unlit segment of the
+ *             picture's own yellow showed the face's cyan, the cold engine's lower yellow a lone yellow strip before it).
  *             "above": true with measure "redFrom" (Zeiger addition, 0.27.0, VFD's red scale end): lit from where the
  *             red zone starts now (segment i lit while steps[i] >= it).
  *             Measures "econEco" / "econLoad" (Zeiger addition, Vintage Cyan's ECON bar): the engine load (torquePct)
@@ -389,7 +391,15 @@ const STRIP_TOP = 662;
 const STRIP_CUT = [0, STRIP_TOP, 1920, 720 - STRIP_TOP];
 // themes saved under an older name, or removed (Nov 14 2026: Sunrise, Map, Map Underpass, Vintage Amber): the setting
 // reads as the theme in its place now
-const RENAMED = { sunrise: 'dark_moon', sunrise_hills: 'mist', map: 'map_mist', map_underpass: 'map_mist', vintage_amber: 'vintage_green' };
+const RENAMED = { sunrise: 'dark_moon', sunrise_hills: 'ember', peaks: 'ember', map: 'mist', map_underpass: 'mist', map_mist: 'mist', vintage_amber: 'vintage',
+    vintage_green: 'vintage', vintage_cyan: 'vintage', apex_sport: 'apex' };
+// Vintage Green and Vintage Cyan are one theme since Zeiger 0.50.4, its colour the setting vintageColor: a car that had
+// Cyan saved (as its theme, or a drive mode's) keeps cyan until the colour is picked
+const VINTAGE_COLOUR = { vintage_green: 'green', vintage_cyan: 'cyan' };
+// ... and Sunrise and Peaks are photos of Ember since 0.50.4 (emberPhoto)
+const EMBER_PHOTO = { sunrise_hills: 'sunrise', peaks: 'peaks' };
+// a style setting that can follow the drive mode ("auto"): [its pick in SPORT, otherwise] (Apex, Zeiger 0.50.4)
+const BY_MODE = { apexStyle: ['sport', 'clean'] };
 // a "withMap" layout stays this long after the phone's map stops (a map pausing for a moment doesn't switch back and forth)
 const MAP_VARIANT_OFF_MS = 8000;
 
@@ -694,6 +704,7 @@ class HudApp {
         this.noDim = false;              // the layout asks for no night colours (noNightDim)
         this.ownStrip = false;           // the layout ends above BMW's bottom strip itself (ownStrip)
 
+        this._vintageMigrate();
         this._setupVehicleData();
         this.layouts.onChange(() => this._rebuild());
         ctx.settings.onChange((key) => {
@@ -703,6 +714,34 @@ class HudApp {
             else if (LIVE_KEYS.indexOf(key) >= 0) this.widgets.forEach((x) => { x.last = null; });
             else if (QUIET_KEYS.indexOf(key) >= 0) { /* the home-screen widget's, the probe's: not the cluster's */ }
             else if (key !== 'demo') this._rebuildSoon(); else this._status();
+        });
+    }
+
+    /** Once, after an update to 0.50.4: a theme or drive mode saved as Vintage Green or Cyan becomes Vintage, its colour
+     *  the one it had (the first found: the theme, then Comfort, Sport, Eco). Only where this app has those settings. */
+    _vintageMigrate() {
+        const st = this.ctx.settings;
+        const themes = ['hudLayout', 'inComfort', 'inSport', 'inEco'].filter((k) => st.item(k));
+        const keys = st.item('vintageColor') ? themes.filter((k) => VINTAGE_COLOUR[st.get(k)]) : [];
+        if (keys.length) this._guard('vintage migrate', () => {
+            st.set('vintageColor', VINTAGE_COLOUR[st.get(keys[0])]);
+            keys.forEach((k) => st.set(k, 'vintage'));
+            this.log.info('Vintage Green / Cyan are one theme now: ' + keys.join(', ') + ' set to Vintage, ' + st.get('vintageColor'));
+        });
+        // Apex and Apex Sport too (0.50.4): Apex in the Sport style, with Sport's own Customise picks (apexSport*, still
+        // in the saved settings) moved to Apex's
+        const sk = st.item('apexStyle') ? themes.filter((k) => st.get(k) === 'apex_sport') : [];
+        if (sk.length) this._guard('apex migrate', () => {
+            st.set('apexStyle', 'sport');
+            ['Mid', 'Big', 'Left'].forEach((e) => { const v = st.get('apexSport' + e); if (v !== undefined && st.item('apex' + e)) st.set('apex' + e, v); });
+            sk.forEach((k) => st.set(k, 'apex'));
+            this.log.info('Apex and Apex Sport are one theme now: ' + sk.join(', ') + ' set to Apex, style Sport');
+        });
+        const pk = st.item('emberPhoto') ? themes.filter((k) => EMBER_PHOTO[st.get(k)]) : [];
+        if (pk.length) this._guard('ember migrate', () => {
+            st.set('emberPhoto', EMBER_PHOTO[st.get(pk[0])]);
+            pk.forEach((k) => st.set(k, 'ember'));
+            this.log.info('Sunrise and Peaks are photos of Ember now: ' + pk.join(', ') + ' set to Ember, ' + st.get('emberPhoto'));
         });
     }
 
@@ -909,7 +948,8 @@ class HudApp {
                     if (m === this.driveMode && variant === this.driveVariant) return;
                     this.log.info('drive mode ' + MODE_NAME[m] + (variant ? ' ' + variant : '') + ' (' + raw + ')');
                     this.driveMode = m; this.driveVariant = variant;
-                    if (this._layoutName() !== this.activeName) this._rebuild(); else this._status();
+                    const lk = this.modeLook ? Object.keys(BY_MODE).find((k) => this.setting(k) === 'auto') : null;
+                    if (this._layoutName() !== this.activeName || (lk && this._look(lk) !== this.modeLook)) this._rebuild(); else this._status();
                 },
             },
         };
@@ -2414,7 +2454,13 @@ class HudApp {
         this.nightKey = typeof layout.nightSetting === 'string' ? layout.nightSetting : null;
         if (this.wx) this.wx.want(layout.wantsWeather === true && this.setting('weather') !== false);
         this.layoutSlots = layout.slots || [];
-        this.layoutTheme = layout.theme && THEMES[layout.theme] ? layout.theme : null;
+        // "themeBy": { "setting", "themes": { value: theme } }: the palette by a setting (Vintage's colour, Zeiger 0.50.4)
+        const tb = layout.themeBy && layout.themeBy.themes ? layout.themeBy.themes[this._look(layout.themeBy.setting)] : null;
+        // a style by the drive mode: the look it was built with, so a change of mode rebuilds it (the mode handler)
+        const mk = layout.themeBy && BY_MODE[layout.themeBy.setting] && this.setting(layout.themeBy.setting) === 'auto' ? layout.themeBy.setting : null;
+        this.modeLook = mk ? this._look(mk) : '';
+        const lt = tb || layout.theme;
+        this.layoutTheme = lt && THEMES[lt] ? lt : null;
         this.themeName = this._themeName();
         this.theme = THEMES[this.themeName] || THEMES.classic;
         // "noNightDim": a layout whose face is a picture (picture widgets keep their colours) stays as drawn at
@@ -2451,7 +2497,11 @@ class HudApp {
             plan = this._plan(shown, maxPx, waste);
         }
         // the sheets' boxes the same whatever the Customise picks (0.37.0), so a pick keeps every layer (_steadySheets)
-        this._steadySheets(plan, layout.widgets.filter((w) => w.toggle && !this._toggleOn(w.toggle) && !(w.themes && w.themes.indexOf(this.themeName) < 0)));
+        // (not the other look of a "themeBy" theme: Vintage's other colour, Apex's other style; a change there is rare and
+        // may show the curtain, where keeping room for both cost Apex 4 MiB of pixel memory)
+        const tk = layout.themeBy && layout.themeBy.setting;
+        const otherLook = (w) => !!tk && [].concat(w.toggle).some((t) => typeof t === 'string' && t.indexOf(tk + '=') === 0 && !this._toggleOn(t));
+        this._steadySheets(plan, layout.widgets.filter((w) => w.toggle && !this._toggleOn(w.toggle) && !otherLook(w) && !(w.themes && w.themes.indexOf(this.themeName) < 0)));
         // another theme: the old one held until the new one shows, if both fit; else the curtain over the change
         let hold = (change || sunFlip) && this._canHold(old, plan, oldPx);
         if (change && !hold) this._guard('curtain', () => this._curtainUp());
@@ -2725,8 +2775,15 @@ class HudApp {
         // "@night": the sun is down (Zeiger 0.43.0: a photo theme's day and night pictures); the theme check rebuilds when it flips
         if (k === '@night') { this.sunToggle = true; const n = this._layoutNight(); return not ? !n : n; }
         // "key=a|b": the setting is one of those (Zeiger 0.36.0)
-        const on = eq > 0 ? k.slice(eq + 1).split('|').indexOf(String(this.setting(k.slice(0, eq)))) >= 0 : this.setting(k) !== false;
+        const on = eq > 0 ? k.slice(eq + 1).split('|').indexOf(String(this._look(k.slice(0, eq)))) >= 0 : this.setting(k) !== false;
         return not ? !on : on;
+    }
+
+    /** A setting as the theme reads it: a style on "auto" (BY_MODE, Apex's) is the drive mode's (Sport in SPORT and
+     *  SPORT+, the other otherwise; the car's mode not seen yet: the other). The rest as they are. */
+    _look(key) {
+        const v = this.setting(key), m = BY_MODE[key];
+        return m && v === 'auto' ? (this.driveMode === 'sport' ? m[0] : m[1]) : v;
     }
 
     /** A widget: on its own layer (sheet null: an effect, or an image widget with "own": true), or a member of a sheet. */
@@ -3097,7 +3154,11 @@ class HudApp {
     _needleTick() {
         if (!this.client.ready || !this.widgets.size) return;
         const now = Date.now();
-        this.widgets.forEach((x) => { if (x.w.spring && x.w.type === 'needle') this._guard('widget ' + x.w.id, () => this._updateNeedle(x, now, false)); });
+        this.widgets.forEach((x) => {
+            if (!x.w.spring) return;
+            if (x.w.type === 'needle') this._guard('widget ' + x.w.id, () => this._updateNeedle(x, now, false));
+            else if (x.w.type === 'segments') this._guard('widget ' + x.w.id, () => this._updateSegments(x, now, false));
+        });
     }
 
     /**
@@ -3185,24 +3246,30 @@ class HudApp {
      * play the turn over that long instead of jumping (cluster-render animations; not drawn by the bench).
      * No value (no data): the needle rests at the table's first point.
      */
-    _updateNeedle(x, now, force) {
-        const w = x.w, table = w.table;
-        if (!Array.isArray(table) || !table.length) return;
-        const raw = this._needleValue(w.measure);
-        const dt = x.t ? Math.min(500, now - x.t) : 0;
+    /**
+     * x.value following raw: through the widget's filter ("lag" ms, 120), or on its "spring" { f: Hz, z: damping }, as
+     * a mechanical gauge (pulled to the value; z under 1 swings a little past and settles), in 4 ms steps. null: none.
+     */
+    _follow(x, raw, now) {
+        const w = x.w, dt = x.t ? Math.min(500, now - x.t) : 0;
         x.t = now;
         const lag = isNum(w.lag) && w.lag > 0 ? w.lag : 120, sp = w.spring;
         if (!isNum(raw)) { x.value = null; x.vel = 0; }
         else if (!isNum(x.value)) { x.value = raw; x.vel = 0; }
         else if (sp) {
-            // a needle on a spring, as a mechanical gauge: pulled to the value at "f" Hz, "z" damping (1: no overshoot,
-            // less: it swings past a little and settles); in 4 ms steps, steady at any tick
             const om = 2 * Math.PI * (sp.f || 6), z = isNum(sp.z) ? sp.z : 0.7;
             for (let t = dt / 1000; t > 0; t -= 0.004) {
                 const h = Math.min(t, 0.004), a = om * om * (raw - x.value) - 2 * z * om * (x.vel || 0);
                 x.vel = (x.vel || 0) + a * h; x.value += x.vel * h;
             }
         } else x.value = x.value + (raw - x.value) * (1 - Math.exp(-dt / lag));
+        return x.value;
+    }
+
+    _updateNeedle(x, now, force) {
+        const w = x.w, table = w.table;
+        if (!Array.isArray(table) || !table.length) return;
+        this._follow(x, this._needleValue(w.measure), now);
         const v = isNum(x.value) ? x.value : table[0][0];
         let deg = table[table.length - 1][1];
         if (v <= table[0][0]) deg = table[0][1];
@@ -3307,16 +3374,22 @@ class HudApp {
      */
     _updateZone(x, now, force) {
         const w = x.w, segs = w.segs, steps = w.steps, p = x.pic, z = this._zoneInfo(x), zn = this._zones();
-        const v = this.testUntil > now ? Number.MAX_VALUE : this.rpmF;
+        // "spring" (Apex, Zeiger 0.50.4): the band follows the rpm as the car sends it on a spring, 60 times a second
+        // (_needleTick), not the tach's 120 ms filter at the tick's 20
+        const sv = w.spring ? this._follow(x, this._needleValue('rpm'), now) : this.rpmF;
+        const test = this.testUntil > now, v = test ? Number.MAX_VALUE : sv;
         let n = 0;
         if (isNum(v)) while (n < segs.length && n < steps.length && v >= steps[n]) n++;
         const zoneOf = (i) => (i >= steps.length ? z.own[i] : steps[i] >= zn.red ? 2 : steps[i] >= zn.yellow ? 1 : 0);
-        const st = segs.map((s, i) => (i < n ? 1 : 0) + 2 * zoneOf(i));
+        // "head": rpm: the lit segments that close behind the front burn brighter, whitest at the front (four steps)
+        const hd = !test && isNum(w.head) && w.head > 0 && isNum(v) ? w.head : 0;
+        const headOf = (i) => (hd && i < n && i < steps.length && v - steps[i] < hd ? 1 + Math.min(3, Math.floor((1 - (v - steps[i]) / hd) * 4)) : 0);
+        const st = segs.map((s, i) => (i < n ? 1 : 0) + 2 * zoneOf(i) + 8 * headOf(i));
         const old = x.zoneSt || [];
         const rects = [], parts = [];
         st.forEach((s, i) => {
             if (!force && old[i] === s) return;
-            const [sx, sy, sw, sh] = segs[i], lit = s & 1, k = s >> 1;
+            const [sx, sy, sw, sh] = segs[i], lit = s & 1, k = (s >> 1) & 3, hot = s >> 3;
             const b = Buffer.alloc(sw * sh * 4, 0);
             // "zoneTrack": unlit, an opaque dark segment in its zone's colour (normal: the track), over the face's own
             if (z.track && !lit && (k > 0 || z.own[i] !== 0)) {
@@ -3331,7 +3404,7 @@ class HudApp {
                 }
             } else if (lit && k === z.own[i] && !z.given[k]) {
                 for (let r = 0; r < sh; r++) p.rgba.copy(b, r * sw * 4, ((sy + r) * w.w + sx) * 4, ((sy + r) * w.w + sx + sw) * 4);
-            } else if (lit || (k > 0 && (k !== z.own[i] || w.zoneFaint === true) && z.dim > 0)) {
+            } else if (lit || (k > 0 && (k !== z.own[i] || w.zoneFaint === true || (Array.isArray(w.zoneFaint) && w.zoneFaint.indexOf(k) >= 0)) && z.dim > 0)) {
                 const c = z.col[k], alpha = lit ? 1 : z.dim;
                 for (let r = 0; r < sh; r++) {
                     const o = ((sy + r) * w.w + sx) * 4;
@@ -3342,6 +3415,14 @@ class HudApp {
                         b[d] = Math.round(c[0] * lum); b[d + 1] = Math.round(c[1] * lum); b[d + 2] = Math.round(c[2] * lum);
                         b[d + 3] = Math.round(a * alpha);
                     }
+                }
+            }
+            // the head: toward white, by its step (the front 85 %)
+            if (lit && hot) {
+                const f = hot * 0.2125;
+                for (let d = 0; d < b.length; d += 4) {
+                    if (!b[d + 3]) continue;
+                    b[d] += Math.round((255 - b[d]) * f); b[d + 1] += Math.round((255 - b[d + 1]) * f); b[d + 2] += Math.round((255 - b[d + 2]) * f);
                 }
             }
             rects.push({ x: sx, y: sy, w: sw, h: sh });

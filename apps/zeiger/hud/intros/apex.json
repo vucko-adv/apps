@@ -1,7 +1,7 @@
 {
  "author": "vucko-adv",
  "copyright": "Copyright (c) 2026 vucko-adv. Zeiger theme artwork.",
- "_about": "Apex: the rev band fills to the red and falls, boost and braking fill and empty, the gear shows N",
+ "_about": "Apex: the rev band fills to the red and falls, the bars fill and empty, the gear shows N (both styles)",
  "ms": 2600,
  "values": {
   "rpm": [

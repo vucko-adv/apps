@@ -8,6 +8,8 @@ Redraws the whole instrument cluster with a hand-drawn theme. Open **Zeiger** fr
 
 ## Vintage Green and Vintage Cyan
 
+**One theme since 0.50.4: Vintage**, the colour a Customise switch (`vintageColor`: green, cyan). `cluster-design/vintage2/merge.js` merges the two builds into `vintage.json` / `vintage_diesel.json`: a widget the same in both colours once, one that differs per colour (toggle `vintageColor=<colour>`), the palette by the layout's `"themeBy"` (shared/hud.js). A car that had Cyan keeps cyan (hud.js `_vintageMigrate`). The rev band's yellow zone is drawn faint while unlit (`"zoneFaint": [1]`): the face has no yellow ghost dots, so with a cold engine's lower yellow zone a lone yellow strip showed before 6000.
+
 An LCD from 1985, drawn in code by `cluster-design/vintage2/build.html` (`?v=green`, `?v=cyan`), one layout in two colourings: Green cream readouts on dark green windows, Cyan cyan fluorescent readouts on dark teal windows. Slanted digits over ghost 8s, P R N D S M and the gear, oil / water / fuel bars under pixel icons, scanlines, and a 2.5 s self-test at power-on.
 
 - **Rpm:** a dot-matrix band (286 dot columns, ghost dots unlit, orange from 5200, red from about 6750) over a tick scale with dot-matrix numbers.
@@ -31,6 +33,8 @@ A fluorescent display in the manner of the late-80s Japanese digital dashes, dra
 - **Engine:** the coolant block and the orange pump are `segments` with `"one": true` (only the last segment reached is lit). The bloom is drawn into the fonts and pictures, so the colour theme's glow stays 0. The face is cut into 8 regions, each a z group of its own: 20 layers on 3 connections and 4.5 MiB of cluster-render's 16 MiB (with the start animation's hidden SYSTEM CHECK text).
 
 ## Apex and Apex Sport
+
+**One theme since 0.50.4: Apex**, the style a Customise switch (`apexStyle`: clean, sport, or auto: Sport in the car's SPORT and SPORT+, Clean otherwise; hud.js `BY_MODE`, `_look`). Both styles share the Customise picks (`apexBig`, `apexLeft`, `apexMid`; Sport's `apexSport*` moved over once) and the band's height (Sport's was thicker). `cluster-design/apex/merge.js` merges the builds as Vintage's. The rev band follows the rpm on a spring at 60 Hz (`"spring"`), the last 300 rpm of the lit band burning toward white (`"head"`), and the shift flash is on both styles. The other style's widgets keep no room in the sheets, so a style change may show the curtain (keeping it cost 4 MiB of pixel memory).
 
 A racing cluster, drawn in code by `cluster-design/apex/build.html` (`?v=sport` for Apex Sport) from the same drawing as its design pictures (`draw.js`).
 
@@ -57,6 +61,8 @@ Three classic round gauges set in a leather dash, drawn in code by `cluster-desi
 
 ## Ember (0.42.0)
 
+**Sunrise and Peaks are Ember's photos since 0.50.4**: Customise's Photo switch (`emberPhoto`: ember, sunrise, peaks) shows Ember's readouts over Sunrise's sky and hills or Peaks' night and day pictures (their installed, compressed pictures), each in its own palette (`"themeBy"`: ember, dark_moon, peaks). A car that had Sunrise or Peaks gets Ember with that photo. Sunrise's weather readouts went with its layout.
+
 A photo theme (`cluster-design/ember/build.html`, built on Peaks' builder): an old BMW saloon at night in a field of tall grass, its cabin lit red (a photo the user sent). The band of the photo shown puts the car in the lower middle (rows 362-586); above it, in the dark, the speed with km/h and a hairline rev line (amber, then the cabin's red from the rev range), the selector letter with the gear and the drive mode on the left, range and the clock with the outside temperature on the right, in a warm white (242, 228, 216, a little dimmer than Peaks' for the night) and a warm grey. The photo goes up ETC2-compressed, its bottom faded to black from row 600 (2.3 MiB), and it starts with the photo themes' soft fade (`cluster-design/intro/make_intros.js`). Shaped with the design skill's critique (dimmer white, red kept for the rev line's top end).
 
 ### Customise (0.45.0, a beta)
@@ -68,6 +74,8 @@ The first photo theme with Customise, as Apex's (preview, Apply). **Font** (`emb
 The limit the front camera reads (`de.bmw.dass.TrafficSignRecognition`, broadcast TrafficSignRecognition, instance 1; found by the probe on a G20): `presentClassLimitSpeed` in 5 km/h steps (10 at a 50 sign, the one checked so far), 0 / 254 / 255 no sign. shared/hud.js keeps it as `speedLimit` (logged on each change with the raw value) for `{{speedLimit}}` and a segments' or needle's `measure`. Ember shows it right of the speed (`ember_limit`: a thin warm white ring round a dark middle, a one-segment bar with `measure: speedLimit` so it shows only with a limit; the number in Barlow Semi Condensed SemiBold 25 px, `p_lim`).
 
 ## Peaks (0.33.0)
+
+Since 0.50.4 a photo of Ember (above), no longer a theme of its own; its pictures stay.
 
 A minimal theme (`cluster-design/peaks/build.html`, drafted in `design.html`) on a photo of sunlit ridges under a deep blue sky (since 0.33.1; 0.33.0 had a peak against a pale evening sky in a dark ink), darkened a little toward the top, over the whole panel. The photo came from a friend of the author. Little on it, in white and a soft grey (colour theme `peaks`): the speed (Barlow Medium 150, font `p_speed`) with km/h and a hairline rev line under it, the selector letter with the gear (`{{gearInD}}`) and the drive mode on the left, range and the clock with the outside temperature on the right. The rev line is a `segments` bar drawn white and coloured by the engine (`zoneColors`: the ink, the yellow and the red zone); `"zoneFaint"` (new) shows the yellow and red zones faintly ahead of the rpm all the time, and they move with the cold-engine guard. Its start animation is the soft fade of the photo themes.
 
@@ -87,13 +95,9 @@ Peaks' photo goes to the cluster ETC2-compressed: 1.32 MiB of cluster-render's p
 
 Dark Moon's readouts and weather over a photo (`cluster-design/underpass` and `cluster-design/mist`, built by `cluster-design/photo/photo_theme.js`): soft scrims behind the readouts so they read on it, and black wherever BMW's gear box lands.
 
-## Map Mist
-
-The phone's map (waze-on-cluster) in a window in the middle of Mist's photo (`cluster-design/map_mist`): the speed on the left, the selector and drive mode on the right, range and coolant at the bottom with a small grey clock under the map between them.
-
 ## Removed themes
 
-A car set to a removed theme shows the nearest one left (shared/hud.js `RENAMED`): Sunrise shows Mist, Map and Map Underpass show Map Mist, Vintage Amber shows Vintage Green. The engine features only they used stay in `shared/hud.js`: `"ownStrip"`, `"fixed"`, `"withMap"`.
+A car set to a removed theme shows the nearest one left (shared/hud.js `RENAMED`): Sunrise shows Mist; Map, Map Underpass and Map Mist (removed in 0.50.4) show Mist; Vintage Amber, Vintage Green and Vintage Cyan show Vintage, Apex Sport shows Apex (0.50.4: one theme each, the colour or style a Customise pick). The engine features only they used stay in `shared/hud.js`: `"ownStrip"`, `"fixed"`, `"withMap"`.
 
 ## Home-screen widget
 
@@ -150,7 +154,7 @@ The bench shows both (bench/README.md): the hang button (`POST /hang`) and `stal
 - **Themes:** a gallery. The theme looked at is big in the middle, with its neighbours beside it, and under it the groups (0.44.0: VINTAGE, SPORT, PHOTO, `THEME_GROUPS` in page.js; a theme in none goes to MORE): a chip each with a dot per theme, the one looked at lit. A tap on a group goes to the theme last looked at in it (else the one in use, else its first); going through the themes runs on from a group's end into the next. A tap left or right of the big card, a finger swiped sideways (the kit's `ctx.onSwipe`, a Zeiger addition) or the iDrive controller go through them; the arrows at the screen's edges only show the way. Since 0.30.0 those taps don't light up (the kit's quiet targets), and **a tap on the big card puts that theme on the cluster**: the card lights up in orange with ON THE CLUSTER for a moment. The big pictures of the last 4 themes looked at are kept, and the neighbours' are sent ahead, so swiping no longer waits for a 2 MB picture. **BMW's own cluster** is not a card but a switch in the bottom right corner: on, BMW's own cluster shows (for the drive mode being set, while the theme changes with it); off, the theme from before comes back. Looking changes nothing on the cluster: **Use this theme** (or **Use for COMFORT / SPORT / ECO PRO**) does. Under it, **Change with the drive mode**, and with it on, the theme of each drive mode: tap one to give it another theme. The car's drive mode now is marked NOW.
 - **About (0.31.0):** the credits, and on the right the author's card: a photo (`hud/pictures/author_photo.json`, baked by `cluster-design/author/bake.html`) and the Instagram, @vucko.adv / instagram.com/vucko.adv.
 - **Settings:** groups on the left, each with what it is set to now; the open group's rows on the right, a switch or `- value +`. The groups:
-  - **Cluster:** start animation, today's weather, the phone's map in Map Mist, theme position (px to the right, 0 by default since 0.30.1; Vintage Green and Cyan carry their own -12 in the layout, `"shiftX"`, so at 0 every theme sits where it should). **Night colours** left in 0.31.1: every Zeiger theme's face is a picture (`"noNightDim"`), so it changed nothing.
+  - **Cluster:** start animation, today's weather, theme position (px to the right, 0 by default since 0.30.1; Vintage Green and Cyan carry their own -12 in the layout, `"shiftX"`, so at 0 every theme sits where it should). **Night colours** left in 0.31.1: every Zeiger theme's face is a picture (`"noNightDim"`), so it changed nothing.
   - **BMW's cluster:** hide BMW's black boxes (test), leave BMW's bottom strip clear (the theme cut above it, not squeezed, since 0.32.0).
   - **Warnings:** oil and coolant temperature and boost; over its limit, the value flashes red on the cluster.
   - **Rev range:** engine (petrol or diesel), where the red and the yellow zones start, the shift point before the red, shift flash, cold-engine rev guard.

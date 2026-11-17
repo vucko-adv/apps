@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "Concours, livelier: its needles move like a real gauge's, on a spring, sixty times a second, so the rev counter drops at a gear change at once; the middle dial keeps only the M badge (the clock and range will find another place); Customise now shows every pick, and Lighting on the left dial. Since 0.48: Concours, the classic gauges, and the speed limit your car's camera reads, on Ember.",
-  "version": "0.50.3",
+  "whatsNew": "Fewer themes, more choice: Vintage is one theme in green or cyan, Apex one in Clean or Sport (or Auto, Sport in the SPORT mode), and Ember takes Sunrise's and Peaks' photos; Customise shows the pick. Apex's rev band fills smoothly with a bright head and flashes toward the shift point. Map Mist is gone. Vintage's cold-engine yellow no longer shows as a lone strip. Your saved themes move over by themselves.",
+  "version": "0.50.4",
   "vendor": "custom",
   "loggingId": "OAZG",
   "maxDiskUsage": 67108864,
@@ -167,19 +167,15 @@
       "key": "hudLayout",
       "label": "Theme (when not by drive mode)",
       "type": "choice",
-      "default": "vintage_green",
+      "default": "vintage",
       "options": [
         [
           "off",
           "Off (BMW's own cluster)"
         ],
         [
-          "vintage_green",
-          "Vintage Green"
-        ],
-        [
-          "vintage_cyan",
-          "Vintage Cyan"
+          "vintage",
+          "Vintage"
         ],
         [
           "vfd",
@@ -190,14 +186,6 @@
           "Apex"
         ],
         [
-          "apex_sport",
-          "Apex Sport"
-        ],
-        [
-          "map_mist",
-          "Map Mist"
-        ],
-        [
           "dark_moon",
           "Dark Moon"
         ],
@@ -206,16 +194,8 @@
           "Underpass"
         ],
         [
-          "sunrise_hills",
-          "Sunrise"
-        ],
-        [
           "mist",
           "Mist"
-        ],
-        [
-          "peaks",
-          "Peaks"
         ],
         [
           "ember",
@@ -245,19 +225,15 @@
       "key": "inComfort",
       "label": "In Comfort",
       "type": "choice",
-      "default": "vintage_green",
+      "default": "vintage",
       "options": [
         [
           "off",
           "Off (BMW's own cluster)"
         ],
         [
-          "vintage_green",
-          "Vintage Green"
-        ],
-        [
-          "vintage_cyan",
-          "Vintage Cyan"
+          "vintage",
+          "Vintage"
         ],
         [
           "vfd",
@@ -268,14 +244,6 @@
           "Apex"
         ],
         [
-          "apex_sport",
-          "Apex Sport"
-        ],
-        [
-          "map_mist",
-          "Map Mist"
-        ],
-        [
           "dark_moon",
           "Dark Moon"
         ],
@@ -284,16 +252,8 @@
           "Underpass"
         ],
         [
-          "sunrise_hills",
-          "Sunrise"
-        ],
-        [
           "mist",
           "Mist"
-        ],
-        [
-          "peaks",
-          "Peaks"
         ],
         [
           "ember",
@@ -309,19 +269,15 @@
       "key": "inSport",
       "label": "In Sport",
       "type": "choice",
-      "default": "vintage_green",
+      "default": "vintage",
       "options": [
         [
           "off",
           "Off (BMW's own cluster)"
         ],
         [
-          "vintage_green",
-          "Vintage Green"
-        ],
-        [
-          "vintage_cyan",
-          "Vintage Cyan"
+          "vintage",
+          "Vintage"
         ],
         [
           "vfd",
@@ -332,14 +288,6 @@
           "Apex"
         ],
         [
-          "apex_sport",
-          "Apex Sport"
-        ],
-        [
-          "map_mist",
-          "Map Mist"
-        ],
-        [
           "dark_moon",
           "Dark Moon"
         ],
@@ -348,16 +296,8 @@
           "Underpass"
         ],
         [
-          "sunrise_hills",
-          "Sunrise"
-        ],
-        [
           "mist",
           "Mist"
-        ],
-        [
-          "peaks",
-          "Peaks"
         ],
         [
           "ember",
@@ -373,19 +313,15 @@
       "key": "inEco",
       "label": "In Eco Pro",
       "type": "choice",
-      "default": "vintage_green",
+      "default": "vintage",
       "options": [
         [
           "off",
           "Off (BMW's own cluster)"
         ],
         [
-          "vintage_green",
-          "Vintage Green"
-        ],
-        [
-          "vintage_cyan",
-          "Vintage Cyan"
+          "vintage",
+          "Vintage"
         ],
         [
           "vfd",
@@ -396,14 +332,6 @@
           "Apex"
         ],
         [
-          "apex_sport",
-          "Apex Sport"
-        ],
-        [
-          "map_mist",
-          "Map Mist"
-        ],
-        [
           "dark_moon",
           "Dark Moon"
         ],
@@ -412,16 +340,8 @@
           "Underpass"
         ],
         [
-          "sunrise_hills",
-          "Sunrise"
-        ],
-        [
           "mist",
           "Mist"
-        ],
-        [
-          "peaks",
-          "Peaks"
         ],
         [
           "ember",
@@ -432,12 +352,6 @@
           "Concours"
         ]
       ]
-    },
-    {
-      "key": "mapInTheme",
-      "label": "Show the phone's map (waze-on-cluster) in Map Mist",
-      "type": "bool",
-      "default": true
     },
     {
       "key": "weather",
@@ -830,6 +744,26 @@
       ]
     },
     {
+      "key": "apexStyle",
+      "label": "Apex: style",
+      "type": "choice",
+      "default": "clean",
+      "options": [
+        [
+          "clean",
+          "Clean"
+        ],
+        [
+          "sport",
+          "Sport"
+        ],
+        [
+          "auto",
+          "Auto (by drive mode)"
+        ]
+      ]
+    },
+    {
       "key": "apexMid",
       "label": "Apex: bottom middle",
       "type": "choice",
@@ -906,78 +840,22 @@
       ]
     },
     {
-      "key": "apexSportMid",
-      "label": "Apex Sport: bottom middle",
+      "key": "emberPhoto",
+      "label": "Ember: photo",
       "type": "choice",
-      "default": "clock",
+      "default": "ember",
       "options": [
         [
-          "clock",
-          "Clock"
+          "ember",
+          "Ember"
         ],
         [
-          "mbadge",
-          "M badge"
+          "sunrise",
+          "Sunrise"
         ],
         [
-          "none",
-          "Empty"
-        ]
-      ]
-    },
-    {
-      "key": "apexSportBig",
-      "label": "Apex Sport: big number",
-      "type": "choice",
-      "default": "speed",
-      "options": [
-        [
-          "speed",
-          "Speed"
-        ],
-        [
-          "rpm",
-          "Rpm"
-        ],
-        [
-          "none",
-          "Empty"
-        ]
-      ]
-    },
-    {
-      "key": "apexSportLeft",
-      "label": "Apex Sport: left block",
-      "type": "choice",
-      "default": "boostBrake",
-      "options": [
-        [
-          "boostBrake",
-          "Boost, brake"
-        ],
-        [
-          "oilWater",
-          "Oil, water"
-        ],
-        [
-          "intakeBoost",
-          "Intake, boost"
-        ],
-        [
-          "gForce",
-          "Accel, brake g"
-        ],
-        [
-          "torquePower",
-          "Torque, power"
-        ],
-        [
-          "tyres",
-          "Tyres"
-        ],
-        [
-          "none",
-          "Empty"
+          "peaks",
+          "Peaks"
         ]
       ]
     },
@@ -1018,6 +896,22 @@
         [
           "mbadge",
           "M badge"
+        ]
+      ]
+    },
+    {
+      "key": "vintageColor",
+      "label": "Vintage: colour",
+      "type": "choice",
+      "default": "green",
+      "options": [
+        [
+          "green",
+          "Green"
+        ],
+        [
+          "cyan",
+          "Cyan"
         ]
       ]
     },

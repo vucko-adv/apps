@@ -34,29 +34,11 @@ const C = {
 };
 const A = G.withAlpha;
 const MODES = [['inComfort', 'COMFORT', 'comfort'], ['inSport', 'SPORT', 'sport'], ['inEco', 'ECO PRO', 'eco']];
-const ABOUT = {
-    vintage_green: 'An LCD from 1985 · cream on dark green · turbo and econ',
-    vintage_cyan: 'An LCD from 1985 · cyan on dark teal · turbo and econ',
-    vfd: 'A late-80s fluorescent display · mint on black',
-    apex: 'A racing cluster · rev band, boost and braking',
-    apex_sport: 'Apex made for SPORT · red glow and shift flash',
-    dark_moon: 'A sunrise seen from orbit · today\'s weather',
-    underpass: 'A photo · low sun on a tiled wall · today\'s weather',
-    mist: 'A photo · a misty valley · today\'s weather',
-    peaks: 'Ridges under a deep blue sky · minimal',
-    ember: 'An old BMW at night, its cabin glowing red',
-    concours: 'Classic gauges in a leather dash · pearl and gold · lit after dark',
-    sunrise_hills: 'Hills at sunrise · today\'s weather',
-    map_mist: 'The phone\'s map in the middle of Mist\'s photo',
-    off: 'No theme: BMW\'s own cluster shows',
-};
-
 /* ---------- the settings, in groups ---------- */
 const GROUPS = [
     { name: 'Cluster', about: 'How the themes show on the cluster.', rows: [
         ['startAnim', 'Start animation', 'when a theme first shows, never while moving'],
         ['weather', 'Today\'s weather', 'Dark Moon, Sunrise, Underpass, Mist · needs the internet uplink'],
-        ['mapInTheme', 'The phone\'s map in Map Mist', 'through waze-on-cluster'],
         ['shiftX', 'Theme position', 'to the right of BMW\'s own cluster'],
     ] },
     { name: 'BMW\'s cluster', about: 'What BMW draws under and over the themes.', rows: [
@@ -103,13 +85,19 @@ const GROUPS = [
 // Customise (Zeiger 0.34.0): the themes whose places can show other things, the setting prefix and the rows (the
 // setting key's ending, label, the line under it); the layouts show a widget for its pick ("toggle": "<key>=<value>")
 const CUSTOM = {
-    apex: { key: 'apex', rows: [['Big', 'Big number', 'in the middle'], ['Left', 'Left block', 'two bars, the tyres, or empty'], ['Mid', 'Bottom middle', 'where the clock is']] },
-    apex_sport: { key: 'apexSport', rows: [['Big', 'Big number', 'in the middle'], ['Left', 'Left block', 'two bars, the tyres, or empty'], ['Mid', 'Bottom middle', 'where the clock is']] },
+    // 0.50.4: Apex and Apex Sport in one theme, the style a switch (the same picks for both)
+    apex: { key: 'apex', rows: [['Big', 'Big number', 'in the middle'], ['Left', 'Left block', 'two bars, the tyres, or empty'], ['Mid', 'Bottom middle', 'where the clock is'], ['Style', 'Style', 'clean, or sport with the red glow']], switch: 'Style', switchLabel: 'Style' },
     // 0.45.0, a beta: the photo themes' Customise starts here (the readouts' font, the M badge under the car)
-    ember: { key: 'ember', beta: true, rows: [['Font', 'Font', 'the readouts\' lettering'], ['Mid', 'Bottom middle', 'under the car']] },
+    ember: { key: 'ember', beta: true, rows: [['Font', 'Font', 'the readouts\' lettering'], ['Mid', 'Bottom middle', 'under the car'], ['Photo', 'Photo', 'Ember, Sunrise or Peaks']], switch: 'Photo', switchLabel: 'Photo' },
     // 0.49.0: the rev counter's face, pearl or black (lit as the side dials)
-    concours: { key: 'concours', rows: [['Face', 'Middle dial', 'pearl, or dark green as the others'], ['Mids', 'Small speed numbers', '30, 90, 150 .. on the speedometer'], ['Light', 'Lighting', 'day or night look, or by the sun']] },
+    concours: { key: 'concours', rows: [['Face', 'Middle dial', 'pearl, or dark green as the others'], ['Mids', 'Small speed numbers', '30, 90, 150 .. on the speedometer'], ['Light', 'Lighting', 'day or night look, or by the sun']], switch: 'Light' },
+    // 0.50.4: Vintage Green and Vintage Cyan in one theme, the colour a switch
+    vintage: { key: 'vintage', rows: [['Color', 'Colour', 'cream on green, or cyan on teal']], switch: 'Color', switchLabel: 'Colour' },
 };
+// a theme whose gallery picture follows a setting: previews/<theme>-<value>.json when there is one (Vintage's colour)
+const PREVIEW_BY = { vintage: 'vintageColor', apex: 'apexStyle', ember: 'emberPhoto' };
+// ... and its big card goes through them by itself: each held this long, then faded into the next (ms)
+const CYCLE_HOLD = 2200, CYCLE_FADE = 600;
 // Zeiger is in beta (0.45.0): a BETA mark in the header, and on a Customise that is newer still ("beta" above)
 const BETA = true;
 // the slot watch (BMW's cluster group): while it is on, the group shows only its switch, the rest is the watch
@@ -118,9 +106,9 @@ const WATCH_ROW = 64, WATCH_LH = 22;
 // goes to MORE at the end, so a new theme shows before it is given a group. Groups with no theme don't show.
 const THEME_GROUPS = [
     ['CLASSIC', ['concours']],
-    ['VINTAGE', ['vintage_green', 'vintage_cyan', 'vfd']],
-    ['SPORT', ['apex', 'apex_sport']],
-    ['PHOTO', ['map_mist', 'dark_moon', 'underpass', 'sunrise_hills', 'mist', 'peaks', 'ember']],
+    ['VINTAGE', ['vintage', 'vfd']],
+    ['SPORT', ['apex']],
+    ['PHOTO', ['dark_moon', 'underpass', 'mist', 'ember']],
 ];
 // the calibration layouts (hudLayout values), for the row in BMW's cluster
 const CALIB = [['', 'Off'], ['grid', 'Grid'], ['mapcal', 'Map frame']];
@@ -201,12 +189,23 @@ function customPreview(theme) {
                 rec.setImage(me, o.w, o.h, px);
                 return { id: me, w: o.w, h: o.h };
             };
-            out = { scale: j.scale, base: img(j.base), keys: {} };
-            Object.keys(j.keys).forEach((k) => {
-                const r = j.keys[k], opts = {};
-                Object.keys(r.opts).forEach((v) => { opts[v] = img(r.opts[v]); });
-                out.keys[k] = { x: r.x, y: r.y, w: r.w, h: r.h, opts, dep: r.dep };
-            });
+            const parts = (src) => {
+                const keys = {};
+                Object.keys(src).forEach((k) => {
+                    const r = src[k], opts = {};
+                    Object.keys(r.opts).forEach((v) => { opts[v] = img(r.opts[v]); });
+                    keys[k] = { x: r.x, y: r.y, w: r.w, h: r.h, opts, dep: r.dep };
+                });
+                return keys;
+            };
+            out = { scale: j.scale, base: img(j.base), keys: parts(j.keys) };
+            // other sets of the whole preview, shown while the draft's alt.key has that value: Concours at night
+            // ("night": its Lighting on Night), Vintage in cyan ("alt": { key, sets: { value: { base, keys } } })
+            const alt = j.alt || (j.night ? { key: j.night.key, sets: { night: j.night } } : null);
+            if (alt && alt.sets) {
+                out.alt = { key: alt.key, sets: {} };
+                Object.keys(alt.sets).forEach((v) => { const s = alt.sets[v]; if (s && s.base) out.alt.sets[v] = { base: img(s.base), keys: parts(s.keys || {}) }; });
+            }
         }
     } catch (e) { out = null; }
     customPics[theme] = out;
@@ -458,21 +457,15 @@ class Page {
             cv.clip(L, cy - 4, R - L, ch + 8);
             if (cv.alpha) cv.alpha(fade);
         }
-        this.picture(cv, this.at, 'hero', cx, cy, cw, ch);
+        if (PREVIEW_BY[this.at] && sp >= 1) this.cycle(cv, this.at, cx, cy, cw, ch);
+        else this.picture(cv, this.at, 'hero', cx, cy, cw, ch);
         // dark enough at the bottom that the picture's own bottom readouts don't show through the theme's name
         cv.gradientRect(cx, cy + ch - 180, cw, 180, [[0, A('#000000', 0)], [0.35, A('#000000', 0.82)], [0.6, A('#000000', 0.95)], [1, A('#000000', 0.97)]]);
         cv.strokeRoundRect(cx, cy, cw, ch, 22, 1, A('#ffffff', 0.12));
-        cv.text(this.name(this.at), cx + 30, cy + ch - 56, 46, C.text, { font: B, literal: true });
-        cv.text(ABOUT[this.at] || '', cx + 30, cy + ch - 22, 21, C.soft, { font: M, literal: true });
+        // the name only (0.50.4: the line under it went, the user: the picture says it)
+        // (0.50.4, the user: the name on the right, Customise on the left, nearer the driver)
+        cv.text(this.name(this.at), cx + cw - 30, cy + ch - 32, 46, C.text, { font: B, align: 'right', literal: true });
         if (this.at === shown) pill(cv, cx + cw - 22, cy + 20, 'ON THE CLUSTER', C.ok);
-        // a theme whose places can show other things: Customise, top left on the card
-        if (CUSTOM[this.at]) {
-            const s = CUSTOM[this.at].beta ? 'CUSTOMISE · BETA' : 'CUSTOMISE', w = cv.textWidth(s, 17, { font: B, spacing: 2, literal: true }) + 56, x = cx + 22, y = cy + 20;
-            cv.roundRect(x, y, w, 40, 20, A('#000000', 0.66));
-            cv.strokeRoundRect(x, y, w, 40, 20, 1.5, A(C.acc, 0.9));
-            cv.text(s, x + w / 2, y + 27, 17, C.accSoft, { font: B, spacing: 2, align: 'center', literal: true });
-            cv.target(x, y, w, 40, () => this.openCustom(this.at), 'customise', 20);
-        }
         // just picked (a tap on the card): the card lights up in the accent, then a frame stays a little longer
         const pk = this.picked && this.picked.v === this.at ? Date.now() - this.picked.t : Infinity;
         if (pk < 1600) {
@@ -483,18 +476,18 @@ class Page {
             cv.roundRect(cx + (cw - sw) / 2, cy + ch / 2 - 34, sw, 68, 34, A('#000000', 0.72 * fa));
             cv.text(s, cx + cw / 2, cy + ch / 2 + 10, 26, A(C.acc, fa), { font: B, spacing: 2, align: 'center', literal: true });
         }
-        // Use
-        const mode = MODES.find((m) => m[0] === key), what = mode ? 'for ' + mode[1] : '';
-        if (this.at === cur) {
-            const s = 'In use' + (what ? ' ' + what : ''), bw = cv.textWidth(s, 22, { font: B, literal: true }) + 56;
-            cv.roundRect(cx + cw - 24 - bw, cy + ch - 76, bw, 52, 26, A('#ffffff', 0.10));
-            cv.text(s, cx + cw - 24 - bw / 2, cy + ch - 42, 22, C.soft, { font: B, align: 'center', literal: true });
-        } else {
-            const s = 'Use ' + (what || 'this theme'), bw = cv.textWidth(s, 23, { font: B, literal: true }) + 60;
-            const bx = cx + cw - 24 - bw, by = cy + ch - 76;
+        // 0.50.4 (the user): the card itself is the button that puts the theme on (a tap anywhere on it, pick()); next to
+        // the name a quiet line says so, or that it is in use; bottom right, Customise for a theme that has it
+        const mode = MODES.find((m) => m[0] === key), what = mode ? ' for ' + mode[1] : '';
+        const nw = cv.textWidth(this.name(this.at), 46, { font: B, literal: true });
+        const inUse = this.at === cur, hint = inUse ? 'In use' + what : 'Tap to use' + what;
+        cv.text(hint, cx + cw - 30 - nw - 22, cy + ch - 35, 19, inUse ? A(C.ok, 0.85) : A('#ffffff', 0.5), { font: M, align: 'right', literal: true });
+        if (CUSTOM[this.at]) {
+            const s = CUSTOM[this.at].beta ? 'Customise · beta' : 'Customise', bw = cv.textWidth(s, 23, { font: B, literal: true }) + 60;
+            const bx = cx + 24, by = cy + ch - 76;
             cv.roundRect(bx, by, bw, 52, 26, C.acc);
             cv.text(s, bx + bw / 2, by + 34, 23, '#ffffff', { font: B, align: 'center', literal: true });
-            cv.target(bx, by, bw, 52, () => this.use(this.at), 'use', 26);
+            cv.target(bx, by, bw, 52, () => this.openCustom(this.at), 'customise', 26);
         }
         if (fade < 1) { if (cv.alpha) cv.alpha(1); cv.noclip(); }
         cx = cx0;
@@ -706,15 +699,17 @@ class Page {
         const colW = 330, gy = 48;
         let ph = bottom - gy - 10, pw = Math.round(ph * 8 / 3);
         if (pw > R - L - colW - 24) { pw = R - L - colW - 24; ph = Math.round(pw * 3 / 8); }
-        const gx = L + 6;
+        // 0.50.4 (the user): the panel on the left, nearer the driver; the preview to its right
+        const gx = R - pw - 6;
         this.cParts = [];
         let moving = false;
         cv.roundRect(gx - 2, gy - 2, pw + 4, ph + 4, 18, '#000000');
         if (prev) {
             const k = pw / prev.base.w;
-            cv.image(prev.base.id, gx, gy, pw, ph);
+            const nt = prev.alt ? prev.alt.sets[this.draft[prev.alt.key]] || null : null;
+            cv.image((nt || prev).base.id, gx, gy, pw, ph);
             Object.keys(prev.keys).forEach((key) => {
-                const r = prev.keys[key], x = gx + Math.round(r.x * k), y = gy + Math.round(r.y * k), w = Math.round(r.w * k), h = Math.round(r.h * k);
+                const r = (nt && nt.keys[key]) || prev.keys[key], x = gx + Math.round(r.x * k), y = gy + Math.round(r.y * k), w = Math.round(r.w * k), h = Math.round(r.h * k);
                 // a part on another ("dep": Concours' clock on the middle dial) drawn once per pick of that one: "<pick>/<its pick>"
                 const pick = (p) => (r.dep && r.opts[p + '/' + this.draft[r.dep]]) || r.opts[p] || r.opts.none;
                 const an = this.cAnim && this.cAnim[key], age = an ? now - an.t : Infinity;
@@ -753,15 +748,26 @@ class Page {
         } else this.picture(cv, v, 'hero', gx, gy, pw, ph, 18);
         if (moving) setTimeout(() => this.kick(), 16);
         cv.strokeRoundRect(gx - 2, gy - 2, pw + 4, ph + 4, 18, 1, A('#ffffff', 0.14));
-        // beside it: the name, what to do, Apply, Reset, Back
-        const ch = this.draftChanges(), cx = gx + pw + 20, cw = R - cx, ap = this.applied ? now - this.applied : Infinity;
+        // left of it: the name, what to do, Apply, Reset, Back
+        const ch = this.draftChanges(), cx = L, cw = gx - 20 - L, ap = this.applied ? now - this.applied : Infinity;
         cv.roundRect(cx, gy - 2, cw, ph + 4, 18, A(C.panel, 0.92));
         cv.strokeRoundRect(cx, gy - 2, cw, ph + 4, 18, 1, C.faint);
         cv.text('Customise', cx + 22, gy + 38, 30, C.text, { font: B, literal: true });
         cv.text(this.name(v), cx + 22, gy + 66, 20, C.dim, { font: B, literal: true });
         const hint = ch.length ? ['A preview: the cluster', 'changes when you Apply.'] : ['Swipe a part, or tap', 'it or its arrows.'];
-        hint.forEach((l, i) => cv.text(l, cx + 22, gy + 104 + i * 24, 18, ch.length ? C.accSoft : C.dim, { font: M, literal: true }));
         const bw = cw - 44, bx = cx + 22, by = gy + ph - 2 - 22 - 50 - 12 - 50 - 12 - 58;
+        if (c.switch) {
+            // a setting picked beside the preview (Concours' Lighting): its options side by side, the pick lit
+            const sk = c.key + c.switch, opts = this.steps(sk), sw = bw / opts.length, sy = gy + 112;
+            cv.text(c.switchLabel || 'Lighting', bx, gy + 100, 16, C.dim, { font: M, literal: true });
+            cv.roundRect(bx, sy, bw, 46, 23, A('#ffffff', 0.08));
+            opts.forEach((o, i) => {
+                const on = this.draft[sk] === o, ox = bx + i * sw;
+                if (on) cv.roundRect(ox + 3, sy + 3, sw - 6, 40, 20, this.draft[sk] !== this.get(sk) ? C.acc : A('#ffffff', 0.22));
+                cv.text(String(this.optLabel(sk, o)).replace(/ \(.*\)$/, ''), ox + sw / 2, sy + 30, 18, on ? '#ffffff' : C.soft, { font: B, align: 'center', literal: true });
+                cv.target(ox, sy, sw, 46, () => { this.draft[sk] = o; this.kick(); }, 'cswitch:' + o, 20);
+            });
+        } else hint.forEach((l, i) => cv.text(l, cx + 22, gy + 104 + i * 24, 18, ch.length ? C.accSoft : C.dim, { font: M, literal: true }));
         if (ch.length) {
             cv.roundRect(bx, by, bw, 58, 29, C.acc);
             cv.text('Apply', bx + bw / 2, by + 38, 25, '#ffffff', { font: B, align: 'center', literal: true });
@@ -810,10 +816,29 @@ class Page {
         cv.target(sx + sw - 84, sy, 84, sh, () => this.step(k, 1), 'inc:' + k, sh / 2);
     }
 
+    /**
+     * The big card of a theme whose look is a setting (Vintage's colour, PREVIEW_BY): it goes through the picks by
+     * itself, from the one set, each held CYCLE_HOLD and faded into the next over CYCLE_FADE, so the choice shows.
+     */
+    cycle(cv, v, x, y, w, h) {
+        // ("auto", Apex's style by the drive mode, has no picture of its own)
+        const by = PREVIEW_BY[v], vals = this.steps(by).filter((q) => q !== 'auto'), n = vals.length || 1, i0 = Math.max(0, vals.indexOf(this.get(by)));
+        const per = CYCLE_HOLD + CYCLE_FADE, t = Math.max(0, Date.now() - (this.atSince || 0)), k = Math.floor(t / per), ph = t - k * per;
+        const a = vals[(i0 + k) % n], b = vals[(i0 + k + 1) % n];
+        this.picture(cv, v, 'hero', x, y, w, h, 18, a);
+        clearTimeout(this.cycleT);
+        if (ph > CYCLE_HOLD && cv.alpha && b !== a) {
+            const p = hero(v + '-' + b) || hero(v);
+            if (p) { cv.alpha((ph - CYCLE_HOLD) / CYCLE_FADE); cv.image(p.id, x, y, w, h); cv.alpha(1); }
+            this.cycleT = setTimeout(() => this.kick(), 33);
+        } else this.cycleT = setTimeout(() => this.kick(), CYCLE_HOLD - ph + 10);
+    }
+
     /** a theme's picture in a rounded box; BMW's own (or a missing picture): words on black */
-    picture(cv, v, size, x, y, w, h, r) {
+    picture(cv, v, size, x, y, w, h, r, pick) {
         r = r || 18;
-        const p = size === 'hero' ? hero(v) : pic(v, size);
+        const by = PREVIEW_BY[v], alt = by ? v + '-' + (pick || this.get(by)) : null;
+        const p = (alt && (size === 'hero' ? hero(alt) : pic(alt, size))) || (size === 'hero' ? hero(v) : pic(v, size));
         cv.roundRect(x, y, w, h, r, '#000000');
         if (p) cv.image(p.id, x, y, w, h);
         else if (h > 60 && x >= L && x + w <= R) cv.text(v === 'off' ? 'BMW\'s own cluster' : this.name(v), x + w / 2, y + h / 2 + 8, Math.min(30, h / 6), '#59606b', { font: M, align: 'center', literal: true });

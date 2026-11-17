@@ -6,6 +6,14 @@
  "packWaste": 1.5,
  "theme": "ember",
  "noNightDim": true,
+ "themeBy": {
+  "setting": "emberPhoto",
+  "themes": {
+   "ember": "ember",
+   "sunrise": "dark_moon",
+   "peaks": "peaks"
+  }
+ },
  "_about": "Ember (Zeiger 0.42.0; Customise 0.45.0): a photo of an old BMW saloon at night in a field, its cabin lit red (cluster-design/ember/build.html). The car big in the lower middle; above it the speed with km/h and a hairline rev line, the selector letter, the gear and the drive mode on the left, range and the clock with the outside temperature on the right, warm white and a warm grey. Customise: the big readouts in one of four fonts (emberFont: barlow, clean, retro, motor), the M badge under the car (emberMid). The speed limit the front camera reads (Zeiger 0.50.0, {{speedLimit}}) in a small black and white round sign right of the speed, only while there is one. The rev line amber then the cabin red from the rev range (zoneSteps / zoneColors), faint ahead of the rpm. Barlow, Barlow Semi Condensed, Inter Tight, Jost and Saira Condensed (OFL). Widget reference: shared/hud.js header.",
  "widgets": [
   {
@@ -14,6 +22,67 @@
    "picture": "ember_bg",
    "own": true,
    "followsShift": true,
+   "toggle": "emberPhoto=ember",
+   "class": "content",
+   "z": 0,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 720
+  },
+  {
+   "id": "bg_sunrise",
+   "type": "picture",
+   "picture": "sunrise_hills_sky",
+   "stretch": true,
+   "toggle": "emberPhoto=sunrise",
+   "class": "content",
+   "z": 0,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 720
+  },
+  {
+   "id": "bg_sunriseland",
+   "type": "picture",
+   "picture": "sunrise_hills_land",
+   "own": true,
+   "toggle": "emberPhoto=sunrise",
+   "class": "content",
+   "z": 1,
+   "x": 0,
+   "y": 428,
+   "w": 1920,
+   "h": 292
+  },
+  {
+   "id": "bg_peaks",
+   "type": "picture",
+   "picture": "peaks_bg",
+   "own": true,
+   "followsShift": true,
+   "toggle": [
+    "emberPhoto=peaks",
+    "@night"
+   ],
+   "class": "content",
+   "z": 0,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 720
+  },
+  {
+   "id": "bg_peaksday",
+   "type": "picture",
+   "picture": "peaks_bg_day",
+   "own": true,
+   "followsShift": true,
+   "toggle": [
+    "emberPhoto=peaks",
+    "!@night"
+   ],
    "class": "content",
    "z": 0,
    "x": 0,
