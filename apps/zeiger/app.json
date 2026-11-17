@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "Fewer themes, more choice: Vintage is one theme in green or cyan, Apex one in Clean or Sport (or Auto, Sport in the SPORT mode), and Ember takes Sunrise's and Peaks' photos; Customise shows the pick. Apex's rev band fills smoothly with a bright head and flashes toward the shift point. Map Mist is gone. Vintage's cold-engine yellow no longer shows as a lone strip. Your saved themes move over by themselves.",
-  "version": "0.50.4",
+  "whatsNew": "A smoother gallery: swiping turns the themes like a carousel, the group buttons are bigger, and a theme's colours, styles or photos stand still while you drive. Customise lists every part with its pick. Settings are simpler: choices as buttons, the testers' switches tucked away. Ember wears a new white M badge. Since 0.49: Concours, the speed limit on Ember, and fewer, richer themes.",
+  "version": "0.50.5",
   "vendor": "custom",
   "loggingId": "OAZG",
   "maxDiskUsage": 67108864,
@@ -683,7 +683,7 @@
     },
     {
       "key": "shiftFlash",
-      "label": "Shift flash (Apex Sport): the rev band flashes white 500 rpm before the shift point, yellow 250 before, red at it",
+      "label": "Shift flash (Apex): the rev band flashes 500 rpm before the shift point, brighter 250 before, red at it",
       "type": "bool",
       "default": true
     },

@@ -35,18 +35,13 @@ const C = {
 const A = G.withAlpha;
 const MODES = [['inComfort', 'COMFORT', 'comfort'], ['inSport', 'SPORT', 'sport'], ['inEco', 'ECO PRO', 'eco']];
 /* ---------- the settings, in groups ---------- */
+const LAB_TAPS = 10, LAB_TAP_GAP_MS = 1500;
 const GROUPS = [
     { name: 'Cluster', about: 'How the themes show on the cluster.', rows: [
         ['startAnim', 'Start animation', 'when a theme first shows, never while moving'],
-        ['weather', 'Today\'s weather', 'Dark Moon, Sunrise, Underpass, Mist · needs the internet uplink'],
+        ['weather', 'Today\'s weather', 'Dark Moon, Underpass, Mist · needs the internet uplink'],
         ['shiftX', 'Theme position', 'to the right of BMW\'s own cluster'],
-    ] },
-    { name: 'BMW\'s cluster', about: 'What BMW draws under and over the themes.', rows: [
-        ['hideBoxes', 'Hide BMW\'s black boxes', 'test'],
-        ['gearLetter', 'Leave BMW\'s gear letter open', 'keeps BMW\'s black gear box away (bimmer-lab\'s car test)'],
         ['stripClear', 'Leave BMW\'s bottom strip clear', 'the theme stays as it is, cut above the strip'],
-        ['calib', 'Calibration', 'a grid or the map frame on the cluster, to measure what BMW hides'],
-        ['slotWatch', 'Watch BMW\'s slots', 'test: every slot now, and what changed when'],
     ] },
     { name: 'Warnings', about: 'Over its limit, the value flashes red on the cluster; a tyre under its pressure turns orange. Not during the start animation.', rows: [
         ['warnOil', 'Oil temperature', 'flashes from', 'OIL', '#ffb23e'],
@@ -59,7 +54,7 @@ const GROUPS = [
         ['redFrom', 'Red zone from', 'Auto: BMW\'s, 6500 petrol, 5000 diesel'],
         ['yellowFrom', 'Yellow zone from', 'Auto: 500 under the red'],
         ['shiftBefore', 'Shift point', 'before the red zone'],
-        ['shiftFlash', 'Shift flash', 'Apex Sport: white, yellow, then red'],
+        ['shiftFlash', 'Shift flash', 'Apex: the rev band flashes toward the shift point'],
         ['coldGuard', 'Cold-engine rev guard', 'both zones lower while the oil is cold'],
     ] },
     { name: 'Units and time', about: 'km/h and °C are drawn into the themes: keep the units metric.', rows: [
@@ -77,8 +72,15 @@ const GROUPS = [
         'Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes.',
         'A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the',
         'community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.',
-    ], rows: [
+    ], rows: [] },
+    // 0.50.5 (the design review): what the people testing Zeiger use, out of the drivers' way; hidden until About is
+    // tapped LAB_TAPS times in a row (again to hide it), saved as the setting "labOn"
+    { name: 'Lab', about: 'Tests and measuring tools for the people who help develop Zeiger.', rows: [
         ['demo', 'Demo data', 'made-up values while the car sends none'],
+        ['gearLetter', 'Leave BMW\'s gear letter open', 'keeps BMW\'s black gear box away (bimmer-lab\'s car test)'],
+        ['hideBoxes', 'Hide BMW\'s black boxes', 'test'],
+        ['calib', 'Calibration', 'a grid or the map frame on the cluster, to measure what BMW hides'],
+        ['slotWatch', 'Watch BMW\'s slots', 'test: every slot now, and what changed when'],
         ['probe', 'Look for cruise and speed limit', 'test: what the car offers apps, listed here'],
     ] },
 ];
@@ -161,10 +163,10 @@ function authorPhoto() {
 // (each its own image, so the renderer keeps its copy too) and the neighbours are sent ahead (gallery()): a swipe shows
 // a picture already there, without decoding and sending 2 MB first. The one used longest ago gives up its slot.
 const HERO_IDS = 0x5a5f0000, HERO_SLOTS = 4;
-// a swipe (or a tap beside the card) slides the next card in from that side and fades it up (0.37.0), so the finger
+// a swipe (or a tap beside the card) turns the carousel one card that way (0.50.5; a slide and fade from 0.37.0), so the finger
 // sees at once that it did something; its neighbours' pictures are sent ahead PRELOAD_MS after it lands, and the one
 // after next in the swipe's direction too
-const SLIDE_MS = 260, SLIDE_PX = 170, PRELOAD_MS = 300;
+const SLIDE_MS = 420, PRELOAD_MS = 300;
 // Customise's preview (0.41.0): hud/previews/<theme>_custom.json (cluster-design/apex/build.html "Customise previews"):
 // the theme with its defaults, and for each Customise setting its rect drawn once per pick; the page lays the picks being
 // tried over the base, so the theme shows as it will on the cluster before Apply sends them. Each its own image.
@@ -331,9 +333,10 @@ class Page {
         }
     }
     us() { return this.get('units') === 'us'; }
-    valueText(k) {
+    valueText(k, pick) {
         if (k === 'calib') { const n = this.calibNow(); return CALIB.find((c) => c[0] === n)[1]; }
-        const v = this.get(k), it = this.item(k);
+        const v = pick !== undefined ? pick : this.get(k), it = this.item(k);
+        if (k === 'units') return v === 'us' ? 'mph · °F' : 'km/h · °C';
         if (k === 'warnOil' || k === 'warnCoolant') return v ? (this.us() ? Math.round(v * 9 / 5 + 32) + ' °F' : v + ' °C') : 'Off';
         if (k === 'warnBoost' || k === 'warnTyre') return v ? (this.us() ? Math.round(v * 14.5) + ' psi' : v.toFixed(1) + ' bar') : 'Off';
         if (k === 'shiftX') return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + ' px';
@@ -350,7 +353,7 @@ class Page {
     }
     summary(g) {
         const on = (k) => this.get(k) === true;
-        if (g.name === 'Cluster') return 'start animation ' + (on('startAnim') ? 'on' : 'off') + ' · position ' + this.valueText('shiftX');
+        if (g.name === 'Cluster') return 'start animation ' + (on('startAnim') ? 'on' : 'off') + ' · position ' + this.valueText('shiftX') + ' · strip ' + (on('stripClear') ? 'clear' : 'covered');
         if (g.name === 'Warnings') {
             const s = [['warnOil', 'oil'], ['warnCoolant', 'coolant'], ['warnBoost', 'boost'], ['warnTyre', 'tyres']].filter((x) => this.get(x[0])).map((x) => x[1] + ' ' + this.valueText(x[0]));
             return s.length ? s.join(' · ') : 'all off';
@@ -358,7 +361,7 @@ class Page {
         if (g.name === 'Rev range') return this.valueText('engine') + ' · yellow ' + num(this.hud.setting('yellowLine')) + ' · red ' + num(this.hud.setting('redline'));
         if (g.name === 'Units and time') return (this.us() ? 'mph' : 'km/h') + ' · ' + this.valueText('clock') + ' · ' + this.valueText('timeZone');
         if (g.name === 'Home-screen widget') return this.valueText('widgetShows') + ' · tap: ' + (this.get('widgetTap') === 'open' ? 'opens Zeiger' : 'next view');
-        if (g.name === 'BMW\'s cluster') return 'black boxes ' + (on('hideBoxes') ? 'hidden' : 'shown') + ' · bottom strip ' + (on('stripClear') ? 'clear' : 'covered') + (this.calibNow() ? ' · calibrating' : '');
+        if (g.name === 'Lab') return 'demo data ' + this.valueText('demo').replace(/ \(.*\)$/, '').toLowerCase() + (this.calibNow() ? ' · calibrating' : '') + (['hideBoxes', 'slotWatch', 'probe'].some(on) ? ' · tests on' : '');
         return 'version ' + ((this.ctx.spec && this.ctx.spec.version) || '?') + ' · credits';
     }
 
@@ -430,7 +433,7 @@ class Page {
         // landed on a theme: its neighbours' big pictures sent ahead a moment later (drawn off the page, 1 px)
         if (this.atWas !== this.at) { this.atWas = this.at; this.atSince = Date.now(); setTimeout(() => this.kick(), PRELOAD_MS + 50); }
         // the big card and its neighbours
-        const ch = Math.min(440, bottom - 48 - 104), cw = Math.round(ch * 8 / 3), cy = 48;
+        const ch = Math.min(440, bottom - 48 - 128), cw = Math.round(ch * 8 / 3), cy = 48;   // (0.50.5: 104 before the taller chips)
         let cx = (W - cw) / 2;
         const sh = Math.round(ch * 0.8), sw = Math.round(sh * 8 / 3), sy = cy + (ch - sh) / 2;
         const side = (v, x, d) => {
@@ -439,26 +442,44 @@ class Page {
             cv.roundRect(x, sy, sw, sh, 18, A(C.bg, 0.62));
             cv.noclip();
         };
-        side(looks[(i - 1 + looks.length) % looks.length], cx - 24 - sw, -1);
-        side(looks[(i + 1) % looks.length], cx + cw + 24, 1);
+        // the slide (0.50.5, the user: a nicer swipe): a carousel. Every card moves from its slot to the next one, the
+        // slots being the big card in the middle and the smaller, dimmed ones beside it (and one more out past each
+        // edge): the new card grows and brightens into the middle, the old one shrinks and dims to the side, the card
+        // after it comes in from the edge and the one before goes out; the big card's name and buttons fade in last
+        const sp = this.slide && this.slide.to === this.at ? (Date.now() - this.slide.t) / SLIDE_MS : 1;
+        const sliding = sp < 1, ek = sliding ? 1 - Math.pow(1 - Math.max(0, sp), 4) : 1;    // ease out (quart)
+        const slot = (o) => (o === 0 ? { x: cx, y: cy, w: cw, h: ch, dim: 0, r: 22 }
+            : { x: o < 0 ? cx - (24 + sw) * -o : cx + cw + 24 + (sw + 24) * (o - 1), y: sy, w: sw, h: sh, dim: 0.62, r: 18 });
+        if (sliding) {
+            const d = this.slide.d, lerp = (a, b) => a + (b - a) * ek;
+            cv.clip(L, cy - 4, R - L, ch + 8);
+            // far ones first, the middle one last (on top)
+            [-2, 2, -1, 1, 0].forEach((o) => {
+                const from = o + d;
+                if (Math.abs(o) > 1 && Math.abs(from) > 1) return;
+                const a = slot(Math.max(-2, Math.min(2, from))), b = slot(o);
+                const x = lerp(a.x, b.x), y = lerp(a.y, b.y), w = lerp(a.w, b.w), h = lerp(a.h, b.h), dim = lerp(a.dim, b.dim);
+                const v = looks[((i + o) % looks.length + looks.length) % looks.length];
+                this.picture(cv, v, o === 0 || from === 0 ? 'hero' : 'big', Math.round(x), Math.round(y), Math.round(w), Math.round(h), Math.round(lerp(a.r, b.r)));
+                if (dim > 0.01) cv.roundRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h), Math.round(lerp(a.r, b.r)), A(C.bg, dim));
+            });
+            cv.noclip();
+            setTimeout(() => this.kick(), 16);
+        } else {
+            side(looks[(i - 1 + looks.length) % looks.length], cx - 24 - sw, -1);
+            side(looks[(i + 1) % looks.length], cx + cw + 24, 1);
+        }
         if (Date.now() - this.atSince >= PRELOAD_MS) {
             const ahead = this.slide && this.slide.to === this.at ? [looks[(i + 2 * this.slide.d + 2 * looks.length) % looks.length]] : [];
             [looks[(i - 1 + looks.length) % looks.length], looks[(i + 1) % looks.length]].concat(ahead).forEach((v) => { const h = hero(v); if (h) cv.image(h.id, -8, -8, 1, 1); });
         }
-        // the slide: the card comes in from the side it was swiped from, easing out, and fades up
-        const sp = this.slide && this.slide.to === this.at ? (Date.now() - this.slide.t) / SLIDE_MS : 1;
-        const cx0 = cx;
-        let fade = 1;
-        if (sp < 1) {
-            const k = 1 - Math.pow(1 - Math.max(0, sp), 3);
-            cx += Math.round(this.slide.d * (1 - k) * SLIDE_PX);
-            fade = 0.3 + 0.7 * k;
-            setTimeout(() => this.kick(), 16);
-            cv.clip(L, cy - 4, R - L, ch + 8);
-            if (cv.alpha) cv.alpha(fade);
+        // the big card's picture (drawn by the carousel while it slides); its name and buttons fade in over the slide's end
+        const cx0 = cx, fade = sliding ? Math.max(0, Math.min(1, (sp - 0.55) / 0.45)) : 1;
+        if (!sliding) {
+            if (PREVIEW_BY[this.at]) this.cycle(cv, this.at, cx, cy, cw, ch);
+            else this.picture(cv, this.at, 'hero', cx, cy, cw, ch);
         }
-        if (PREVIEW_BY[this.at] && sp >= 1) this.cycle(cv, this.at, cx, cy, cw, ch);
-        else this.picture(cv, this.at, 'hero', cx, cy, cw, ch);
+        if (fade < 1 && cv.alpha) cv.alpha(fade);
         // dark enough at the bottom that the picture's own bottom readouts don't show through the theme's name
         cv.gradientRect(cx, cy + ch - 180, cw, 180, [[0, A('#000000', 0)], [0.35, A('#000000', 0.82)], [0.6, A('#000000', 0.95)], [1, A('#000000', 0.97)]]);
         cv.strokeRoundRect(cx, cy, cw, ch, 22, 1, A('#ffffff', 0.12));
@@ -489,27 +510,28 @@ class Page {
             cv.text(s, bx + bw / 2, by + 34, 23, '#ffffff', { font: B, align: 'center', literal: true });
             cv.target(bx, by, bw, 52, () => this.openCustom(this.at), 'customise', 26);
         }
-        if (fade < 1) { if (cv.alpha) cv.alpha(1); cv.noclip(); }
+        if (fade < 1 && cv.alpha) cv.alpha(1);
         cx = cx0;
         // plain arrows at the screen's edges; the taps are the whole left and right half (added last: the buttons win)
         arrow(cv, L + 26, cy + ch / 2, -1); arrow(cv, R - 26, cy + ch / 2, 1);
         // the groups: a chip each with its name and a dot per theme; the one looked at lit. A tap goes to the group (the
         // theme last looked at in it, else the one in use there, else its first)
-        const gy = cy + ch + 8, gh = 34, gs = this.groups();
+        // (0.50.5: 46 px tall and 18 px under the card, a finger's room; they were 34 and 8)
+        const gy = cy + ch + 18, gh = 46, gs = this.groups();
         if (!this.groupAt) this.groupAt = {};
         const chips = gs.map((g) => {
             const here = g.list.indexOf(this.at) >= 0;
             if (here) this.groupAt[g.name] = this.at;
-            const tw = cv.textWidth(g.name, 15, { font: B, spacing: 2, literal: true });
+            const tw = cv.textWidth(g.name, 18, { font: B, spacing: 2, literal: true });
             const dots = g.list.reduce((a, v) => a + (v === this.at ? 22 : 7) + 6, -6);
-            return { g, here, tw, w: 22 + tw + 14 + dots + 20 };
+            return { g, here, tw, w: 26 + tw + 16 + dots + 24 };
         });
         let gx = (W - chips.reduce((a, c) => a + c.w + 12, -12)) / 2;
         chips.forEach((c) => {
             cv.roundRect(gx, gy, c.w, gh, gh / 2, c.here ? A('#ffffff', 0.10) : A('#ffffff', 0.04));
             if (c.here) cv.strokeRoundRect(gx, gy, c.w, gh, gh / 2, 1, A(C.acc, 0.55));
-            cv.text(c.g.name, gx + 22, gy + 23, 15, c.here ? C.text : C.dim, { font: B, spacing: 2, literal: true });
-            let dx = gx + 22 + c.tw + 14;
+            cv.text(c.g.name, gx + 26, gy + 30, 18, c.here ? C.text : C.dim, { font: B, spacing: 2, literal: true });
+            let dx = gx + 26 + c.tw + 16;
             c.g.list.forEach((v) => {
                 const w = v === this.at ? 22 : 7;
                 cv.roundRect(dx, gy + gh / 2 - 3.5, w, 7, 3.5, v === this.at ? C.acc : A('#ffffff', c.here ? 0.30 : 0.18));
@@ -560,41 +582,60 @@ class Page {
         cv.target(cx + cw, cy, R - cx - cw, ch + 40, go(1), 'next', 0, true);
     }
 
+    /** the settings groups shown: Lab only once unlocked */
+    groupsShown() { return GROUPS.filter((g) => g.name !== 'Lab' || this.ctx.settings.get('labOn') === true); }
+    /** a tap on About's group: LAB_TAPS in a row (each within LAB_TAP_GAP_MS of the last) show or hide Lab */
+    aboutTap() {
+        const now = Date.now();
+        this.labTaps = this.labTaps && now - this.labTapAt < LAB_TAP_GAP_MS ? this.labTaps + 1 : 1;
+        this.labTapAt = now;
+        if (this.labTaps >= LAB_TAPS) {
+            this.labTaps = 0;
+            const on = this.ctx.settings.get('labOn') !== true;
+            this.ctx.settings.set('labOn', on);
+            this.labMsg = { on, t: now };
+            [1600, 2700].forEach((ms) => setTimeout(() => this.kick(), ms));
+        }
+    }
+
     settings(cv, bottom) {
         // the groups
-        const gx = 24, gw = 476, gy = 48, gap = 8, gh = Math.min(72, Math.floor((bottom - 6 - gy - gap * (GROUPS.length - 1)) / GROUPS.length));
-        GROUPS.forEach((g, i) => {
+        const GS = this.groupsShown();
+        if (this.group >= GS.length) this.group = GS.length - 1;
+        const gx = 24, gw = 476, gy = 48, gap = 8, gh = Math.min(72, Math.floor((bottom - 6 - gy - gap * (GS.length - 1)) / GS.length));
+        GS.forEach((g, i) => {
             const y = gy + i * (gh + gap), sel = i === this.group;
             glass(cv, gx, y, gw, gh, sel);
             cv.text(g.name, gx + 22, y + gh / 2 - 2, 25, C.text, { font: B, literal: true });
             cv.text(fit(cv, this.summary(g), 17, gw - 44, M), gx + 22, y + gh / 2 + 22, 17, sel ? C.accSoft : C.dim, { font: M, literal: true });
-            cv.target(gx, y, gw, gh, () => { this.group = i; this.kick(); }, 'group:' + i, 14);
+            cv.target(gx, y, gw, gh, () => { this.group = i; if (g.name === 'About') this.aboutTap(); this.kick(); }, 'group:' + i, 14);
         });
         // the open group
-        const g = GROUPS[this.group], px = 524, pw = R - 12 - px, py = gy, ph = bottom - 6 - py;
+        const g = GS[this.group], px = 524, pw = R - 12 - px, py = gy, ph = bottom - 6 - py;
         cv.roundRect(px, py, pw, ph, 20, A(C.panel, 0.92));
         cv.strokeRoundRect(px, py, pw, ph, 20, 1, C.faint);
         cv.text(g.name, px + 32, py + 52, 38, C.text, { font: B, literal: true });
+        // the tenth tap on About: a moment's word that Lab is shown (or hidden again)
+        if (this.labMsg && Date.now() - this.labMsg.t < 2500) pill(cv, px + pw - 32, py + 24, this.labMsg.on ? 'LAB ON' : 'LAB OFF', this.labMsg.on ? C.ok : C.dim);
         let y = py + 70;
         if (g.about) {
             const lines = [].concat(g.about);
             lines.forEach((l, j) => cv.text(l, px + 32, py + 86 + j * 24, 19, C.dim, { font: M, literal: true }));
             y = py + 104 + (lines.length - 1) * 24;
         }
-        const credits = g.name === 'About', watch = g.name === 'BMW\'s cluster' && this.get('slotWatch') === true;
+        // (0.50.5: the slot watch and the probe are in Lab; About keeps the credits)
+        const credits = g.name === 'About', lab = g.name === 'Lab', watch = lab && this.get('slotWatch') === true, probe = lab && this.get('probe') === true;
         const rows = watch ? g.rows.filter((r) => r[0] === 'slotWatch') : g.rows;
         const room = py + ph - 10 - y - (credits ? Math.max(CREDITS.length * 26 + 24, 196) : 0);
         // the slot watch and the probe (0.46.0) give their lines the room: their rows as low as they go
-        const rh = watch || (credits && this.get('probe') === true) ? WATCH_ROW : Math.min(84, Math.floor(room / rows.length));
+        const rh = watch ? WATCH_ROW : probe ? 56 : Math.min(84, Math.floor(room / Math.max(1, rows.length)));   // (probe: Lab's six rows, 56 each)
         rows.forEach((row, j) => this.row(cv, px + 32, y + j * rh, pw - 64, rh, row));
         if (watch) {
             const wy = y + rh + 18;
             this.watchLines(cv, px + 32, wy, pw - 64, Math.max(3, Math.floor((py + ph - 14 - wy - 18) / WATCH_LH)));
-        }
-        if (credits && this.get('probe') === true) {
-            this.probeLines(cv, px + 32, y + g.rows.length * rh + 18, pw - 64, py + ph - 14);
-        } else if (credits) {
-            if (this.get('probe') !== true) { this.probeR = undefined; this.probeStop(); }
+        } else if (probe) this.probeLines(cv, px + 32, y + rows.length * rh + 18, pw - 64, py + ph - 14);
+        if (lab && !probe) { this.probeR = undefined; this.probeStop(); }
+        if (credits) {
             const cy = y + g.rows.length * rh + 18;
             cv.fillRect(px + 32, cy - 8, pw - 64, 1, C.faint);
             CREDITS.forEach((s, j) => cv.text(s, px + 32, cy + 22 + j * 26, 18, j ? C.dim : C.soft, { font: M, literal: true }));
@@ -755,7 +796,7 @@ class Page {
         cv.text('Customise', cx + 22, gy + 38, 30, C.text, { font: B, literal: true });
         cv.text(this.name(v), cx + 22, gy + 66, 20, C.dim, { font: B, literal: true });
         const hint = ch.length ? ['A preview: the cluster', 'changes when you Apply.'] : ['Swipe a part, or tap', 'it or its arrows.'];
-        const bw = cw - 44, bx = cx + 22, by = gy + ph - 2 - 22 - 50 - 12 - 50 - 12 - 58;
+        const bw = cw - 44, bx = cx + 22, by = gy + ph - 2 - 22 - 50 - 12 - 58;   // (0.50.5: Reset and Back on one row)
         if (c.switch) {
             // a setting picked beside the preview (Concours' Lighting): its options side by side, the pick lit
             const sk = c.key + c.switch, opts = this.steps(sk), sw = bw / opts.length, sy = gy + 112;
@@ -768,6 +809,24 @@ class Page {
                 cv.target(ox, sy, sw, 46, () => { this.draft[sk] = o; this.kick(); }, 'cswitch:' + o, 20);
             });
         } else hint.forEach((l, i) => cv.text(l, cx + 22, gy + 104 + i * 24, 18, ch.length ? C.accSoft : C.dim, { font: M, literal: true }));
+        // 0.50.5 (the design review): every part listed with its pick, so it reads without looking at the preview and
+        // the controller reaches it; a tap goes on to the next pick (as a tap on the part), changed ones in the accent
+        {
+            const parts = c.rows.filter(([end]) => end !== c.switch).map(([end, label]) => [c.key + end, label]);
+            let ry0 = c.switch ? gy + 168 : gy + 150;
+            const rh0 = 44;
+            parts.forEach(([key, label]) => {
+                if (ry0 + rh0 > by - 6) return;
+                const changed = this.draft[key] !== this.get(key), val = String(this.optLabel(key, this.draft[key])).replace(/ \(.*\)$/, '');
+                cv.fillRect(bx, ry0, bw, 1, C.faint);
+                cv.text(label, bx, ry0 + 29, 17, C.dim, { font: M, literal: true });
+                const vx = bx + bw - 26;
+                cv.text(fit(cv, val, 20, bw - 150, B), vx, ry0 + 30, 20, changed ? C.acc : C.text, { font: B, align: 'right', literal: true });
+                cv.text("›", bx + bw - 6, ry0 + 30, 24, C.dim, { font: B, align: 'right', literal: true });
+                cv.target(bx, ry0 + 2, bw, rh0 - 4, () => this.stepDraft(key, 1), 'cpartrow:' + key, 10);
+                ry0 += rh0;
+            });
+        }
         if (ch.length) {
             cv.roundRect(bx, by, bw, 58, 29, C.acc);
             cv.text('Apply', bx + bw / 2, by + 38, 25, '#ffffff', { font: B, align: 'center', literal: true });
@@ -776,13 +835,13 @@ class Page {
             cv.roundRect(bx, by, bw, 58, 29, ap < 1600 ? A(C.ok, 0.22) : A('#ffffff', 0.06));
             cv.text(ap < 1600 ? 'Applied' : 'Nothing to apply', bx + bw / 2, by + 37, 21, ap < 1600 ? C.ok : C.dim, { font: B, align: 'center', literal: true });
         }
-        const ry = by + 58 + 12;
-        cv.roundRect(bx, ry, bw, 50, 25, A('#ffffff', 0.10));
-        cv.text('Reset', bx + bw / 2, ry + 33, 20, ch.length ? C.soft : C.dim, { font: B, align: 'center', literal: true });
-        cv.target(bx, ry, bw, 50, () => this.openCustom(v), 'creset', 25);
-        cv.roundRect(bx, ry + 62, bw, 50, 25, A('#ffffff', 0.10));
-        cv.text(ch.length ? 'Back, not applied' : 'Back', bx + bw / 2, ry + 95, 20, C.soft, { font: B, align: 'center', literal: true });
-        cv.target(bx, ry + 62, bw, 50, () => { this.custom = null; this.draft = null; this.kick(); }, 'customBack', 25);
+        const ry = by + 58 + 12, hw = (bw - 12) / 2;
+        cv.roundRect(bx, ry, hw, 50, 25, A('#ffffff', 0.10));
+        cv.text('Reset', bx + hw / 2, ry + 33, 20, ch.length ? C.soft : C.dim, { font: B, align: 'center', literal: true });
+        cv.target(bx, ry, hw, 50, () => this.openCustom(v), 'creset', 25);
+        cv.roundRect(bx + hw + 12, ry, hw, 50, 25, A('#ffffff', 0.10));
+        cv.text('Back', bx + hw + 12 + hw / 2, ry + 33, 20, C.soft, { font: B, align: 'center', literal: true });
+        cv.target(bx + hw + 12, ry, hw, 50, () => { this.custom = null; this.draft = null; this.kick(); }, 'customBack', 25);
     }
 
     /** one setting: label and line under it on the left, a switch or - value + on the right */
@@ -803,6 +862,20 @@ class Page {
             cv.target(x, y + 4, w, h - 8, () => this.set(k, !(this.get(k) === true)), 'set:' + k, 12);
             return;
         }
+        if (it.type === 'choice' && Array.isArray(it.options) && it.options.length <= 3) {
+            const opts = it.options.map((o) => o[0]), sw = 380, sh = Math.min(58, h - 16), sx = x + w - sw, sy = mid - sh / 2, cw = sw / opts.length, cur = this.get(k);
+            cv.roundRect(sx, sy, sw, sh, sh / 2, A('#ffffff', 0.07));
+            cv.strokeRoundRect(sx, sy, sw, sh, sh / 2, 1, A('#ffffff', 0.12));
+            opts.forEach((o, i) => {
+                const ox = sx + i * cw, on = o === cur, t = String(this.valueText(k, o)).replace(/ \(.*\)$/, '');
+                if (on) cv.roundRect(ox + 4, sy + 4, cw - 8, sh - 8, (sh - 8) / 2, C.acc);
+                let fs = 22;
+                while (fs > 16 && cv.textWidth(t, fs, { font: B, literal: true }) > cw - 20) fs -= 2;
+                cv.text(fit(cv, t, fs, cw - 16, B), ox + cw / 2, mid + 8, fs, on ? '#ffffff' : C.soft, { font: B, align: 'center', literal: true });
+                cv.target(ox, sy, cw, sh, () => this.set(k, o), 'seg:' + k + ':' + o, sh / 2);
+            });
+            return;
+        }
         const sw = 320, sh = Math.min(58, h - 16), sx = x + w - sw, sy = mid - sh / 2, v = this.valueText(k);
         cv.roundRect(sx, sy, sw, sh, sh / 2, A('#ffffff', 0.07));
         cv.strokeRoundRect(sx, sy, sw, sh, sh / 2, 1, A('#ffffff', 0.12));
@@ -821,6 +894,13 @@ class Page {
      * itself, from the one set, each held CYCLE_HOLD and faded into the next over CYCLE_FADE, so the choice shows.
      */
     cycle(cv, v, x, y, w, h) {
+        // 0.50.5 (the design review): still while the car moves (over 5 km/h, the car's own data): the pick as it is set
+        const d = this.hud && this.hud.car ? this.hud.car.data() : null;
+        if (d && !d.demo && typeof d.speed === 'number' && d.speed > 5) {
+            this.picture(cv, v, 'hero', x, y, w, h, 18);
+            clearTimeout(this.cycleT); this.cycleT = setTimeout(() => this.kick(), 1000);
+            return;
+        }
         // ("auto", Apex's style by the drive mode, has no picture of its own)
         const by = PREVIEW_BY[v], vals = this.steps(by).filter((q) => q !== 'auto'), n = vals.length || 1, i0 = Math.max(0, vals.indexOf(this.get(by)));
         const per = CYCLE_HOLD + CYCLE_FADE, t = Math.max(0, Date.now() - (this.atSince || 0)), k = Math.floor(t / per), ph = t - k * per;
