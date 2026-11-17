@@ -91,6 +91,27 @@
    "h": 720
   },
   {
+   "id": "precip",
+   "type": "precip",
+   "class": "content",
+   "z": 2,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 440,
+   "amount": 0.7,
+   "fade": {
+    "rain": [
+     180,
+     440
+    ],
+    "snow": [
+     128,
+     320
+    ]
+   }
+  },
+  {
    "id": "rev_track",
    "type": "picture",
    "picture": "ember_track",
@@ -915,6 +936,344 @@
    "y": 228,
    "w": 320,
    "h": 28
+  },
+  {
+   "id": "acc_track",
+   "type": "segments",
+   "own": false,
+   "picture": "ember_acc_track",
+   "measure": "accBars",
+   "segs": [
+    [
+     0,
+     32,
+     40,
+     32
+    ]
+   ],
+   "steps": [
+    1
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 620,
+   "y": 108,
+   "w": 40,
+   "h": 64
+  },
+  {
+   "id": "acc_on",
+   "type": "segments",
+   "own": false,
+   "picture": "ember_acc_on",
+   "measure": "accOn",
+   "segs": [
+    [
+     0,
+     0,
+     40,
+     32
+    ],
+    [
+     10,
+     34,
+     20,
+     4
+    ],
+    [
+     7,
+     41,
+     27,
+     4
+    ],
+    [
+     3,
+     48,
+     34,
+     4
+    ],
+    [
+     0,
+     55,
+     41,
+     4
+    ]
+   ],
+   "steps": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 620,
+   "y": 108,
+   "w": 40,
+   "h": 64
+  },
+  {
+   "id": "acc_rdy",
+   "type": "segments",
+   "own": false,
+   "picture": "ember_acc_rdy",
+   "measure": "accRdy",
+   "segs": [
+    [
+     0,
+     0,
+     40,
+     32
+    ],
+    [
+     10,
+     34,
+     20,
+     4
+    ],
+    [
+     7,
+     41,
+     27,
+     4
+    ],
+    [
+     3,
+     48,
+     34,
+     4
+    ],
+    [
+     0,
+     55,
+     41,
+     4
+    ]
+   ],
+   "steps": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 620,
+   "y": 108,
+   "w": 40,
+   "h": 64
+  },
+  {
+   "id": "cc_on",
+   "type": "segments",
+   "own": false,
+   "picture": "ember_cc_on",
+   "measure": "ccOn",
+   "segs": [
+    [
+     0,
+     0,
+     40,
+     64
+    ]
+   ],
+   "steps": [
+    1
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 620,
+   "y": 108,
+   "w": 40,
+   "h": 64
+  },
+  {
+   "id": "cc_rdy",
+   "type": "segments",
+   "own": false,
+   "picture": "ember_cc_rdy",
+   "measure": "ccRdy",
+   "segs": [
+    [
+     0,
+     0,
+     40,
+     64
+    ]
+   ],
+   "steps": [
+    1
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 620,
+   "y": 108,
+   "w": 40,
+   "h": 64
+  },
+  {
+   "id": "cc_set_on",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{cruiseOn}}",
+   "font": "p_cc",
+   "color": "fg",
+   "align": "left",
+   "x": 664,
+   "y": 120,
+   "w": 120,
+   "h": 36
+  },
+  {
+   "id": "cc_set_rdy",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{cruiseRdy}}",
+   "font": "p_cc",
+   "color": [
+    150,
+    136,
+    126,
+    255
+   ],
+   "align": "left",
+   "x": 664,
+   "y": 120,
+   "w": 120,
+   "h": 36
+  },
+  {
+   "id": "cc_word_on",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{cruiseLabelOn}}",
+   "font": "p_small",
+   "color": [
+    92,
+    214,
+    128,
+    255
+   ],
+   "align": "left",
+   "x": 622,
+   "y": 172,
+   "w": 170,
+   "h": 28
+  },
+  {
+   "id": "cc_word_rdy",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{cruiseLabelRdy}}",
+   "font": "p_small",
+   "color": [
+    150,
+    136,
+    126,
+    255
+   ],
+   "align": "left",
+   "x": 622,
+   "y": 172,
+   "w": 170,
+   "h": 28
+  },
+  {
+   "id": "nopassend_ring",
+   "type": "segments",
+   "own": false,
+   "picture": "ember_nopassend",
+   "measure": "noPassEnd",
+   "segs": [
+    [
+     0,
+     0,
+     68,
+     68
+    ]
+   ],
+   "steps": [
+    1
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 1188,
+   "y": 136,
+   "w": 68,
+   "h": 68
+  },
+  {
+   "id": "next_ring",
+   "type": "segments",
+   "own": false,
+   "picture": "ember_next",
+   "measure": "nextLimitOn",
+   "segs": [
+    [
+     0,
+     0,
+     48,
+     48
+    ]
+   ],
+   "steps": [
+    1
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 1126,
+   "y": 103,
+   "w": 48,
+   "h": 48
+  },
+  {
+   "id": "next",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{nextLimit}}",
+   "font": "p_next",
+   "color": "fg",
+   "align": "center",
+   "x": 1129,
+   "y": 114,
+   "w": 42,
+   "h": 19
+  },
+  {
+   "id": "nopass_ring",
+   "type": "segments",
+   "own": false,
+   "picture": "ember_nopass",
+   "measure": "noPassing",
+   "segs": [
+    [
+     0,
+     0,
+     68,
+     68
+    ]
+   ],
+   "steps": [
+    1
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 1188,
+   "y": 136,
+   "w": 68,
+   "h": 68
   },
   {
    "id": "limit_ring",

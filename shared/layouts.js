@@ -44,6 +44,7 @@ const TYPES = {
     needle: ['picture', 'measure', 'table'],
     segments: ['picture', 'measure', 'segs', 'steps'],
     bandflash: ['geo', 'top', 'bandH', 'stages'],
+    precip: [],          // Zeiger 0.50.6: rain or snow over the theme (a test)
 };
 const CLASSES = ['ambient', 'content', 'overlay', 'alert'];
 

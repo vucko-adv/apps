@@ -83,6 +83,7 @@
  *             emptyX, emptyY], "strip" [left end x, y, h, slant], "topEnd" x; the middle is black, and the map
  *             window is cut see-through while "holeWhen" is on ("hole", "holeInset", "holeRadius" as fill)
  *   segbar    effect layer; "max" segments, the first round(signal) lit (e.g. "setupLevel:engine"), "slant" px
+ *   precip    effect layer (time); rain or snow falling over the theme (0.50.6, a test: Lab's weatherFx), "amount" 0..1
  *   icon      image layer; a line icon from icons.js ("icon": gauge, shock, wheel, cog, stack, therm, oilcan, fuel)
  *   arc also takes "start" and "sweep" in degrees (clockwise from 12 o'clock; negative = anticlockwise)
  *   grid      calibration: effect layer of lines every "step" px (brighter every "major" steps)
@@ -254,6 +255,11 @@
  * Text tokens: {{speed}} {{u:speed}} {{oil}} {{coolant}} {{boost}} {{u:boost}} {{rpm}}
  * {{gear}} (P / R / N, D3 / S3 / M3 by the shifter programme, or just 3 when the selector position is unknown), {{gearnum}} (3, or P / R / N)
  * {{speedLimit}} (Zeiger 0.50.0: the limit the front camera reads, km/h, '' with no sign; also a needle's / segments' "measure")
+ * measures "noPassing" (Zeiger 0.50.6: 1 while the camera reads no overtaking), "noPassEnd" (1 a moment after it ends),
+ * "nextLimitOn" (1 while a next limit differs from the present one), "signPlate" (the supplementary plate's code);
+ * {{nextLimit}} (the next limit ahead, km/h, '' with none or the same); the cruise control (0.50.6, a first try):
+ * measures "accOn" / "accRdy" (1 + the distance, ACC holding / ready), "accBars", "ccOn" / "ccRdy" (a plain cruise
+ * control), tokens {{cruiseOn}} {{cruiseRdy}} (the set speed) {{cruiseLabelOn}} {{cruiseLabelRdy}} (ACC, CRUISE .. READY)
  * {{spd:<i>}} (speed scale label i of SPEED_SCALE: 0..200 mph, 0..320 km/h) {{range}} {{u:distLc}} (mi, km) {{u:dist}} (MI, KM) {{ambient}} (outside, signed: +75) {{u:speedLc}} (mph, km/h) {{ampmLc}} (am, pm) {{torque}} {{u:torque}} (lb-ft, Nm) {{torquePct}} {{powerPct}} (% of config.engine's peak) {{boostHi}} {{boostMid}}
  * (gauge labels for 1.4 / 0.7 bar in the display unit) {{stage}} (P R N, D / S / M by the shifter programme) {{gearInD}} (gear number while in D) {{mode}} (COMFORT, SPORT, SPORT PLUS, SPORT INDIVIDUAL, ECO PRO, ...)
  * {{temp:<deg C>}} (that temperature in the display unit, °F rounded to 10, for gauge labels) {{setup:engine|chassis|steering|gearbox}} (what that part is set to in the drive mode now)
@@ -369,6 +375,11 @@ const REFUSED_RETRIES = 2;       // ... at most this many times until something 
 // once when the car moves faster than INTRO_STILL_KMH (the demo drive plays it anyway, for the bench), redraws its texts
 // every INTRO_TEXT_MS, and moves layers with the renderer's animation number INTRO_ANIM
 const INTRO_LEAD_MS = 300, INTRO_WAIT_MS = 15000, INTRO_STILL_KMH = 3, INTRO_TEXT_MS = 50, INTRO_ANIM = 98;
+const NO_PASS_END_MS = 5000;
+// the cruise control / ACC (0.50.6, a first try: the fields' names on a G20 are not known yet, see _cruiseIn): where
+// the cluster's own display of it is, the instances tried (the catalog lists none), how often the fields are read
+const CRUISE_IFACE = 'de.bmw.dass.driverassistanceapplications.StatusDisplayXADAndSpeed', CRUISE_FIELDS = ['statusDisplayXAD', 'statusDisplaySpeed'];
+const CRUISE_INSTANCES = ['1', '2', '3', '4'], CRUISE_POLL_MS = 1000;     // the end of no overtaking shown this long (0.50.6)
 const NEEDLE_MS = 16;              // ~60 Hz: the "spring" needles
 const GLIDE_ANIM = 97;            // a needle's "glide" turn (one per layer, replaced at every tick)
 const FS_ANIM = 99,FS_REARM_MS = 200, FS_HOLD_MS = 1200, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
@@ -421,7 +432,7 @@ function shiftPixels(rgba, w, h, dx) {
     return out;
 }
 // settings that only change what a text shows (the next tick paints it), no rebuild
-const LIVE_KEYS = ['slotWatch', 'warnOil', 'warnCoolant', 'warnBoost', 'warnTyre', 'badge', 'badgeBMW', 'gFlipLat', 'gFlipLong', 'gRange', 'gTrail'];
+const LIVE_KEYS = ['weatherFx', 'slotWatch', 'warnOil', 'warnCoolant', 'warnBoost', 'warnTyre', 'badge', 'badgeBMW', 'gFlipLat', 'gFlipLong', 'gRange', 'gTrail'];
 // g (after cauliflowermossgrape's G-Force, MIT, idea only): a sample over G_BAD is a bad reading, not a corner;
 // the rest are averaged over G_AVG_MS so kerbs and potholes don't throw the dot about
 const G_BAD = 3;
@@ -909,6 +920,21 @@ class HudApp {
                     const lim = isNum(sp) && sp > 0 && sp < 254 ? sp * 5 : null;
                     if (lim !== this.speedLimit) this.log.info('speed limit ' + (lim === null ? 'none' : lim) + ' (raw ' + sp + ', unit ' + (v && v.unitOfMeasurementSpeedLimit) + ')');
                     this.speedLimit = lim;
+                    // 0.50.6: the same event's no overtaking (recognitionNoPassing, 0 at no sign on the G20; any other
+                    // value but 254 / 255 read as the sign) and its supplementary plate (displaySupplementalSign: rain,
+                    // snow, a time.. by a code not known yet, every change logged so the codes can be learnt)
+                    const np = v && v.recognitionNoPassing, noPass = isNum(np) && np > 0 && np < 254;
+                    if (noPass !== this.noPassing) this.log.info('no overtaking ' + (noPass ? 'on' : 'off') + ' (raw ' + np + ')');
+                    // its end (0.50.6): the restriction gone, the end sign a moment (NO_PASS_END_MS)
+                    if (this.noPassing === true && !noPass) this.noPassEndAt = Date.now();
+                    this.noPassing = noPass;
+                    // the next limit, ahead (nextClassLimitSpeed, as the present one; 254 at none on the G20)
+                    const ns = v && v.nextClassLimitSpeed, next = isNum(ns) && ns > 0 && ns < 254 ? ns * 5 : null;
+                    if (next !== this.nextLimit) this.log.info('next speed limit ' + (next === null ? 'none' : next) + ' (raw ' + ns + ')');
+                    this.nextLimit = next;
+                    const ss = v && v.displaySupplementalSign, plate = isNum(ss) && ss > 0 && ss < 254 ? ss : null;
+                    if (plate !== this.signPlate) this.log.info('supplementary sign ' + (plate === null ? 'none' : plate) + ' (raw ' + ss + ')');
+                    this.signPlate = plate;
                 },
             },
             // outside temperature: raw * 0.5 - 40 deg C, 255 = none (car_vitals, MIT)
@@ -954,6 +980,7 @@ class HudApp {
             },
         };
         this.car = new Car(this.ctx, ['rpm', 'speed', 'temps', 'accel', 'gear', 'torque'], extra);
+        this._cruiseWatch();
         this.car.setRedline(this.setting('redline'));
         this.gBuf = [];                  // [t, lat, long] of the last G_AVG_MS
         this.gSm = null;                 // { lat, long, at }: their average
@@ -1802,6 +1829,62 @@ class HudApp {
         return out;
     }
 
+    /** The cruise control's fields (CRUISE_IFACE) on every instance tried; whatever comes goes to _cruiseIn. */
+    _cruiseWatch() {
+        if (!this.ctx.signals || typeof this.ctx.signals.watch !== 'function') return;
+        CRUISE_INSTANCES.forEach((inst) => {
+            const h = {};
+            CRUISE_FIELDS.forEach((f) => { h[f] = (v) => this._guard('cruise', () => this._cruiseIn(f + '@' + inst, v)); });
+            Promise.resolve(this.ctx.signals.watch(CRUISE_IFACE, inst, h, this.log, { pollMs: CRUISE_POLL_MS }))
+                .then((res) => this.log.info('cruise: ' + CRUISE_IFACE.split('.').pop() + ' instance ' + inst + ': ' + (res && res.error ? res.error : 'subscribed')))
+                .catch((e) => this.log.info('cruise: instance ' + inst + ': ' + e));
+        });
+    }
+
+    /**
+     * A cruise field's value: every number in it by its path, and from their names (not known yet for a G20: the first
+     * car test tells) the set speed (a "set / target / desired .. speed" 20-300, the XAD field's first), the distance
+     * (a "dist / gap / level / step" 1-6, the ACC's; none: a plain cruise control) and whether it holds the speed
+     * (an "activ / engag / regul / control" at 1). Every change logged with all the numbers, to learn the names.
+     */
+    _cruiseIn(src, v) {
+        if (!this.cruiseRaw) this.cruiseRaw = {};
+        this.cruiseRaw[src] = v;
+        this.cruiseAt = Date.now();
+        const flat = {};
+        const walk = (x, k) => {
+            if (x === null || x === undefined) return;
+            if (typeof x === 'number' || typeof x === 'boolean') { flat[k] = +x; return; }
+            if (typeof x === 'object' && !Buffer.isBuffer(x)) Object.keys(x).forEach((kk) => walk(x[kk], k ? k + '.' + kk : kk));
+        };
+        Object.keys(this.cruiseRaw).sort().forEach((k) => walk(this.cruiseRaw[k], k));
+        const keys = Object.keys(flat), find = (re, ok, pref) => {
+            const ks = keys.filter((k) => re.test(k) && ok(flat[k]));
+            return ks.find((k) => pref && pref.test(k)) || ks[0];
+        };
+        const setK = find(/(set|target|desired|wish|soll).*speed|speed.*(set|target|desired|wish|soll)/i, (n) => n >= 20 && n <= 300)
+            || find(/speed|velocity|geschw/i, (n) => n >= 20 && n <= 300, /XAD/);
+        const distK = find(/dist|gap|interval|level|step|abstand/i, (n) => n >= 1 && n <= 6);
+        const actK = find(/activ|engag|regul|control/i, (n) => n === 1 || n === 0);
+        const c = { set: setK ? Math.round(flat[setK]) : null, dist: distK ? Math.max(1, Math.min(4, Math.round(flat[distK]))) : null,
+            active: actK ? flat[actK] === 1 : null };
+        c.on = isNum(c.set);
+        this.cruise = c;
+        const text = keys.map((k) => k + '=' + flat[k]).join(' ');
+        if (text !== this.cruiseText) {
+            this.cruiseText = text;
+            if ((this.cruiseLogs = (this.cruiseLogs || 0) + 1) <= 400) this.log.info('cruise raw: ' + text.slice(0, 900) + ' -> set ' + c.set + ' (' + setK + '), distance ' + c.dist + ' (' + distK + '), active ' + c.active + ' (' + actK + ')');
+        }
+    }
+
+    /** The cruise control now: { on, active, set, dist (null: no ACC) } or null; ACC on at 130, distance 3 in demo. */
+    _cruiseNow() {
+        const c = this.cruise && this.cruiseAt && Date.now() - this.cruiseAt < 10000 ? this.cruise : null;
+        if (c && c.on) return { on: true, active: c.active !== false, set: c.set, dist: c.dist };
+        if (!c && this.car.data().demo) return { on: true, active: true, set: 130, dist: 3 };
+        return null;
+    }
+
     _raw(name) {
         // the start animation's value, if it sets one (rpm: already in rpmF); its "live" keys read on, past this
         if (this.intro && name !== 'rpm' && !this.introLive) {
@@ -1812,6 +1895,29 @@ class HudApp {
         }
         // the speed limit the camera reads (km/h; null: no sign), 80 in demo
         if (name === 'speedLimit') return isNum(this.speedLimit) ? this.speedLimit : this.car.data().demo ? 80 : null;
+        // no overtaking (1 while the camera reads the sign, else 0; 1 in demo), the supplementary plate's code (null: none)
+        if (name === 'noPassing') return this.noPassing === true || (this.noPassing === undefined && this.car.data().demo) ? 1 : 0;
+        if (name === 'signPlate') return isNum(this.signPlate) ? this.signPlate : null;
+        // the next limit (km/h) while it differs from the present one (100 in demo), and 1 while it shows
+        if (name === 'nextLimit') {
+            const d = this.car.data().demo, now = isNum(this.speedLimit) ? this.speedLimit : d ? 80 : null;
+            const n = isNum(this.nextLimit) ? this.nextLimit : this.nextLimit === undefined && d ? 100 : null;
+            return isNum(n) && n !== now ? n : null;
+        }
+        if (name === 'nextLimitOn') return isNum(this._raw('nextLimit')) ? 1 : 0;
+        // the cruise control (0.50.6): ACC holding / ready (1 + the distance bars lit), a plain cruise control holding /
+        // ready (1), ACC's unlit bars (1 while ACC shows)
+        if (/^(accOn|accRdy|accBars|ccOn|ccRdy)$/.test(name)) {
+            const c = this._cruiseNow(), acc = !!(c && isNum(c.dist));
+            if (!c) return 0;
+            if (name === 'accOn') return acc && c.active ? 1 + c.dist : 0;
+            if (name === 'accRdy') return acc && !c.active ? 1 + c.dist : 0;
+            if (name === 'accBars') return acc ? 1 : 0;
+            if (name === 'ccOn') return !acc && c.active ? 1 : 0;
+            return !acc && !c.active ? 1 : 0;
+        }
+        // the end of no overtaking: 1 for NO_PASS_END_MS after the restriction ends
+        if (name === 'noPassEnd') return this.noPassEndAt && Date.now() - this.noPassEndAt < NO_PASS_END_MS ? 1 : 0;
         if (name === 'boost') return this._boost();
         if (name === 'gLat' || name === 'gLong') {
             // the 150 ms average while samples come in; else the car's last reading, unless it is a bad one
@@ -1995,6 +2101,14 @@ class HudApp {
             }
             // the speed limit the camera reads, '' while there's no sign (Zeiger 0.50.0)
             case 'speedLimit': { const v = this._raw('speedLimit'); return isNum(v) ? String(v) : ''; }
+            case 'nextLimit': { const v = this._raw('nextLimit'); return isNum(v) ? String(v) : ''; }
+            // the cruise control's set speed and its word, holding (On) or ready (Rdy), '' otherwise
+            case 'cruiseOn': case 'cruiseRdy': case 'cruiseLabelOn': case 'cruiseLabelRdy': {
+                const c = this._cruiseNow(), on = /On$/.test(tok);
+                if (!c || c.active !== on) return '';
+                if (/^cruiseLabel/.test(tok)) return (isNum(c.dist) ? 'ACC' : 'CRUISE') + (on ? '' : '  READY');
+                return String(c.set);
+            }
             case 'mode': case 'modeShort': {
                 // the demo drive sends no drive mode: COMFORT there, so a theme's mode line shows on the bench (Zeiger)
                 const m = this.driveMode || (this.car.data().demo ? 'comfort' : null);
@@ -2815,7 +2929,7 @@ class HudApp {
                 if (!ref && assetRef) { c.drop(assetRef); assetRef = 0; usedAsset = 0; }
                 if (assetRef && this.assetFor) this.assetFor.set(ak, assetRef);
             } else if (IMAGE_TYPES[w.type]) ref = c.image(Object.assign({ iw: sp ? (w.crop ? w.crop[2] : sp.w) : w.w, ih: sp ? (w.crop ? w.crop[3] : sp.h) : w.h }, base));
-            else ref = c.effect(Object.assign({ fs: w.type === 'swatch' ? calibration.SWATCH : shaders[w.type] }, base));
+            else ref = c.effect(Object.assign({ fs: w.type === 'swatch' ? calibration.SWATCH : shaders[w.type] }, base, w.type === 'precip' ? { time: true } : {}));
             if (!ref) { this.log.warn('widget "' + w.id + '": layer refused'); return; }
             this.placed.push({ c, ref, x: w.x, y: w.y, w: w.w, h: w.h });
         }
@@ -3680,6 +3794,18 @@ class HudApp {
             x.last = key;
             x.c.uniform(x.ref, 'u_lit', [lit]);
             x.c.uniform(x.ref, 'u_strobe', [sp.now ? 1 : 0]);
+        } else if (w.type === 'precip') {
+            // rain or snow over the theme (0.50.6, a test): Lab's "Rain and snow" setting, off by default
+            const pick = this.setting('weatherFx'), kind = pick === 'rain' ? 1 : pick === 'snow' ? 2 : 0;
+            const amt = isNum(w.amount) ? w.amount : 0.7, key = kind + '|' + amt;
+            // "fade": { rain: [from, to], snow: [from, to] } px down the layer where it fades out (else its lower 60 %)
+            const fd = w.fade && w.fade[kind === 2 ? 'snow' : 'rain'], fade = Array.isArray(fd) && fd.length === 2 ? fd : [w.h * 0.4, w.h];
+            if (!force && key === x.last) return;
+            x.last = key;
+            x.c.uniform(x.ref, 'u_size', [w.w, w.h]);
+            x.c.uniform(x.ref, 'u_kind', [kind]);
+            x.c.uniform(x.ref, 'u_amount', [amt]);
+            x.c.uniform(x.ref, 'u_fade', fade, { type: 'vec2' });
         } else if (w.type === 'bandflash') {
             // the last stage the rpm has reached (its "at" is rpm from the shift point: -500, -250, 0), its colour on and
             // off "hz" times a second (5: a 100 ms half, two of the 50 ms ticks, so every flash is the same length)

@@ -1378,4 +1378,73 @@ void main() {
 }
 `;
 
-module.exports = { texpic: TEXPIC, curtain: CURTAIN, bandflash: BANDFLASH, shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, dial: DIAL, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES };
+const PRECIP = `// Rain or snow falling over a theme (Zeiger 0.50.6, a test), a cluster-render "effect" layer (GLSL ES 1.00)
+// with time: true. v_uv 0..1, (0,0) at the top-left. Uniforms from hud.js:
+//   u_size  layer size in px;  u_time  seconds (the renderer's clock);  u_kind  0 nothing, 1 rain, 2 snow;
+//   u_amount  0..1, how much falls
+// Rain: thin slanted streaks in three depths (near ones longer, faster, brighter). Snow: soft flakes in three
+// depths, falling slowly and swaying. Straight alpha, light, so the readouts stay readable through it; it fades
+// out from u_fade.x to u_fade.y px down (hud.js: the widget's "fade" per kind), a band with a soft end.
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+varying vec2 v_uv;
+uniform vec2 u_size;
+uniform float u_time;
+uniform float u_kind;
+uniform float u_amount;
+uniform vec2 u_fade;      // px from the top: fading out from x, gone at y
+
+float h1(float n) { return fract(sin(n * 127.1) * 43758.5453); }
+
+// one depth of rain: a streak in some columns cell px apart, falling at speed px/s, len px long
+float rain(vec2 p, float cell, float speed, float len, float seed) {
+    p.x += p.y * 0.16;                                   // slanted, as wind-driven rain
+    float col = floor(p.x / cell);
+    float r = h1(col + seed);
+    if (r > 0.25 + 0.65 * u_amount) return 0.0;
+    float x = (col + 0.5 + (h1(col * 3.7 + seed) - 0.5) * 0.6) * cell;
+    float dx = abs(p.x - x);
+    if (dx > 1.1) return 0.0;
+    float period = u_size.y + len * 3.0;
+    float y = mod(u_time * speed * (0.85 + 0.3 * r) + r * period, period) - len;
+    float dy = p.y - y;
+    if (dy < 0.0 || dy > len) return 0.0;
+    return (dy / len) * (1.0 - dx / 1.1);               // brightest at its head (lowest end)
+}
+
+// one depth of snow: at most one flake per cell px square, falling at speed px/s, rad px
+float snow(vec2 p, float cell, float speed, float rad, float seed) {
+    vec2 q = vec2(p.x, p.y - u_time * speed);
+    vec2 c = floor(q / cell);
+    float r = h1(c.x * 17.0 + c.y * 131.0 + seed);
+    if (r > 0.2 + 0.7 * u_amount) return 0.0;
+    vec2 ctr = (c + vec2(0.25 + 0.5 * h1(c.x + c.y * 7.0 + seed), 0.25 + 0.5 * h1(c.y + c.x * 3.0 + seed))) * cell;
+    ctr.x += sin(u_time * (0.8 + r) + r * 6.2832) * cell * 0.18;
+    float d = length(q - ctr);
+    return 1.0 - smoothstep(rad * 0.35, rad, d);
+}
+
+void main() {
+    vec2 p = v_uv * u_size;
+    float a = 0.0;
+    vec3 col = vec3(1.0);
+    if (u_kind > 1.5) {
+        a = max(a, 0.45 * snow(p, 46.0, 38.0, 2.2, 1.0));
+        a = max(a, 0.65 * snow(p, 70.0, 62.0, 3.2, 2.0));
+        a = max(a, 0.85 * snow(p, 110.0, 95.0, 4.6, 3.0));
+    } else if (u_kind > 0.5) {
+        col = vec3(0.80, 0.86, 0.92);
+        a = max(a, 0.22 * rain(p, 13.0, 1100.0, 16.0, 1.0));
+        a = max(a, 0.32 * rain(p, 21.0, 1500.0, 26.0, 2.0));
+        a = max(a, 0.45 * rain(p, 33.0, 2000.0, 38.0, 3.0));
+    }
+    // fading out from u_fade.x to u_fade.y px down (a band at the top: no hard edge where it ends)
+    a *= 1.0 - smoothstep(u_fade.x, u_fade.y, p.y);
+    gl_FragColor = vec4(col, a);
+}
+`;
+
+module.exports = { precip: PRECIP, texpic: TEXPIC, curtain: CURTAIN, bandflash: BANDFLASH, shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, dial: DIAL, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES };

@@ -82,6 +82,7 @@ const GROUPS = [
         ['calib', 'Calibration', 'a grid or the map frame on the cluster, to measure what BMW hides'],
         ['slotWatch', 'Watch BMW\'s slots', 'test: every slot now, and what changed when'],
         ['probe', 'Look for cruise and speed limit', 'test: what the car offers apps, listed here'],
+        ['weatherFx', 'Rain and snow', 'test: falling over the theme (Ember)'],
     ] },
 ];
 // Customise (Zeiger 0.34.0): the themes whose places can show other things, the setting prefix and the rows (the
@@ -628,7 +629,7 @@ class Page {
         const rows = watch ? g.rows.filter((r) => r[0] === 'slotWatch') : g.rows;
         const room = py + ph - 10 - y - (credits ? Math.max(CREDITS.length * 26 + 24, 196) : 0);
         // the slot watch and the probe (0.46.0) give their lines the room: their rows as low as they go
-        const rh = watch ? WATCH_ROW : probe ? 56 : Math.min(84, Math.floor(room / Math.max(1, rows.length)));   // (probe: Lab's six rows, 56 each)
+        const rh = watch ? WATCH_ROW : probe ? 50 : Math.min(84, Math.floor(room / Math.max(1, rows.length)));   // (probe: Lab's seven rows, 50 each)
         rows.forEach((row, j) => this.row(cv, px + 32, y + j * rh, pw - 64, rh, row));
         if (watch) {
             const wy = y + rh + 18;

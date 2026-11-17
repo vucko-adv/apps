@@ -90,10 +90,15 @@ const LIVE = [
     { iface: 'de.bmw.infotainment.fasus.FASuS', names: ['statusNextSpeedLimitRecognition', 'statusSLITextMessage'] },
     { iface: 'de.bmw.environmentalmodel.SignRecognitionFrontCamera', names: ['TrafficSignRecognitionFrontCamera'] },
     { iface: 'de.bmw.dass.HMIControlAD', names: ['controlSpeedLock'] },
+    // 0.50.6: the cruise control / ACC (its set speed and the distance, as the cluster shows them; listed only until now)
+    // and the camera's older sign event (sign type, value and its supplementary plate: no overtaking, stop, rain, snow?)
+    { iface: 'de.bmw.dass.driverassistanceapplications.StatusDisplayXADAndSpeed', names: ['statusDisplaySpeed', 'statusDisplayXAD'] },
+    { iface: 'de.bmw.dass.StatusDriverAssistanceFunctions', names: ['statusForesight'] },
+    { iface: 'de.bmw.environmentalmodel.SignRecognitionFrontCameraLegacy', names: ['RecognitionTrafficSignCamera', 'recognitionTrafficSignCamera2'] },
 ];
 // where the cruise control's state and set speed should be (their names didn't say so): every field listed
 const SHOW_ALL = ['de.bmw.dass.driverassistanceapplications.StatusDisplayXADAndSpeed', 'de.bmw.dass.StatusDriverAssistanceFunctions'];
-const HISTORY = 4;
+const HISTORY = 6;
 
 /** An interface's instance ids in the catalog entry (instance / instances / instanceIds: a string, list or map) */
 function instancesOf(entry) {
@@ -139,9 +144,9 @@ function live(signals, db, log, onUpdate) {
     const got = (it, v) => {
         if (stopped) return;
         it.value = v; it.n++; it.at = Date.now();
-        const text = pairs(v, 40).join('  ');
+        const p = pairs(v, 60), text = p.join('  ');
         if (!it.seen.length || it.seen[it.seen.length - 1].text !== text) {
-            it.seen.push({ at: it.at, text });
+            it.seen.push({ at: it.at, text, p });
             if (it.seen.length > HISTORY) it.seen.shift();
             if (log && logged++ < 400) log.info('probe live: ' + it.iface + '.' + it.name + ' = ' + text.slice(0, 600));
         }
@@ -150,7 +155,7 @@ function live(signals, db, log, onUpdate) {
     (async () => {
         for (const s of LIVE) {
             const mine = items.filter((it) => it.iface === s.iface), found = instancesOf(entryOf(db, s.iface));
-            const insts = found.length ? found.slice(0, 3) : ['1'];
+            const insts = found.length ? found.slice(0, 3) : ['1', '2', '3', '4'];
             for (const inst of insts) {
                 if (stopped) return;
                 const handlers = {};
@@ -159,7 +164,7 @@ function live(signals, db, log, onUpdate) {
                 try { res = await signals.watch(s.iface, inst, handlers, log); } catch (e) { res = { error: String(e && e.message || e) }; }
                 mine.forEach((it) => { it.inst = inst; it.res = res; it.error = res && res.error; it.guess = !found.length; it.keys = Object.keys(entryOf(db, s.iface) || {}); });
                 if (log) log.info('probe live: ' + s.iface + ' instance ' + inst + (found.length ? '' : ' (none in the catalog)') + ': ' + (res && res.error ? res.error : 'subscribed'));
-                if (res && !res.error) { subs.push(res); break; }
+                if (res && !res.error) { subs.push(res); if (found.length) break; mine.forEach((it) => { it.inst = insts.slice(0, insts.indexOf(inst) + 1).join('/'); }); }
             }
             onUpdate();
         }
@@ -205,8 +210,16 @@ function liveLines(L, db) {
         else if (it.error) out.push('    instance ' + it.inst);
         // 0.50.0: the camera's limit as the themes show it (5 km/h steps: 10 was a 50 sign)
         if (it.n && it.name === 'TrafficSignRecognition' && it.value) { const sp = it.value.presentClassLimitSpeed; out.push('    = ' + (sp > 0 && sp < 254 ? sp * 5 + ' km/h' : 'no sign') + ' (presentClassLimitSpeed ' + sp + ' x 5)'); }
-        if (it.n) chunk(it.seen[it.seen.length - 1].text, 70).slice(0, 6).forEach((l) => out.push('    ' + l));
-        it.seen.slice(0, -1).reverse().forEach((s) => out.push('    before, ' + hms(s.at) + ': ' + s.text.slice(0, 90)));
+        // the sign sources: every field (0.50.6: no overtaking, a limit for rain or snow are somewhere in them)
+        const sign = /TrafficSign/.test(it.iface + it.name);
+        if (it.n) chunk(it.seen[it.seen.length - 1].text, 70).slice(0, sign ? 14 : 6).forEach((l) => out.push('    ' + l));
+        // each earlier change: the fields it changed, old -> new (0.50.6; the whole value before, cut at 90)
+        const kv = (q) => { const m = {}; (q || []).forEach((x) => { const i = x.indexOf('='); m[i > 0 ? x.slice(0, i) : x] = i > 0 ? x.slice(i + 1) : ''; }); return m; };
+        for (let j = it.seen.length - 1; j > 0; j--) {
+            const a = kv(it.seen[j - 1].p), b = kv(it.seen[j].p);
+            const ch = Object.keys(Object.assign({}, a, b)).filter((k) => a[k] !== b[k]).map((k) => k + ' ' + (a[k] === undefined ? '-' : a[k]) + '>' + (b[k] === undefined ? '-' : b[k]));
+            out.push('    ' + hms(it.seen[j].at) + ' changed: ' + (ch.join('  ') || 'nothing').slice(0, 110));
+        }
     });
     SHOW_ALL.forEach((id) => { out.push(id.split('.').pop() + ': every field (for the cruise control)'); every(db, id).forEach((l) => out.push(l)); });
     return out;
