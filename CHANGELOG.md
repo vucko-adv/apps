@@ -4,6 +4,8 @@ Newest first. Dates are when the build was pushed.
 
 ## Nov 17 2026
 
+- **Zeiger 0.50.2:** Concours, finer. The rev counter's numbers are applied, as on a watch: a gold side for their thickness and a thin polished gold edge round the enamel, with only a tight contact shadow. The left dial's scales sit deeper: the panel over them casts its shade into each window, over the needles too, so they pass under its edge instead of grazing it. The gear window sits lower on the speedometer.
+
 - **Zeiger 0.50.1:** installs again. Zeiger never set `maxDiskUsage`, so the head unit's app manager gave it the build's default of 20 MiB; with Concours the app is about 31 MB and the update to 0.50.0 failed (UPDATE_FAILED, the previous version kept). app.json now asks for 64 MiB (`maxDiskUsage`, as the Doom app asks for 100). Concours: the side dials 40 px further out, so the leather shows between them and the rev counter by day too; at night their ring's outer edge catches a little light, so they read as wide as by day.
 
 - **Zeiger 0.50.0:** **the speed limit on the cluster.** The probe found it on a G20: the front camera's traffic sign recognition (de.bmw.dass.TrafficSignRecognition) sends the limit live, in 5 km/h steps (10 read at a 50 sign; more signs will confirm the step). **Ember** shows it discreetly, a small black and white round sign right of the speed, only while the camera reads a limit. Themes get it as `{{speedLimit}}` (km/h, empty with no sign) and as a measure for segments and needles. The probe (About, Look for cruise and speed limit) shows the limit in km/h next to the raw value. The bench's manual values send a limit too (`limit`, 80 km/h).
