@@ -216,6 +216,19 @@ list shows the next page; the log and `data/probe.txt` have it all. Nothing is s
 nothing on the cluster changes (probe.js). Photograph every page: the next build asks for the fields found and shows
 their values while driving. `ZEIGER_PROBE_CATALOG` names another catalog file, for the emulator.
 
+**Live (0.48.0).** On a G20 the probe listed 667 interfaces, 17 of them about the speed limit. Those whose names it
+showed in full are now in app.json "signals" (each `_optional`, every instance `*`) and are read live while the test is
+on (probe.js `LIVE`): `de.bmw.dass.TrafficSignRecognition` (event TrafficSignRecognition: presentClassLimitSpeed and
+more), `driverassistanceapplications.TrafficSignDisplayControl` (displaySpeedLimitAndNoPassingRestriction),
+`navigation.externalize.adasng.CCP` (effectiveSpeedLimit, speedLimitUnit, variableSpeedLimitSign), `fasus.FASuS`
+(statusNextSpeedLimitRecognition, statusSLITextMessage), `environmentalmodel.SignRecognitionFrontCamera`
+(TrafficSignRecognitionFrontCamera) and `dass.HMIControlAD` (controlSpeedLock). The page shows, first, each one's state
+(waiting, connected, error, or how many values and when) with its last value as key=value pairs and the ones before it;
+then every field of `StatusDisplayXADAndSpeed` and `StatusDriverAssistanceFunctions`, where the cruise control's state
+and set speed should be (no name there said so); then the catalog list as before. The instance comes from the catalog
+entry (instance / instances), else 1 is tried and the page says so. Values go to the log too. Switched off, the
+subscriptions end. The next build reads the right fields for the themes.
+
 ## Boost
 
 Boost (Apex's and Apex Sport's bar and readout, Vintage Green's and Cyan's TURBO bar) comes from two places:

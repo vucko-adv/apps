@@ -597,7 +597,7 @@ class Page {
         if (credits && this.get('probe') === true) {
             this.probeLines(cv, px + 32, y + g.rows.length * rh + 18, pw - 64, py + ph - 14);
         } else if (credits) {
-            if (this.get('probe') !== true) this.probeR = undefined;
+            if (this.get('probe') !== true) { this.probeR = undefined; this.probeStop(); }
             const cy = y + g.rows.length * rh + 18;
             cv.fillRect(px + 32, cy - 8, pw - 64, 1, C.faint);
             CREDITS.forEach((s, j) => cv.text(s, px + 32, cy + 22 + j * 26, 18, j ? C.dim : C.soft, { font: M, literal: true }));
@@ -614,16 +614,29 @@ class Page {
     /**
      * The probe (0.46.0, a test, probe.js): the car's SOME/IP catalog searched for the cruise control and the speed
      * limit, its lines in place of the credits; a tap on them shows the next page. Read once each time it is switched on.
+     * 0.48.0: then what was found is read live (probe.live) while it is on, its values first; switched off, it stops.
      */
     probeLines(cv, x, y, w, bottom) {
         const F = { font: M, literal: true }, LH = 22;
         if (this.probeR === undefined) {
             this.probeR = null; this.probePage = 0;
-            probe.run(this.ctx.log, this.ctx.dataDir, (r) => { this.probeR = r; this.kick(); });
+            probe.run(this.ctx.log, this.ctx.dataDir, (r) => {
+                this.probeR = r;
+                if (!r.error && this.get('probe') === true && !this.probeL) {
+                    let last = 0;
+                    const kick = () => { const now = Date.now(); if (now - last > 500) { last = now; this.kick(); } };
+                    this.probeL = probe.live(this.ctx.signals, r.db, this.ctx.log, kick);
+                    // the "s ago" and the connection state, while nothing new comes
+                    this.probeTimer = setInterval(() => this.kick(), 2000);
+                }
+                this.kick();
+            });
         }
         cv.fillRect(x, y - 8, w, 1, C.faint);
-        // two columns side by side, the first line (how many) across both
-        const all = probe.lines(this.probeR), rows = Math.max(3, Math.floor((bottom - y - 12) / LH) - 1);
+        // two columns side by side, the first line (how many) across both; the live values before the catalog's list
+        const found = probe.lines(this.probeR);
+        const all = [found[0]].concat(probe.liveLines(this.probeL, this.probeR && this.probeR.db), found.slice(1));
+        const rows = Math.max(3, Math.floor((bottom - y - 12) / LH) - 1);
         cv.text(fit(cv, all[0], 17, w, M), x, y + 18, 17, C.soft, F);
         const rest = all.slice(1), cw = Math.floor((w - 24) / 2), per = (rows - 1) * 2;
         const pages = Math.max(1, Math.ceil(rest.length / per)), page = (this.probePage || 0) % pages;
@@ -633,6 +646,12 @@ class Page {
         });
         if (pages > 1) cv.text('page ' + (page + 1) + ' of ' + pages + ' · tap for the next', x + w, y + 18 + rows * LH, 15, C.dim, Object.assign({ align: 'right' }, F));
         cv.target(x, y - 8, w, bottom - y + 8, () => { this.probePage = (page + 1) % pages; this.kick(); }, 'probe', 0, true);
+    }
+
+    /** The live read off (the probe switched off) */
+    probeStop() {
+        if (this.probeL) { this.probeL.stop(); this.probeL = null; }
+        if (this.probeTimer) { clearInterval(this.probeTimer); this.probeTimer = null; }
     }
 
     /**

@@ -1,6 +1,6 @@
 'use strict';
 /**
- * probe.js - Zeiger 0.46.0, a test: can an app read the cruise control and the speed limit?
+ * probe.js - Zeiger 0.46.0, a test: can an app read the cruise control and the speed limit? (0.48.0: live, below)
  *
  * The head unit's SOME/IP catalog (/etc/oap/someip/someip-interfaces.json on iDrive 7: { interfaces: { "<id>": {...} } })
  * names every interface an app may ask for in app.json "signals", with its fields and their structs. This looks through
@@ -79,15 +79,149 @@ function lines(r) {
     return out;
 }
 
+/* ---------------- 0.48.0: read live, while the test is on ---------------- */
+
+// What the 0.46.0 probe found on a G20 (Nov 17 2026), only the names it showed in full. Fields ("s" in app.json) and
+// events (app.json "_broadcasts") are both subscribed to by name; every one is "_optional" in app.json.
+const LIVE = [
+    { iface: 'de.bmw.dass.TrafficSignRecognition', names: ['TrafficSignRecognition'] },
+    { iface: 'de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl', names: ['displaySpeedLimitAndNoPassingRestriction'] },
+    { iface: 'de.bmw.infotainment.navigation.externalize.adasng.CCP', names: ['effectiveSpeedLimit', 'speedLimitUnit', 'variableSpeedLimitSign'] },
+    { iface: 'de.bmw.infotainment.fasus.FASuS', names: ['statusNextSpeedLimitRecognition', 'statusSLITextMessage'] },
+    { iface: 'de.bmw.environmentalmodel.SignRecognitionFrontCamera', names: ['TrafficSignRecognitionFrontCamera'] },
+    { iface: 'de.bmw.dass.HMIControlAD', names: ['controlSpeedLock'] },
+];
+// where the cruise control's state and set speed should be (their names didn't say so): every field listed
+const SHOW_ALL = ['de.bmw.dass.driverassistanceapplications.StatusDisplayXADAndSpeed', 'de.bmw.dass.StatusDriverAssistanceFunctions'];
+const HISTORY = 4;
+
+/** An interface's instance ids in the catalog entry (instance / instances / instanceIds: a string, list or map) */
+function instancesOf(entry) {
+    const out = [];
+    const take = (v) => {
+        if (typeof v === 'string' || typeof v === 'number') out.push(String(v));
+        else if (Array.isArray(v)) v.forEach((x) => (x && typeof x === 'object' ? take(x.name || x.id || x.instanceId || x.instance) : take(x)));
+        else if (v && typeof v === 'object') Object.keys(v).forEach((k) => out.push(k));
+    };
+    Object.keys(entry || {}).forEach((k) => { if (/^instances?(ids?)?$/i.test(k)) take(entry[k]); });
+    return out.filter((v, i) => v && v !== '*' && out.indexOf(v) === i);
+}
+
+/** A catalog entry by id (interfaces as a map or a list) */
+function entryOf(db, id) {
+    const ifs = (db && db.interfaces) || {};
+    return Array.isArray(ifs) ? ifs.find((x) => x && (x.id === id || x.name === id)) : ifs[id];
+}
+
+/** A value as short "key=value" pairs (the last key of each path), at most max */
+function pairs(v, max) {
+    const out = [];
+    const walk = (x, k) => {
+        if (out.length >= max) return;
+        if (x === null || x === undefined) out.push(k + '=-');
+        else if (typeof x !== 'object') out.push((k ? k + '=' : '') + (typeof x === 'number' && !Number.isInteger(x) ? x.toFixed(2) : String(x)));
+        else if (Buffer.isBuffer(x)) out.push(k + '=<' + x.length + ' bytes>');
+        else if (Array.isArray(x)) { if (!x.length) out.push(k + '=[]'); x.forEach((y, i) => walk(y, k + '[' + i + ']')); }
+        else Object.keys(x).forEach((kk) => walk(x[kk], kk));
+    };
+    walk(v, '');
+    return out;
+}
+
+/**
+ * Subscribe to LIVE (signals: ctx.signals; db: the catalog, for the instance ids). onUpdate() on every value.
+ * Returns { items: [{ iface, name, inst, res, error, n, at, value, seen: [{ at, text }] }], stop() }.
+ */
+function live(signals, db, log, onUpdate) {
+    const items = [], subs = [];
+    let stopped = false, logged = 0;
+    LIVE.forEach((s) => s.names.forEach((name) => items.push({ iface: s.iface, name, inst: null, res: null, error: null, n: 0, at: 0, value: undefined, seen: [] })));
+    const got = (it, v) => {
+        if (stopped) return;
+        it.value = v; it.n++; it.at = Date.now();
+        const text = pairs(v, 40).join('  ');
+        if (!it.seen.length || it.seen[it.seen.length - 1].text !== text) {
+            it.seen.push({ at: it.at, text });
+            if (it.seen.length > HISTORY) it.seen.shift();
+            if (log && logged++ < 400) log.info('probe live: ' + it.iface + '.' + it.name + ' = ' + text.slice(0, 600));
+        }
+        onUpdate();
+    };
+    (async () => {
+        for (const s of LIVE) {
+            const mine = items.filter((it) => it.iface === s.iface), found = instancesOf(entryOf(db, s.iface));
+            const insts = found.length ? found.slice(0, 3) : ['1'];
+            for (const inst of insts) {
+                if (stopped) return;
+                const handlers = {};
+                mine.forEach((it) => { handlers[it.name] = (v) => got(it, v); });
+                let res;
+                try { res = await signals.watch(s.iface, inst, handlers, log); } catch (e) { res = { error: String(e && e.message || e) }; }
+                mine.forEach((it) => { it.inst = inst; it.res = res; it.error = res && res.error; it.guess = !found.length; it.keys = Object.keys(entryOf(db, s.iface) || {}); });
+                if (log) log.info('probe live: ' + s.iface + ' instance ' + inst + (found.length ? '' : ' (none in the catalog)') + ': ' + (res && res.error ? res.error : 'subscribed'));
+                if (res && !res.error) { subs.push(res); break; }
+            }
+            onUpdate();
+        }
+    })();
+    return {
+        items,
+        stop() { stopped = true; subs.forEach((r) => { try { r.shutdown(); } catch (e) { /* gone */ } }); },
+    };
+}
+
+/** Every field, event and method of an interface (with what an event or method carries), for SHOW_ALL */
+function every(db, id) {
+    const e = entryOf(db, id);
+    if (!e) return ['    not in this car\'s catalog'];
+    const out = [];
+    const names = (o) => { const n = []; const w = (x, d) => { if (!x || typeof x !== 'object' || d > 6) return; Object.keys(x).forEach((k) => { if (k === 'name' && typeof x[k] === 'string') n.push(x[k]); else w(x[k], d + 1); }); }; w(o, 0); return n; };
+    Object.keys(e).forEach((sec) => {
+        const v = e[sec];
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+            Object.keys(v).forEach((k) => {
+                const inner = names(v[k]).filter((n) => n !== k);
+                out.push('    ' + sec + '.' + k + (inner.length ? ': ' + inner.join(', ') : ''));
+            });
+        } else out.push('    ' + sec + ' = ' + (Array.isArray(v) ? v.map((x) => (typeof x === 'object' ? JSON.stringify(x) : x)).join(', ') : String(v)).slice(0, 200));
+    });
+    return out;
+}
+
+/** The page's live lines: each source and its value (and the values before it), then SHOW_ALL's fields */
+function liveLines(L, db) {
+    if (!L) return [];
+    const now = Date.now(), ago = (t) => { const s = Math.round((now - t) / 1000); return s < 60 ? s + ' s ago' : Math.round(s / 60) + ' min ago'; };
+    const hms = (t) => { const d = new Date(t); return [d.getHours(), d.getMinutes(), d.getSeconds()].map((x) => String(x).padStart(2, '0')).join(':'); };
+    const chunk = (text, n) => { const out = []; let line = ''; text.split('  ').forEach((p) => { if (line && line.length + p.length + 2 > n) { out.push(line); line = ''; } line += (line ? '  ' : '') + p; }); if (line) out.push(line); return out; };
+    const out = ['Live while this is on: drive past signs, cruise on and off, then look'];
+    L.items.forEach((it) => {
+        const state = it.n ? it.n + ' values, ' + ago(it.at) : it.error ? 'error' : it.res ? (it.res.available ? 'connected' : 'waiting') : 'starting';
+        const short = it.iface.split('.').pop();
+        out.push(state + ' · ' + short + (it.name !== short ? '.' + it.name : ''));
+        if (it.error) out.push('    ' + it.error);
+        // no instance in the catalog: '1' was a guess; what the entry has, for the next try
+        if (it.guess && !it.n && it === L.items.find((x) => x.iface === it.iface)) out.push('    no instance listed, tried ' + it.inst + ' · it has: ' + (it.keys || []).join(', '));
+        else if (it.error) out.push('    instance ' + it.inst);
+        if (it.n) chunk(it.seen[it.seen.length - 1].text, 70).slice(0, 6).forEach((l) => out.push('    ' + l));
+        it.seen.slice(0, -1).reverse().forEach((s) => out.push('    before, ' + hms(s.at) + ': ' + s.text.slice(0, 90)));
+    });
+    SHOW_ALL.forEach((id) => { out.push(id.split('.').pop() + ': every field (for the cruise control)'); every(db, id).forEach((l) => out.push(l)); });
+    return out;
+}
+
 function run(log, dataDir, done) {
     const tryAt = (i) => {
         if (i >= PATHS.length) { done({ error: 'not found at ' + PATHS.join(', ') }); return; }
         fs.readFile(PATHS[i], 'utf8', (err, text) => {
             if (err) { if (i + 1 < PATHS.length) tryAt(i + 1); else done({ error: err.code === 'EACCES' ? 'no permission to read ' + PATHS[i] : String(err.message || err) }); return; }
             let r;
-            try { r = search(JSON.parse(text)); } catch (e) { done({ error: 'unreadable: ' + e.message }); return; }
-            r.file = PATHS[i];
-            const all = lines(r);
+            let db;
+            try { db = JSON.parse(text); r = search(db); } catch (e) { done({ error: 'unreadable: ' + e.message }); return; }
+            r.file = PATHS[i]; r.db = db;
+            // 0.48.0: the cruise candidates' fields, and the instances of what is read live, for the log and probe.txt
+            const all = lines(r).concat(SHOW_ALL.map((id) => [id + ':'].concat(every(db, id))).reduce((a, b) => a.concat(b), []),
+                LIVE.map((x) => x.iface + ' instances: ' + (instancesOf(entryOf(db, x.iface)).join(', ') || 'none listed')));
             if (log) { log.info('probe: ' + PATHS[i] + ' (' + Math.round(text.length / 1024) + ' KiB)'); all.forEach((l) => log.info('probe: ' + l)); }
             // the whole list, for a USB stick or the logs page: data/probe.txt
             try { if (dataDir) fs.writeFileSync(path.join(dataDir, 'probe.txt'), all.join('\n') + '\n'); } catch (e) { /* read-only: the log has it */ }
@@ -97,4 +231,4 @@ function run(log, dataDir, done) {
     tryAt(0);
 }
 
-module.exports = { search, lines, run, match, words };
+module.exports = { search, lines, run, match, words, live, liveLines, instancesOf, pairs, every, LIVE, SHOW_ALL };

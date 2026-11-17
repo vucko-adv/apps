@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "Home-screen widgets: each Zeiger widget can now show its own view. Place two or three side by side and tap one to change what it shows (engine, weather, the cluster's theme), for an overview next to BMW's menu. Settings, Home-screen widget, \"Tap on a widget\" can make a tap open Zeiger again, as before.",
-  "version": "0.47.0",
+  "whatsNew": "The test goes on: with Settings, About, \"Look for cruise and speed limit\" on, Zeiger now reads the speed limit sources it found in your car while you drive and shows their values there, and lists the fields where the cruise control should be. Nothing on the cluster changes yet.",
+  "version": "0.48.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -32,6 +32,45 @@
   ],
   "internet": true,
   "signals": {
+    "de.bmw.dass.TrafficSignRecognition": {
+      "_instances": "*",
+      "_broadcasts": [
+        "TrafficSignRecognition"
+      ],
+      "_optional": "the probe's live test of the speed limit (About, Look for cruise and speed limit)"
+    },
+    "de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl": {
+      "_instances": "*",
+      "displaySpeedLimitAndNoPassingRestriction": "s",
+      "_optional": "the probe's live test of the speed limit (About, Look for cruise and speed limit)"
+    },
+    "de.bmw.infotainment.navigation.externalize.adasng.CCP": {
+      "_instances": "*",
+      "_broadcasts": [
+        "effectiveSpeedLimit",
+        "speedLimitUnit",
+        "variableSpeedLimitSign"
+      ],
+      "_optional": "the probe's live test of the speed limit (About, Look for cruise and speed limit)"
+    },
+    "de.bmw.infotainment.fasus.FASuS": {
+      "_instances": "*",
+      "statusNextSpeedLimitRecognition": "s",
+      "statusSLITextMessage": "s",
+      "_optional": "the probe's live test of the speed limit (About, Look for cruise and speed limit)"
+    },
+    "de.bmw.environmentalmodel.SignRecognitionFrontCamera": {
+      "_instances": "*",
+      "_broadcasts": [
+        "TrafficSignRecognitionFrontCamera"
+      ],
+      "_optional": "the probe's live test of the speed limit (About, Look for cruise and speed limit)"
+    },
+    "de.bmw.dass.HMIControlAD": {
+      "_instances": "*",
+      "controlSpeedLock": "s",
+      "_optional": "the probe's live test of the cruise control (About, Look for cruise and speed limit)"
+    },
     "de.bmw.infotainment.vehicle.CDS": {
       "statusEngineSpeed2": "rs",
       "statusEngineTemperature": "rs"
