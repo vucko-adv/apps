@@ -108,7 +108,7 @@ const CUSTOM = {
     // 0.45.0, a beta: the photo themes' Customise starts here (the readouts' font, the M badge under the car)
     ember: { key: 'ember', beta: true, rows: [['Font', 'Font', 'the readouts\' lettering'], ['Mid', 'Bottom middle', 'under the car']] },
     // 0.49.0: the rev counter's face, pearl or black (lit as the side dials)
-    concours: { key: 'concours', rows: [['Face', 'Middle dial', 'pearl, or dark green as the others'], ['Clock', 'Clock place', 'the clock, the M badge, or empty'], ['Info', 'Range and temperature', 'under the clock'], ['Mids', 'Small speed numbers', '30, 90, 150 .. on the speedometer'], ['Light', 'Lighting', 'day or night look, or by the sun']] },
+    concours: { key: 'concours', rows: [['Face', 'Middle dial', 'pearl, or dark green as the others'], ['Mids', 'Small speed numbers', '30, 90, 150 .. on the speedometer'], ['Light', 'Lighting', 'day or night look, or by the sun']] },
 };
 // Zeiger is in beta (0.45.0): a BETA mark in the header, and on a Customise that is newer still ("beta" above)
 const BETA = true;
@@ -205,7 +205,7 @@ function customPreview(theme) {
             Object.keys(j.keys).forEach((k) => {
                 const r = j.keys[k], opts = {};
                 Object.keys(r.opts).forEach((v) => { opts[v] = img(r.opts[v]); });
-                out.keys[k] = { x: r.x, y: r.y, w: r.w, h: r.h, opts };
+                out.keys[k] = { x: r.x, y: r.y, w: r.w, h: r.h, opts, dep: r.dep };
             });
         }
     } catch (e) { out = null; }
@@ -715,7 +715,8 @@ class Page {
             cv.image(prev.base.id, gx, gy, pw, ph);
             Object.keys(prev.keys).forEach((key) => {
                 const r = prev.keys[key], x = gx + Math.round(r.x * k), y = gy + Math.round(r.y * k), w = Math.round(r.w * k), h = Math.round(r.h * k);
-                const pick = (p) => r.opts[p] || r.opts.none;
+                // a part on another ("dep": Concours' clock on the middle dial) drawn once per pick of that one: "<pick>/<its pick>"
+                const pick = (p) => (r.dep && r.opts[p + '/' + this.draft[r.dep]]) || r.opts[p] || r.opts.none;
                 const an = this.cAnim && this.cAnim[key], age = an ? now - an.t : Infinity;
                 const o = pick(this.draft[key]);
                 if (an && age < PART_MS && pick(an.from)) {

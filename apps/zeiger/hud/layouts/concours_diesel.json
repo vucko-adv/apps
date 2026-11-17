@@ -128,54 +128,6 @@
    "h": 390
   },
   {
-   "id": "time_pearl_day",
-   "type": "text",
-   "class": "content",
-   "z": 2,
-   "text": "{{time}}",
-   "font": "co_time",
-   "color": [
-    0,
-    83,
-    47,
-    255
-   ],
-   "align": "center",
-   "x": 850,
-   "y": 520,
-   "w": 220,
-   "h": 41,
-   "toggle": [
-    "concoursFace=pearl",
-    "!@night",
-    "concoursClock=on"
-   ]
-  },
-  {
-   "id": "info_pearl_day",
-   "type": "text",
-   "class": "content",
-   "z": 2,
-   "text": "{{range}} km  ·  {{ambientN}}°",
-   "font": "co_val",
-   "color": [
-    70,
-    84,
-    72,
-    255
-   ],
-   "align": "center",
-   "x": 820,
-   "y": 570,
-   "w": 280,
-   "h": 23,
-   "toggle": [
-    "concoursFace=pearl",
-    "!@night",
-    "concoursInfo=on"
-   ]
-  },
-  {
    "id": "mode_pearl_day",
    "type": "text",
    "class": "content",
@@ -210,56 +162,7 @@
    "h": 38,
    "toggle": [
     "concoursFace=pearl",
-    "!@night",
-    "concoursClock=m"
-   ]
-  },
-  {
-   "id": "time_black_day",
-   "type": "text",
-   "class": "content",
-   "z": 2,
-   "text": "{{time}}",
-   "font": "co_time",
-   "color": [
-    143,
-    230,
-    208,
-    255
-   ],
-   "align": "center",
-   "x": 850,
-   "y": 520,
-   "w": 220,
-   "h": 41,
-   "toggle": [
-    "concoursFace=black",
-    "!@night",
-    "concoursClock=on"
-   ]
-  },
-  {
-   "id": "info_black_day",
-   "type": "text",
-   "class": "content",
-   "z": 2,
-   "text": "{{range}} km  ·  {{ambientN}}°",
-   "font": "co_val",
-   "color": [
-    114,
-    191,
-    172,
-    255
-   ],
-   "align": "center",
-   "x": 820,
-   "y": 570,
-   "w": 280,
-   "h": 23,
-   "toggle": [
-    "concoursFace=black",
-    "!@night",
-    "concoursInfo=on"
+    "!@night"
    ]
   },
   {
@@ -297,8 +200,7 @@
    "h": 38,
    "toggle": [
     "concoursFace=black",
-    "!@night",
-    "concoursClock=m"
+    "!@night"
    ]
   },
   {
@@ -412,54 +314,6 @@
    "h": 390
   },
   {
-   "id": "time_pearl_night",
-   "type": "text",
-   "class": "content",
-   "z": 2,
-   "text": "{{time}}",
-   "font": "co_time",
-   "color": [
-    0,
-    70,
-    40,
-    255
-   ],
-   "align": "center",
-   "x": 850,
-   "y": 520,
-   "w": 220,
-   "h": 41,
-   "toggle": [
-    "concoursFace=pearl",
-    "@night",
-    "concoursClock=on"
-   ]
-  },
-  {
-   "id": "info_pearl_night",
-   "type": "text",
-   "class": "content",
-   "z": 2,
-   "text": "{{range}} km  ·  {{ambientN}}°",
-   "font": "co_val",
-   "color": [
-    62,
-    58,
-    48,
-    255
-   ],
-   "align": "center",
-   "x": 820,
-   "y": 570,
-   "w": 280,
-   "h": 23,
-   "toggle": [
-    "concoursFace=pearl",
-    "@night",
-    "concoursInfo=on"
-   ]
-  },
-  {
    "id": "mode_pearl_night",
    "type": "text",
    "class": "content",
@@ -494,56 +348,7 @@
    "h": 38,
    "toggle": [
     "concoursFace=pearl",
-    "@night",
-    "concoursClock=m"
-   ]
-  },
-  {
-   "id": "time_black_night",
-   "type": "text",
-   "class": "content",
-   "z": 2,
-   "text": "{{time}}",
-   "font": "co_time",
-   "color": [
-    84,
-    246,
-    206,
-    255
-   ],
-   "align": "center",
-   "x": 850,
-   "y": 520,
-   "w": 220,
-   "h": 41,
-   "toggle": [
-    "concoursFace=black",
-    "@night",
-    "concoursClock=on"
-   ]
-  },
-  {
-   "id": "info_black_night",
-   "type": "text",
-   "class": "content",
-   "z": 2,
-   "text": "{{range}} km  ·  {{ambientN}}°",
-   "font": "co_val",
-   "color": [
-    62,
-    198,
-    168,
-    255
-   ],
-   "align": "center",
-   "x": 820,
-   "y": 570,
-   "w": 280,
-   "h": 23,
-   "toggle": [
-    "concoursFace=black",
-    "@night",
-    "concoursInfo=on"
+    "@night"
    ]
   },
   {
@@ -581,8 +386,7 @@
    "h": 38,
    "toggle": [
     "concoursFace=black",
-    "@night",
-    "concoursClock=m"
+    "@night"
    ]
   },
   {
@@ -819,7 +623,11 @@
    ],
    "toggle": [
     "!@night"
-   ]
+   ],
+   "spring": {
+    "f": 11,
+    "z": 0.72
+   }
   },
   {
    "id": "needle_rpm",
@@ -848,7 +656,11 @@
    ],
    "toggle": [
     "!@night"
-   ]
+   ],
+   "spring": {
+    "f": 11,
+    "z": 0.72
+   }
   },
   {
    "id": "needle_rpm_n",
@@ -877,7 +689,11 @@
    ],
    "toggle": [
     "@night"
-   ]
+   ],
+   "spring": {
+    "f": 11,
+    "z": 0.72
+   }
   },
   {
    "id": "needle_boost_sh",
@@ -906,7 +722,11 @@
    ],
    "toggle": [
     "!@night"
-   ]
+   ],
+   "spring": {
+    "f": 8,
+    "z": 0.75
+   }
   },
   {
    "id": "needle_boost",
@@ -935,7 +755,11 @@
    ],
    "toggle": [
     "!@night"
-   ]
+   ],
+   "spring": {
+    "f": 8,
+    "z": 0.75
+   }
   },
   {
    "id": "needle_boost_n",
@@ -964,7 +788,11 @@
    ],
    "toggle": [
     "@night"
-   ]
+   ],
+   "spring": {
+    "f": 8,
+    "z": 0.75
+   }
   },
   {
    "id": "needle_speed_sh",
@@ -993,7 +821,11 @@
    ],
    "toggle": [
     "!@night"
-   ]
+   ],
+   "spring": {
+    "f": 5.5,
+    "z": 0.85
+   }
   },
   {
    "id": "needle_speed",
@@ -1022,7 +854,11 @@
    ],
    "toggle": [
     "!@night"
-   ]
+   ],
+   "spring": {
+    "f": 5.5,
+    "z": 0.85
+   }
   },
   {
    "id": "needle_speed_n",
@@ -1051,7 +887,11 @@
    ],
    "toggle": [
     "@night"
-   ]
+   ],
+   "spring": {
+    "f": 5.5,
+    "z": 0.85
+   }
   },
   {
    "id": "hub_tach",

@@ -134,7 +134,11 @@
  *             px from its top-left; else the picture's own px, py) by "measure" (speed in km/h, rpm, fuel 0..1, oil,
  *             coolant, or any _raw() name) through "table": [[value, degrees clockwise from 12 o'clock], ...] in
  *             rising value order (straight between points, held at the ends; no data: the first point). "glide": ms
- *             has the renderer play each turn over that long (cluster-render animations, untested on the car)
+ *             has the renderer play each turn over that long (cluster-render animations; Concours, Zeiger 0.50.3: 50, a
+ *             tick, so the needle moves on between ticks instead of in steps). "lag": ms of its filter (120); an rpm
+ *             needle reads the rpm unfiltered (not the tach's 120 ms one), so "lag" is all it trails by. "spring":
+ *             { "f": Hz, "z": damping } in place of the filter: a mechanical needle pulled to the value (z under 1 swings
+ *             a little past and settles), turned 60 times a second (Concours, Zeiger 0.50.3)
  *   segments  image layer of its own: a bar of segments that light one by one. "picture" is the bar with every
  *             segment lit (the widget's size); "segs" [[x, y, w, h], ...] each segment's box in it (widget px),
  *             first to light first; "steps" [v, ...] the value each segment lights at (segment i is lit while the
@@ -363,7 +367,9 @@ const REFUSED_RETRIES = 2;       // ... at most this many times until something 
 // once when the car moves faster than INTRO_STILL_KMH (the demo drive plays it anyway, for the bench), redraws its texts
 // every INTRO_TEXT_MS, and moves layers with the renderer's animation number INTRO_ANIM
 const INTRO_LEAD_MS = 300, INTRO_WAIT_MS = 15000, INTRO_STILL_KMH = 3, INTRO_TEXT_MS = 50, INTRO_ANIM = 98;
-const FS_ANIM = 99, FS_REARM_MS = 200, FS_HOLD_MS = 1200, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
+const NEEDLE_MS = 16;              // ~60 Hz: the "spring" needles
+const GLIDE_ANIM = 97;            // a needle's "glide" turn (one per layer, replaced at every tick)
+const FS_ANIM = 99,FS_REARM_MS = 200, FS_HOLD_MS = 1200, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
 const TICK_MS = 50;              // 20 Hz: shift bar and gauges
 const TEXT_MS = 200;             // text re-draws at most 5 times a second (what BMW's own readouts do)
 const TARGET_SIZES = { hud: [800, 480], panel: [1920, 720] };
@@ -1037,6 +1043,8 @@ class HudApp {
         if (this.target === 'panel') this._clientAt(CURTAIN_CONN);     // the curtain's connection, ready before a change
         this.clients.forEach((c) => c.connect());
         this.tickTimer = setInterval(() => this._guard('tick', () => this._tick()), TICK_MS);
+        // needles with a "spring" move at 60 Hz (the rest of the gauges at the tick's 20)
+        this.needleTimer = setInterval(() => this._guard('needles', () => this._needleTick()), NEEDLE_MS);
         // Auto theme: check for sunrise / sunset once a minute; the status line too
         this.themeTimer = setInterval(() => this._guard('theme check', () => {
             if (this._themeName() !== this.themeName || (this._nightDim() && !this.noDim) !== this.nightOn
@@ -1130,6 +1138,7 @@ class HudApp {
     stop() {
         clearTimeout(this.rebuildT); this.rebuildT = null;
         clearInterval(this.tickTimer);
+        clearInterval(this.needleTimer);
         clearInterval(this.themeTimer);
         clearInterval(this.statusTimer);
         clearInterval(this.watchTimer);
@@ -3080,8 +3089,15 @@ class HudApp {
         this._guard('intro', () => this._introTick(now));
         if (this.curtain) this._guard('curtain', () => this._curtainTick(now));
         if (this.held) this._guard('hold', () => this._holdTick(now));
-        this.widgets.forEach((x) => this._guard('widget ' + x.w.id, () => this._update(x, now, false)));
+        this.widgets.forEach((x) => { if (!x.w.spring) this._guard('widget ' + x.w.id, () => this._update(x, now, false)); });
         this._failsafe(now, false);
+    }
+
+    /** The "spring" needles, 60 times a second (NEEDLE_MS), so they sweep instead of stepping at the tick's 20. */
+    _needleTick() {
+        if (!this.client.ready || !this.widgets.size) return;
+        const now = Date.now();
+        this.widgets.forEach((x) => { if (x.w.spring && x.w.type === 'needle') this._guard('widget ' + x.w.id, () => this._updateNeedle(x, now, false)); });
     }
 
     /**
@@ -3142,6 +3158,7 @@ class HudApp {
         const raw = isNum(intro) ? intro : isNum(test) ? test : this.car.data().rpm;
         const dt = this.lastTickT ? Math.min(500, now - this.lastTickT) : 0;
         this.lastTickT = now;
+        this.rpmIn = isNum(raw) ? raw : null;       // unfiltered, for an rpm needle (its own filter is the only one)
         if (!isNum(raw)) { this.rpmF = null; this.rpmShown = null; return; }
         this.rpmF = isNum(this.rpmF) ? this.rpmF + (raw - this.rpmF) * (1 - Math.exp(-dt / 120)) : raw;
         if (!isNum(this.rpmShown) || Math.abs(this.rpmF - this.rpmShown) >= 40) this.rpmShown = Math.max(0, Math.round(this.rpmF / 50) * 50);
@@ -3156,6 +3173,8 @@ class HudApp {
         }
         if (measure === 'speed') return d.speed;
         if (measure === 'oil' || measure === 'coolant') return d[measure];
+        // rpm: as the car (or the start animation, the shift test) gives it; filtered twice it trailed a shift by half a second
+        if (measure === 'rpm') return this.intro || this.testAt !== null ? this.rpmIn : d.rpm;
         return this._raw(measure);
     }
 
@@ -3172,8 +3191,18 @@ class HudApp {
         const raw = this._needleValue(w.measure);
         const dt = x.t ? Math.min(500, now - x.t) : 0;
         x.t = now;
-        if (!isNum(raw)) x.value = null;
-        else x.value = isNum(x.value) ? x.value + (raw - x.value) * (1 - Math.exp(-dt / 120)) : raw;
+        const lag = isNum(w.lag) && w.lag > 0 ? w.lag : 120, sp = w.spring;
+        if (!isNum(raw)) { x.value = null; x.vel = 0; }
+        else if (!isNum(x.value)) { x.value = raw; x.vel = 0; }
+        else if (sp) {
+            // a needle on a spring, as a mechanical gauge: pulled to the value at "f" Hz, "z" damping (1: no overshoot,
+            // less: it swings past a little and settles); in 4 ms steps, steady at any tick
+            const om = 2 * Math.PI * (sp.f || 6), z = isNum(sp.z) ? sp.z : 0.7;
+            for (let t = dt / 1000; t > 0; t -= 0.004) {
+                const h = Math.min(t, 0.004), a = om * om * (raw - x.value) - 2 * z * om * (x.vel || 0);
+                x.vel = (x.vel || 0) + a * h; x.value += x.vel * h;
+            }
+        } else x.value = x.value + (raw - x.value) * (1 - Math.exp(-dt / lag));
         const v = isNum(x.value) ? x.value : table[0][0];
         let deg = table[table.length - 1][1];
         if (v <= table[0][0]) deg = table[0][1];
@@ -3187,9 +3216,8 @@ class HudApp {
         x.angle = deg;
         x.c.set(x.ref, { rotate: deg });
         if (isNum(w.glide) && w.glide > 0 && isNum(from)) {
-            // one animation at a time: the client keeps every one it sent (a layer plays at most 16)
-            if (x.anim) x.c.stop(x.ref, x.anim);
-            x.anim = x.c.animate(x.ref, { property: 'rotate', keys: '0:' + from.toFixed(2) + ' ' + Math.round(w.glide) + ':' + deg.toFixed(2) });
+            // one animation, always the same number: each turn replaces the last (a layer plays at most 16)
+            x.c.animate(x.ref, { anim: GLIDE_ANIM, property: 'rotate', keys: '0:' + from.toFixed(2) + ' ' + Math.round(w.glide) + ':' + deg.toFixed(2), loop: false, interp: 'linear' });
         }
     }
 

@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "Concours, finer: the rev counter's numbers are applied like a watch's, with a thin gold edge; the left dial's scales sit deeper, the needles passing under the panel's edge; the gear window sits lower; the side dials stand further apart. Since 0.48: Concours, the classic gauges, and the speed limit your car's camera reads, on Ember.",
-  "version": "0.50.2",
+  "whatsNew": "Concours, livelier: its needles move like a real gauge's, on a spring, sixty times a second, so the rev counter drops at a gear change at once; the middle dial keeps only the M badge (the clock and range will find another place); Customise now shows every pick, and Lighting on the left dial. Since 0.48: Concours, the classic gauges, and the speed limit your car's camera reads, on Ember.",
+  "version": "0.50.3",
   "vendor": "custom",
   "loggingId": "OAZG",
   "maxDiskUsage": 67108864,
@@ -1034,42 +1034,6 @@
         [
           "black",
           "Dark green"
-        ]
-      ]
-    },
-    {
-      "key": "concoursClock",
-      "label": "Concours: clock place",
-      "type": "choice",
-      "default": "off",
-      "options": [
-        [
-          "off",
-          "Empty"
-        ],
-        [
-          "on",
-          "Clock"
-        ],
-        [
-          "m",
-          "M badge"
-        ]
-      ]
-    },
-    {
-      "key": "concoursInfo",
-      "label": "Concours: range and temperature",
-      "type": "choice",
-      "default": "off",
-      "options": [
-        [
-          "off",
-          "Off"
-        ],
-        [
-          "on",
-          "Shown"
         ]
       ]
     },
