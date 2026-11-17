@@ -45,6 +45,7 @@ const ABOUT = {
     mist: 'A photo · a misty valley · today\'s weather',
     peaks: 'Ridges under a deep blue sky · minimal',
     ember: 'An old BMW at night, its cabin glowing red',
+    concours: 'Classic gauges in a leather dash · pearl and gold · lit after dark',
     sunrise_hills: 'Hills at sunrise · today\'s weather',
     map_mist: 'The phone\'s map in the middle of Mist\'s photo',
     off: 'No theme: BMW\'s own cluster shows',
@@ -106,6 +107,8 @@ const CUSTOM = {
     apex_sport: { key: 'apexSport', rows: [['Big', 'Big number', 'in the middle'], ['Left', 'Left block', 'two bars, the tyres, or empty'], ['Mid', 'Bottom middle', 'where the clock is']] },
     // 0.45.0, a beta: the photo themes' Customise starts here (the readouts' font, the M badge under the car)
     ember: { key: 'ember', beta: true, rows: [['Font', 'Font', 'the readouts\' lettering'], ['Mid', 'Bottom middle', 'under the car']] },
+    // 0.49.0: the rev counter's face, pearl or black (lit as the side dials)
+    concours: { key: 'concours', rows: [['Face', 'Middle dial', 'pearl, or dark green as the others'], ['Clock', 'Clock place', 'the clock, the M badge, or empty'], ['Info', 'Range and temperature', 'under the clock'], ['Mids', 'Small speed numbers', '30, 90, 150 .. on the speedometer'], ['Light', 'Lighting', 'day or night look, or by the sun']] },
 };
 // Zeiger is in beta (0.45.0): a BETA mark in the header, and on a Customise that is newer still ("beta" above)
 const BETA = true;
@@ -114,6 +117,7 @@ const WATCH_ROW = 64, WATCH_LH = 22;
 // the gallery's groups (0.44.0), in this order; a swipe goes on into the next group at a group's end. A theme in none
 // goes to MORE at the end, so a new theme shows before it is given a group. Groups with no theme don't show.
 const THEME_GROUPS = [
+    ['CLASSIC', ['concours']],
     ['VINTAGE', ['vintage_green', 'vintage_cyan', 'vfd']],
     ['SPORT', ['apex', 'apex_sport']],
     ['PHOTO', ['map_mist', 'dark_moon', 'underpass', 'sunrise_hills', 'mist', 'peaks', 'ember']],

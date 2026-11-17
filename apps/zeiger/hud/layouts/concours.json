@@ -1,0 +1,1183 @@
+{
+ "schemaVersion": 2,
+ "name": "Concours",
+ "author": "vucko-adv",
+ "copyright": "Copyright (c) 2026 vucko-adv. Zeiger theme artwork.",
+ "packWaste": 4,
+ "theme": "concours",
+ "noNightDim": true,
+ "nightSetting": "concoursLight",
+ "_about": "Concours (Zeiger 0.49.0): three round gauges of a classic sports car in polished gold bezels, set in a leather dash with a stitched brow, drawn in cluster-design/concours/build.html. Middle: the rev counter, a pearl face with applied gold batons and raised dark green numerals (petrol to 8000, red from 6500; the _diesel layout to 6000, red from 5000), the clock, range with the outside temperature and the drive mode in it. Left, a dark green face: boost (0-2 bar), oil temperature and fuel through windows in the face, their scales on plates behind it; all three needles turn behind the face (a cover picture over them, the windows cut out). Right, a dark green face: the speedometer (0-260 km/h), gold batons at every 20, a window for the selector and gear. By day the markings are paint; after sunset (@night pictures) lamps round the edge of each face throw light inward: a bright ring at the rim, the markings and plates lit, the pearl lit from its rim in with its numerals glowing, the needles glowing on their own. Drop shadows under every needle, domed hubs, a glass reflection over each dial. Customise: concoursFace pearl | black. km/h, bar and °C are drawn in. Numbers in Krona One, words in Michroma (OFL). Widget reference: shared/hud.js header.",
+ "widgets": [
+  {
+   "id": "dash",
+   "type": "picture",
+   "picture": "concours_dash",
+   "own": true,
+   "class": "content",
+   "z": 0,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 720,
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "dash_night",
+   "type": "picture",
+   "picture": "concours_dash_night",
+   "own": true,
+   "class": "content",
+   "z": 0,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 720,
+   "toggle": [
+    "@night"
+   ]
+  },
+  {
+   "id": "tach_pearl_day",
+   "type": "picture",
+   "picture": "concours_tach_pearl_day",
+   "class": "content",
+   "z": 1,
+   "x": 622,
+   "y": 22,
+   "w": 676,
+   "h": 676,
+   "toggle": [
+    "concoursFace=pearl",
+    "!@night"
+   ]
+  },
+  {
+   "id": "tach_black_day",
+   "type": "picture",
+   "picture": "concours_tach_black_day",
+   "class": "content",
+   "z": 1,
+   "x": 622,
+   "y": 22,
+   "w": 676,
+   "h": 676,
+   "toggle": [
+    "concoursFace=black",
+    "!@night"
+   ]
+  },
+  {
+   "id": "left_day",
+   "type": "picture",
+   "picture": "concours_left_day",
+   "class": "content",
+   "z": 1,
+   "x": 137,
+   "y": 112,
+   "w": 496,
+   "h": 496,
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "right_day",
+   "type": "picture",
+   "picture": "concours_right_day",
+   "class": "content",
+   "z": 1,
+   "x": 1287,
+   "y": 112,
+   "w": 496,
+   "h": 496,
+   "toggle": [
+    "concoursMids=on",
+    "!@night"
+   ]
+  },
+  {
+   "id": "rightp_day",
+   "type": "picture",
+   "picture": "concours_rightp_day",
+   "class": "content",
+   "z": 1,
+   "x": 1287,
+   "y": 112,
+   "w": 496,
+   "h": 496,
+   "toggle": [
+    "concoursMids=off",
+    "!@night"
+   ]
+  },
+  {
+   "id": "cover_day",
+   "type": "picture",
+   "picture": "concours_cover_day",
+   "class": "content",
+   "z": 4,
+   "toggle": [
+    "!@night"
+   ],
+   "x": 191,
+   "y": 166,
+   "w": 390,
+   "h": 390
+  },
+  {
+   "id": "time_pearl_day",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{time}}",
+   "font": "co_time",
+   "color": [
+    0,
+    83,
+    47,
+    255
+   ],
+   "align": "center",
+   "x": 850,
+   "y": 520,
+   "w": 220,
+   "h": 41,
+   "toggle": [
+    "concoursFace=pearl",
+    "!@night",
+    "concoursClock=on"
+   ]
+  },
+  {
+   "id": "info_pearl_day",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{range}} km  ·  {{ambientN}}°",
+   "font": "co_val",
+   "color": [
+    70,
+    84,
+    72,
+    255
+   ],
+   "align": "center",
+   "x": 820,
+   "y": 570,
+   "w": 280,
+   "h": 23,
+   "toggle": [
+    "concoursFace=pearl",
+    "!@night",
+    "concoursInfo=on"
+   ]
+  },
+  {
+   "id": "mode_pearl_day",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{modeShort}}",
+   "font": "co_mode",
+   "color": [
+    110,
+    105,
+    91,
+    255
+   ],
+   "align": "center",
+   "x": 860,
+   "y": 441,
+   "w": 200,
+   "h": 16,
+   "toggle": [
+    "concoursFace=pearl",
+    "!@night"
+   ]
+  },
+  {
+   "id": "mbadge_pearl_day",
+   "type": "picture",
+   "picture": "concours_badge_gold_day",
+   "class": "content",
+   "z": 2,
+   "x": 918,
+   "y": 523,
+   "w": 85,
+   "h": 38,
+   "toggle": [
+    "concoursFace=pearl",
+    "!@night",
+    "concoursClock=m"
+   ]
+  },
+  {
+   "id": "time_black_day",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{time}}",
+   "font": "co_time",
+   "color": [
+    143,
+    230,
+    208,
+    255
+   ],
+   "align": "center",
+   "x": 850,
+   "y": 520,
+   "w": 220,
+   "h": 41,
+   "toggle": [
+    "concoursFace=black",
+    "!@night",
+    "concoursClock=on"
+   ]
+  },
+  {
+   "id": "info_black_day",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{range}} km  ·  {{ambientN}}°",
+   "font": "co_val",
+   "color": [
+    114,
+    191,
+    172,
+    255
+   ],
+   "align": "center",
+   "x": 820,
+   "y": 570,
+   "w": 280,
+   "h": 23,
+   "toggle": [
+    "concoursFace=black",
+    "!@night",
+    "concoursInfo=on"
+   ]
+  },
+  {
+   "id": "mode_black_day",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{modeShort}}",
+   "font": "co_mode",
+   "color": [
+    96,
+    156,
+    142,
+    255
+   ],
+   "align": "center",
+   "x": 860,
+   "y": 441,
+   "w": 200,
+   "h": 16,
+   "toggle": [
+    "concoursFace=black",
+    "!@night"
+   ]
+  },
+  {
+   "id": "mbadge_black_day",
+   "type": "picture",
+   "picture": "concours_badge_steel_day",
+   "class": "content",
+   "z": 2,
+   "x": 918,
+   "y": 523,
+   "w": 85,
+   "h": 38,
+   "toggle": [
+    "concoursFace=black",
+    "!@night",
+    "concoursClock=m"
+   ]
+  },
+  {
+   "id": "gear_day",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{stage}}{{gearInD}}",
+   "font": "co_win",
+   "color": [
+    128,
+    252,
+    220,
+    255
+   ],
+   "align": "center",
+   "x": 1497,
+   "y": 442,
+   "w": 76,
+   "h": 32,
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "tach_pearl_night",
+   "type": "picture",
+   "picture": "concours_tach_pearl_night",
+   "class": "content",
+   "z": 1,
+   "x": 622,
+   "y": 22,
+   "w": 676,
+   "h": 676,
+   "toggle": [
+    "concoursFace=pearl",
+    "@night"
+   ]
+  },
+  {
+   "id": "tach_black_night",
+   "type": "picture",
+   "picture": "concours_tach_black_night",
+   "class": "content",
+   "z": 1,
+   "x": 622,
+   "y": 22,
+   "w": 676,
+   "h": 676,
+   "toggle": [
+    "concoursFace=black",
+    "@night"
+   ]
+  },
+  {
+   "id": "left_night",
+   "type": "picture",
+   "picture": "concours_left_night",
+   "class": "content",
+   "z": 1,
+   "x": 137,
+   "y": 112,
+   "w": 496,
+   "h": 496,
+   "toggle": [
+    "@night"
+   ]
+  },
+  {
+   "id": "right_night",
+   "type": "picture",
+   "picture": "concours_right_night",
+   "class": "content",
+   "z": 1,
+   "x": 1287,
+   "y": 112,
+   "w": 496,
+   "h": 496,
+   "toggle": [
+    "concoursMids=on",
+    "@night"
+   ]
+  },
+  {
+   "id": "rightp_night",
+   "type": "picture",
+   "picture": "concours_rightp_night",
+   "class": "content",
+   "z": 1,
+   "x": 1287,
+   "y": 112,
+   "w": 496,
+   "h": 496,
+   "toggle": [
+    "concoursMids=off",
+    "@night"
+   ]
+  },
+  {
+   "id": "cover_night",
+   "type": "picture",
+   "picture": "concours_cover_night",
+   "class": "content",
+   "z": 4,
+   "toggle": [
+    "@night"
+   ],
+   "x": 191,
+   "y": 166,
+   "w": 390,
+   "h": 390
+  },
+  {
+   "id": "time_pearl_night",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{time}}",
+   "font": "co_time",
+   "color": [
+    0,
+    70,
+    40,
+    255
+   ],
+   "align": "center",
+   "x": 850,
+   "y": 520,
+   "w": 220,
+   "h": 41,
+   "toggle": [
+    "concoursFace=pearl",
+    "@night",
+    "concoursClock=on"
+   ]
+  },
+  {
+   "id": "info_pearl_night",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{range}} km  ·  {{ambientN}}°",
+   "font": "co_val",
+   "color": [
+    62,
+    58,
+    48,
+    255
+   ],
+   "align": "center",
+   "x": 820,
+   "y": 570,
+   "w": 280,
+   "h": 23,
+   "toggle": [
+    "concoursFace=pearl",
+    "@night",
+    "concoursInfo=on"
+   ]
+  },
+  {
+   "id": "mode_pearl_night",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{modeShort}}",
+   "font": "co_mode",
+   "color": [
+    64,
+    60,
+    50,
+    255
+   ],
+   "align": "center",
+   "x": 860,
+   "y": 441,
+   "w": 200,
+   "h": 16,
+   "toggle": [
+    "concoursFace=pearl",
+    "@night"
+   ]
+  },
+  {
+   "id": "mbadge_pearl_night",
+   "type": "picture",
+   "picture": "concours_badge_gold_night",
+   "class": "content",
+   "z": 2,
+   "x": 918,
+   "y": 523,
+   "w": 85,
+   "h": 38,
+   "toggle": [
+    "concoursFace=pearl",
+    "@night",
+    "concoursClock=m"
+   ]
+  },
+  {
+   "id": "time_black_night",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{time}}",
+   "font": "co_time",
+   "color": [
+    84,
+    246,
+    206,
+    255
+   ],
+   "align": "center",
+   "x": 850,
+   "y": 520,
+   "w": 220,
+   "h": 41,
+   "toggle": [
+    "concoursFace=black",
+    "@night",
+    "concoursClock=on"
+   ]
+  },
+  {
+   "id": "info_black_night",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{range}} km  ·  {{ambientN}}°",
+   "font": "co_val",
+   "color": [
+    62,
+    198,
+    168,
+    255
+   ],
+   "align": "center",
+   "x": 820,
+   "y": 570,
+   "w": 280,
+   "h": 23,
+   "toggle": [
+    "concoursFace=black",
+    "@night",
+    "concoursInfo=on"
+   ]
+  },
+  {
+   "id": "mode_black_night",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{modeShort}}",
+   "font": "co_mode",
+   "color": [
+    44,
+    140,
+    118,
+    255
+   ],
+   "align": "center",
+   "x": 860,
+   "y": 441,
+   "w": 200,
+   "h": 16,
+   "toggle": [
+    "concoursFace=black",
+    "@night"
+   ]
+  },
+  {
+   "id": "mbadge_black_night",
+   "type": "picture",
+   "picture": "concours_badge_steel_night",
+   "class": "content",
+   "z": 2,
+   "x": 918,
+   "y": 523,
+   "w": 85,
+   "h": 38,
+   "toggle": [
+    "concoursFace=black",
+    "@night",
+    "concoursClock=m"
+   ]
+  },
+  {
+   "id": "gear_night",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{stage}}{{gearInD}}",
+   "font": "co_win",
+   "color": [
+    120,
+    250,
+    216,
+    255
+   ],
+   "align": "center",
+   "x": 1497,
+   "y": 442,
+   "w": 76,
+   "h": 32,
+   "toggle": [
+    "@night"
+   ]
+  },
+  {
+   "id": "gear_glass",
+   "type": "picture",
+   "picture": "concours_gearglass",
+   "class": "content",
+   "z": 3,
+   "x": 1497,
+   "y": 437,
+   "w": 76,
+   "h": 40
+  },
+  {
+   "id": "needle_oil_sh",
+   "type": "needle",
+   "picture": "concours_needle_under_sh",
+   "measure": "oil",
+   "table": [
+    [
+     60,
+     205
+    ],
+    [
+     150,
+     253
+    ]
+   ],
+   "class": "content",
+   "z": 2,
+   "x": 370,
+   "y": 179,
+   "w": 46,
+   "h": 221,
+   "pivot": [
+    23,
+    193
+   ],
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "needle_oil",
+   "type": "needle",
+   "picture": "concours_needle_under",
+   "measure": "oil",
+   "table": [
+    [
+     60,
+     205
+    ],
+    [
+     150,
+     253
+    ]
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 362,
+   "y": 167,
+   "w": 46,
+   "h": 221,
+   "pivot": [
+    23,
+    193
+   ],
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "needle_oil_n",
+   "type": "needle",
+   "picture": "concours_needle_under_night",
+   "measure": "oil",
+   "table": [
+    [
+     60,
+     205
+    ],
+    [
+     150,
+     253
+    ]
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 362,
+   "y": 167,
+   "w": 46,
+   "h": 221,
+   "pivot": [
+    23,
+    193
+   ],
+   "toggle": [
+    "@night"
+   ]
+  },
+  {
+   "id": "needle_fuel_sh",
+   "type": "needle",
+   "picture": "concours_needle_under_sh",
+   "measure": "fuel",
+   "table": [
+    [
+     0,
+     155
+    ],
+    [
+     1,
+     107
+    ]
+   ],
+   "class": "content",
+   "z": 2,
+   "x": 370,
+   "y": 179,
+   "w": 46,
+   "h": 221,
+   "pivot": [
+    23,
+    193
+   ],
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "needle_fuel",
+   "type": "needle",
+   "picture": "concours_needle_under",
+   "measure": "fuel",
+   "table": [
+    [
+     0,
+     155
+    ],
+    [
+     1,
+     107
+    ]
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 362,
+   "y": 167,
+   "w": 46,
+   "h": 221,
+   "pivot": [
+    23,
+    193
+   ],
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "needle_fuel_n",
+   "type": "needle",
+   "picture": "concours_needle_under_night",
+   "measure": "fuel",
+   "table": [
+    [
+     0,
+     155
+    ],
+    [
+     1,
+     107
+    ]
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 362,
+   "y": 167,
+   "w": 46,
+   "h": 221,
+   "pivot": [
+    23,
+    193
+   ],
+   "toggle": [
+    "@night"
+   ]
+  },
+  {
+   "id": "needle_rpm_sh",
+   "type": "needle",
+   "picture": "concours_needle_big_sh",
+   "measure": "rpm",
+   "table": [
+    [
+     0,
+     -135
+    ],
+    [
+     8000,
+     135
+    ]
+   ],
+   "class": "content",
+   "z": 5,
+   "x": 941,
+   "y": 123,
+   "w": 56,
+   "h": 341,
+   "pivot": [
+    28,
+    251
+   ],
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "needle_rpm",
+   "type": "needle",
+   "picture": "concours_needle_big",
+   "measure": "rpm",
+   "table": [
+    [
+     0,
+     -135
+    ],
+    [
+     8000,
+     135
+    ]
+   ],
+   "class": "content",
+   "z": 6,
+   "x": 932,
+   "y": 109,
+   "w": 56,
+   "h": 341,
+   "pivot": [
+    28,
+    251
+   ],
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "needle_rpm_n",
+   "type": "needle",
+   "picture": "concours_needle_big_night",
+   "measure": "rpm",
+   "table": [
+    [
+     0,
+     -135
+    ],
+    [
+     8000,
+     135
+    ]
+   ],
+   "class": "content",
+   "z": 6,
+   "x": 932,
+   "y": 109,
+   "w": 56,
+   "h": 341,
+   "pivot": [
+    28,
+    251
+   ],
+   "toggle": [
+    "@night"
+   ]
+  },
+  {
+   "id": "needle_boost_sh",
+   "type": "needle",
+   "picture": "concours_needle_under_sh",
+   "measure": "boost",
+   "table": [
+    [
+     0,
+     -46
+    ],
+    [
+     2,
+     46
+    ]
+   ],
+   "class": "content",
+   "z": 2,
+   "x": 370,
+   "y": 179,
+   "w": 46,
+   "h": 221,
+   "pivot": [
+    23,
+    193
+   ],
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "needle_boost",
+   "type": "needle",
+   "picture": "concours_needle_under",
+   "measure": "boost",
+   "table": [
+    [
+     0,
+     -46
+    ],
+    [
+     2,
+     46
+    ]
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 362,
+   "y": 167,
+   "w": 46,
+   "h": 221,
+   "pivot": [
+    23,
+    193
+   ],
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "needle_boost_n",
+   "type": "needle",
+   "picture": "concours_needle_under_night",
+   "measure": "boost",
+   "table": [
+    [
+     0,
+     -46
+    ],
+    [
+     2,
+     46
+    ]
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 362,
+   "y": 167,
+   "w": 46,
+   "h": 221,
+   "pivot": [
+    23,
+    193
+   ],
+   "toggle": [
+    "@night"
+   ]
+  },
+  {
+   "id": "needle_speed_sh",
+   "type": "needle",
+   "picture": "concours_needle_small_sh",
+   "measure": "speed",
+   "table": [
+    [
+     0,
+     -135
+    ],
+    [
+     300,
+     135
+    ]
+   ],
+   "class": "content",
+   "z": 5,
+   "x": 1518,
+   "y": 189,
+   "w": 51,
+   "h": 265,
+   "pivot": [
+    25,
+    183
+   ],
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "needle_speed",
+   "type": "needle",
+   "picture": "concours_needle_small",
+   "measure": "speed",
+   "table": [
+    [
+     0,
+     -135
+    ],
+    [
+     300,
+     135
+    ]
+   ],
+   "class": "content",
+   "z": 6,
+   "x": 1510,
+   "y": 177,
+   "w": 51,
+   "h": 265,
+   "pivot": [
+    25,
+    183
+   ],
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "needle_speed_n",
+   "type": "needle",
+   "picture": "concours_needle_small_night",
+   "measure": "speed",
+   "table": [
+    [
+     0,
+     -135
+    ],
+    [
+     300,
+     135
+    ]
+   ],
+   "class": "content",
+   "z": 6,
+   "x": 1510,
+   "y": 177,
+   "w": 51,
+   "h": 265,
+   "pivot": [
+    25,
+    183
+   ],
+   "toggle": [
+    "@night"
+   ]
+  },
+  {
+   "id": "hub_tach",
+   "type": "picture",
+   "picture": "concours_hub_big",
+   "class": "content",
+   "z": 7,
+   "x": 920,
+   "y": 320,
+   "w": 80,
+   "h": 80,
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "hub_left",
+   "type": "picture",
+   "picture": "concours_hub_small",
+   "class": "content",
+   "z": 7,
+   "x": 356,
+   "y": 331,
+   "w": 58,
+   "h": 58,
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "hub_right",
+   "type": "picture",
+   "picture": "concours_hub_small",
+   "class": "content",
+   "z": 7,
+   "x": 1506,
+   "y": 331,
+   "w": 58,
+   "h": 58,
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "hub_tach_n",
+   "type": "picture",
+   "picture": "concours_hub_big_night",
+   "class": "content",
+   "z": 7,
+   "x": 920,
+   "y": 320,
+   "w": 80,
+   "h": 80,
+   "toggle": [
+    "@night"
+   ]
+  },
+  {
+   "id": "hub_left_n",
+   "type": "picture",
+   "picture": "concours_hub_small_night",
+   "class": "content",
+   "z": 7,
+   "x": 356,
+   "y": 331,
+   "w": 58,
+   "h": 58,
+   "toggle": [
+    "@night"
+   ]
+  },
+  {
+   "id": "hub_right_n",
+   "type": "picture",
+   "picture": "concours_hub_small_night",
+   "class": "content",
+   "z": 7,
+   "x": 1506,
+   "y": 331,
+   "w": 58,
+   "h": 58,
+   "toggle": [
+    "@night"
+   ]
+  },
+  {
+   "id": "glass_tach",
+   "type": "picture",
+   "picture": "concours_glass_big",
+   "class": "content",
+   "z": 8,
+   "x": 684,
+   "y": 84,
+   "w": 552,
+   "h": 193,
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "glass_left",
+   "type": "picture",
+   "picture": "concours_glass_small",
+   "class": "content",
+   "z": 8,
+   "x": 191,
+   "y": 166,
+   "w": 388,
+   "h": 136,
+   "toggle": [
+    "!@night"
+   ]
+  },
+  {
+   "id": "glass_right",
+   "type": "picture",
+   "picture": "concours_glass_small",
+   "class": "content",
+   "z": 8,
+   "x": 1341,
+   "y": 166,
+   "w": 388,
+   "h": 136,
+   "toggle": [
+    "!@night"
+   ]
+  }
+ ]
+}

@@ -38,6 +38,10 @@
 
 <p align="center"><img src="docs/images/zeiger-ember.png" width="900" alt="The Ember theme"></p>
 
+**Concours**: three classic round gauges set in a leather dash. In the middle a pearl rev counter in a deep gold bezel with raised green numbers; on the left boost, oil and fuel seen through windows in the face; on the right the speedometer to 300 km/h with gold marks and the gear in a small digital screen. By day polished metal; at night the light comes from behind the bezels and falls in over the dials. Customise: a dark green middle dial, the clock or an M badge, range and temperature, and day, night or by the sun.
+
+<p align="center"><img src="docs/images/zeiger-concours.png" width="900" alt="The Concours theme"></p>
+
 **Map Mist**: the phone's map (through waze-on-cluster) in the middle of Mist's photo.
 
 <p align="center"><img src="docs/images/zeiger-map-mist.png" width="900" alt="The Map Mist theme"></p>

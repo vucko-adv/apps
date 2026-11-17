@@ -193,6 +193,17 @@ const THEMES = {
         bg: [1, 1, 1, 255], panel: [20, 10, 8, 255], line: [242, 228, 216, 255], head: [198, 172, 154, 255],
         ink: [1, 1, 1, 255], accent: [255, 62, 46, 255], well: [20, 10, 8, 255],
     },
+    // Concours (layout concours.json, Zeiger 0.49.0): three classic round gauges in gold bezels, a pearl rev counter, black
+    // side dials lit green; its readouts carry their own colours (one set per face), these roles serve the rest
+    concours: {
+        name: 'Concours',
+        fg: [29, 75, 54, 255], dim: [88, 92, 78, 255], track: [60, 56, 44, 255], arc: [255, 106, 31, 255],
+        glow: 0, stripe: false,
+        bar: { low: [29, 75, 54], mid: [255, 176, 80], high: [176, 42, 28], midAt: 'shift' },
+        rev: { from: [88, 92, 78], to: [29, 75, 54] },
+        bg: [6, 6, 6, 255], panel: [6, 6, 6, 255], line: [216, 178, 96, 255], head: [88, 92, 78, 255],
+        ink: [6, 6, 6, 255], accent: [255, 106, 31, 255], well: [6, 6, 6, 255],
+    },
     // Map Mist (layout map_mist.json, Zeiger): Map's readouts round the phone's map over Mist's photo, Mist's colours
     map_mist: {
         name: 'Map Mist',

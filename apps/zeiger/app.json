@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "The test goes on: with Settings, About, \"Look for cruise and speed limit\" on, Zeiger now reads the speed limit sources it found in your car while you drive and shows their values there, and lists the fields where the cruise control should be. Nothing on the cluster changes yet.",
-  "version": "0.48.0",
+  "whatsNew": "A new theme, Concours: three classic round gauges in a leather dash. In the middle a pearl rev counter in a deep gold bezel; on the left boost, oil and fuel seen through windows in the face; on the right the speedometer to 300 km/h with gold marks and the gear in a small digital screen. By day polished metal; at night the light comes from behind the bezels and falls in over the dials, the needles glow orange. Customise: a dark green middle dial, the clock or an M badge, range and temperature, the small speed numbers, and day, night or by the sun.",
+  "version": "0.49.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "iconGlyph": "ZGR",
@@ -221,6 +221,10 @@
           "Ember"
         ],
         [
+          "concours",
+          "Concours"
+        ],
+        [
           "grid",
           "Calibration grid"
         ],
@@ -293,6 +297,10 @@
         [
           "ember",
           "Ember"
+        ],
+        [
+          "concours",
+          "Concours"
         ]
       ]
     },
@@ -353,6 +361,10 @@
         [
           "ember",
           "Ember"
+        ],
+        [
+          "concours",
+          "Concours"
         ]
       ]
     },
@@ -413,6 +425,10 @@
         [
           "ember",
           "Ember"
+        ],
+        [
+          "concours",
+          "Concours"
         ]
       ]
     },
@@ -1001,6 +1017,94 @@
         [
           "mbadge",
           "M badge"
+        ]
+      ]
+    },
+    {
+      "key": "concoursFace",
+      "label": "Concours: face",
+      "type": "choice",
+      "default": "pearl",
+      "options": [
+        [
+          "pearl",
+          "Pearl"
+        ],
+        [
+          "black",
+          "Dark green"
+        ]
+      ]
+    },
+    {
+      "key": "concoursClock",
+      "label": "Concours: clock place",
+      "type": "choice",
+      "default": "off",
+      "options": [
+        [
+          "off",
+          "Empty"
+        ],
+        [
+          "on",
+          "Clock"
+        ],
+        [
+          "m",
+          "M badge"
+        ]
+      ]
+    },
+    {
+      "key": "concoursInfo",
+      "label": "Concours: range and temperature",
+      "type": "choice",
+      "default": "off",
+      "options": [
+        [
+          "off",
+          "Off"
+        ],
+        [
+          "on",
+          "Shown"
+        ]
+      ]
+    },
+    {
+      "key": "concoursMids",
+      "label": "Concours: speedometer's small numbers",
+      "type": "choice",
+      "default": "on",
+      "options": [
+        [
+          "on",
+          "Shown"
+        ],
+        [
+          "off",
+          "Off"
+        ]
+      ]
+    },
+    {
+      "key": "concoursLight",
+      "label": "Concours: lighting",
+      "type": "choice",
+      "default": "auto",
+      "options": [
+        [
+          "auto",
+          "Auto (sunset)"
+        ],
+        [
+          "day",
+          "Day"
+        ],
+        [
+          "night",
+          "Night"
         ]
       ]
     },
