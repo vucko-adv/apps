@@ -247,6 +247,7 @@
  *
  * Text tokens: {{speed}} {{u:speed}} {{oil}} {{coolant}} {{boost}} {{u:boost}} {{rpm}}
  * {{gear}} (P / R / N, D3 / S3 / M3 by the shifter programme, or just 3 when the selector position is unknown), {{gearnum}} (3, or P / R / N)
+ * {{speedLimit}} (Zeiger 0.50.0: the limit the front camera reads, km/h, '' with no sign; also a needle's / segments' "measure")
  * {{spd:<i>}} (speed scale label i of SPEED_SCALE: 0..200 mph, 0..320 km/h) {{range}} {{u:distLc}} (mi, km) {{u:dist}} (MI, KM) {{ambient}} (outside, signed: +75) {{u:speedLc}} (mph, km/h) {{ampmLc}} (am, pm) {{torque}} {{u:torque}} (lb-ft, Nm) {{torquePct}} {{powerPct}} (% of config.engine's peak) {{boostHi}} {{boostMid}}
  * (gauge labels for 1.4 / 0.7 bar in the display unit) {{stage}} (P R N, D / S / M by the shifter programme) {{gearInD}} (gear number while in D) {{mode}} (COMFORT, SPORT, SPORT PLUS, SPORT INDIVIDUAL, ECO PRO, ...)
  * {{temp:<deg C>}} (that temperature in the display unit, °F rounded to 10, for gauge labels) {{setup:engine|chassis|steering|gearbox}} (what that part is set to in the drive mode now)
@@ -854,6 +855,16 @@ class HudApp {
             // S / M next to the gear: the gearbox status carries no programme on some cars, the M drive display does
             'de.bmw.infotainment.misc.MDrive': {
                 dataDisplayGearbox: (v) => { this.program = PROGRAMS[v && v.displayProgramGearbox] || null; },
+            },
+            // the speed limit the front camera reads (Zeiger 0.50.0; found by the probe on a G20, Nov 17 2026):
+            // presentClassLimitSpeed in 5 km/h steps (10 read at a 50 sign; to be checked at more signs), 0 / 254 / 255 none
+            'de.bmw.dass.TrafficSignRecognition': {
+                TrafficSignRecognition: (v) => {
+                    const sp = v && v.presentClassLimitSpeed;
+                    const lim = isNum(sp) && sp > 0 && sp < 254 ? sp * 5 : null;
+                    if (lim !== this.speedLimit) this.log.info('speed limit ' + (lim === null ? 'none' : lim) + ' (raw ' + sp + ', unit ' + (v && v.unitOfMeasurementSpeedLimit) + ')');
+                    this.speedLimit = lim;
+                },
             },
             // outside temperature: raw * 0.5 - 40 deg C, 255 = none (car_vitals, MIT)
             'de.bmw.infrastructure.EnvironmentalInformation': {
@@ -1750,6 +1761,8 @@ class HudApp {
             try { v = this._introValue(name, () => this._raw(name)); } finally { this.introLive = false; }
             if (v !== undefined) return v;
         }
+        // the speed limit the camera reads (km/h; null: no sign), 80 in demo
+        if (name === 'speedLimit') return isNum(this.speedLimit) ? this.speedLimit : this.car.data().demo ? 80 : null;
         if (name === 'boost') return this._boost();
         if (name === 'gLat' || name === 'gLong') {
             // the 150 ms average while samples come in; else the car's last reading, unless it is a bad one
@@ -1931,6 +1944,8 @@ class HudApp {
                 const d = this.car.data();
                 return (d.stage === 'D' || (!d.stage && isNum(d.gear))) && isNum(d.gear) && d.gear > 0 ? String(d.gear) : '';
             }
+            // the speed limit the camera reads, '' while there's no sign (Zeiger 0.50.0)
+            case 'speedLimit': { const v = this._raw('speedLimit'); return isNum(v) ? String(v) : ''; }
             case 'mode': case 'modeShort': {
                 // the demo drive sends no drive mode: COMFORT there, so a theme's mode line shows on the bench (Zeiger)
                 const m = this.driveMode || (this.car.data().demo ? 'comfort' : null);

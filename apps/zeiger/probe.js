@@ -203,6 +203,8 @@ function liveLines(L, db) {
         // no instance in the catalog: '1' was a guess; what the entry has, for the next try
         if (it.guess && !it.n && it === L.items.find((x) => x.iface === it.iface)) out.push('    no instance listed, tried ' + it.inst + ' · it has: ' + (it.keys || []).join(', '));
         else if (it.error) out.push('    instance ' + it.inst);
+        // 0.50.0: the camera's limit as the themes show it (5 km/h steps: 10 was a 50 sign)
+        if (it.n && it.name === 'TrafficSignRecognition' && it.value) { const sp = it.value.presentClassLimitSpeed; out.push('    = ' + (sp > 0 && sp < 254 ? sp * 5 + ' km/h' : 'no sign') + ' (presentClassLimitSpeed ' + sp + ' x 5)'); }
         if (it.n) chunk(it.seen[it.seen.length - 1].text, 70).slice(0, 6).forEach((l) => out.push('    ' + l));
         it.seen.slice(0, -1).reverse().forEach((s) => out.push('    before, ' + hms(s.at) + ': ' + s.text.slice(0, 90)));
     });

@@ -6,7 +6,7 @@
  "packWaste": 1.5,
  "theme": "ember",
  "noNightDim": true,
- "_about": "Ember (Zeiger 0.42.0; Customise 0.45.0): a photo of an old BMW saloon at night in a field, its cabin lit red (cluster-design/ember/build.html). The car big in the lower middle; above it the speed with km/h and a hairline rev line, the selector letter, the gear and the drive mode on the left, range and the clock with the outside temperature on the right, warm white and a warm grey. Customise: the big readouts in one of four fonts (emberFont: barlow, clean, retro, motor), the M badge under the car (emberMid). The rev line amber then the cabin red from the rev range (zoneSteps / zoneColors), faint ahead of the rpm. Barlow, Barlow Semi Condensed, Inter Tight, Jost and Saira Condensed (OFL). Widget reference: shared/hud.js header.",
+ "_about": "Ember (Zeiger 0.42.0; Customise 0.45.0): a photo of an old BMW saloon at night in a field, its cabin lit red (cluster-design/ember/build.html). The car big in the lower middle; above it the speed with km/h and a hairline rev line, the selector letter, the gear and the drive mode on the left, range and the clock with the outside temperature on the right, warm white and a warm grey. Customise: the big readouts in one of four fonts (emberFont: barlow, clean, retro, motor), the M badge under the car (emberMid). The speed limit the front camera reads (Zeiger 0.50.0, {{speedLimit}}) in a small black and white round sign right of the speed, only while there is one. The rev line amber then the cabin red from the rev range (zoneSteps / zoneColors), faint ahead of the rpm. Barlow, Barlow Semi Condensed, Inter Tight, Jost and Saira Condensed (OFL). Widget reference: shared/hud.js header.",
  "widgets": [
   {
    "id": "bg",
@@ -846,6 +846,45 @@
    "y": 228,
    "w": 320,
    "h": 28
+  },
+  {
+   "id": "limit_ring",
+   "type": "segments",
+   "own": false,
+   "picture": "ember_limit",
+   "measure": "speedLimit",
+   "segs": [
+    [
+     0,
+     0,
+     68,
+     68
+    ]
+   ],
+   "steps": [
+    1
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 1116,
+   "y": 136,
+   "w": 68,
+   "h": 68
+  },
+  {
+   "id": "limit",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{speedLimit}}",
+   "font": "p_lim",
+   "color": "fg",
+   "align": "center",
+   "x": 1120,
+   "y": 158,
+   "w": 60,
+   "h": 26
   },
   {
    "id": "speed",
