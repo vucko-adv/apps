@@ -2,10 +2,11 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "The speed limit on the cluster: Ember now shows the limit your car's camera reads, in a small black and white sign beside the speed, only while there is one. The cruise and speed limit test (About) shows it in km/h too. Concours, the classic gauges, came in the last version.",
-  "version": "0.50.0",
+  "whatsNew": "Installs again: Zeiger now asks the head unit for room for its themes (0.50.0 was too big for the default and was not installed). New since 0.48: Concours, three classic round gauges in a leather dash, lit from behind the bezels at night, with its own Customise; and the speed limit your car's camera reads, on Ember in a small black and white sign beside the speed.",
+  "version": "0.50.1",
   "vendor": "custom",
   "loggingId": "OAZG",
+  "maxDiskUsage": 67108864,
   "iconGlyph": "ZGR",
   "shared": [
     "hud.js",
