@@ -1297,14 +1297,15 @@ class HudApp {
      * when the chosen layout has a "withMap", without its self-test. True when it rebuilt.
      */
     _mapVariantCheck() {
-        const on = !!(this.waze && this.waze.streaming && this.setting('mapInTheme') !== false);
+        const allowed = () => this.mapToggle || this.setting('mapInTheme') !== false;   // (0.50.11: "@map" layouts have their own setting)
+        const on = !!(this.waze && this.waze.streaming && allowed());
         if (!on) {
             if (!this.mapVariant || this.mapVariantT) return false;
             this.mapVariantT = setTimeout(() => this._guard('map variant', () => {
                 this.mapVariantT = null;
-                if (this.waze && this.waze.streaming && this.setting('mapInTheme') !== false) return;
+                if (this.waze && this.waze.streaming && allowed()) return;
                 this.mapVariant = false;
-                if (!this.hasWithMap) return;
+                if (!this.hasWithMap && !this.mapToggle) return;
                 this.log.info('the phone\'s map is off: the plain layout again');
                 this.noSelfTestOnce = true;
                 this._rebuild();
@@ -1314,7 +1315,7 @@ class HudApp {
         clearTimeout(this.mapVariantT); this.mapVariantT = null;
         if (this.mapVariant) return false;
         this.mapVariant = true;
-        if (!this.hasWithMap) return false;
+        if (!this.hasWithMap && !this.mapToggle) return false;
         this.log.info('the phone\'s map is on: the layout with the map');
         this.noSelfTestOnce = true;
         this._rebuild();
@@ -2527,7 +2528,10 @@ class HudApp {
         // "withMap" (Zeiger: Vintage Green / Amber): the layout to show in its place while the phone's map is on
         // (waze-on-cluster streaming, the setting "mapInTheme" on); back to this one when the map has been off a while
         this.hasWithMap = typeof layout.withMap === 'string' && layout.withMap.length > 0;
-        if (this.mapVariant && this.setting('mapInTheme') === false) this.mapVariant = false;
+        // "@map" toggles (Zeiger 0.50.11): the layout switches its own pieces while the phone's map streams
+        this.mapToggle = layout.widgets.some((w) => [].concat(w.toggle || []).some((t) => /^!?@map$/.test(t)));
+        this.mapSetting = typeof layout.mapSetting === 'string' ? layout.mapSetting : null;
+        if (this.mapVariant && !this.mapToggle && this.setting('mapInTheme') === false) this.mapVariant = false;
         if (this.hasWithMap && this.mapVariant) {
             try { layout = this.layouts.load(layout.withMap); } catch (e) { this.log.warn('layout "' + layout.withMap + '" unusable (' + e.message + '); showing "' + name + '"'); }
         }
@@ -2899,6 +2903,9 @@ class HudApp {
         if (c) this._blit(x, [c.rect], c.px);
     }
 
+    /** The phone's map is in the theme now: streaming (waze-on-cluster) and the layout's mapSetting not "off". */
+    _mapOn() { return !!(this.mapVariant && (!this.mapSetting || this.setting(this.mapSetting) !== 'off')); }
+
     /** "key" is on while that bool setting is on; "!key" while it is off. */
     _toggleOn(t) {
         if (Array.isArray(t)) return t.every((k) => this._toggleOn(k));      // a list: every one on (Zeiger addition)
@@ -2906,6 +2913,9 @@ class HudApp {
         const k = not ? t.slice(1) : t, eq = k.indexOf('=');
         // "@night": the sun is down (Zeiger 0.43.0: a photo theme's day and night pictures); the theme check rebuilds when it flips
         if (k === '@night') { this.sunToggle = true; const n = this._layoutNight(); return not ? !n : n; }
+        // "@map" (Zeiger 0.50.11): the phone's map streams (waze-on-cluster) and the layout's "mapSetting" is not "off";
+        // the theme leaves a hole where the map shows in BMW's map window (Concours's middle ring)
+        if (k === '@map') { const m = this._mapOn(); return not ? !m : m; }
         // "key=a|b": the setting is one of those (Zeiger 0.36.0)
         const on = eq > 0 ? k.slice(eq + 1).split('|').indexOf(String(this._look(k.slice(0, eq)))) >= 0 : this.setting(k) !== false;
         return not ? !on : on;

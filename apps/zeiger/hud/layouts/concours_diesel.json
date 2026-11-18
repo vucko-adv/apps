@@ -7,6 +7,7 @@
  "theme": "concours",
  "noNightDim": true,
  "nightSetting": "concoursLight",
+ "mapSetting": "concoursMap",
  "_about": "Concours (Zeiger 0.49.0): three round gauges of a classic sports car in polished gold bezels, set in a leather dash with a stitched brow, drawn in cluster-design/concours/build.html. Middle: the rev counter, a pearl face with applied gold batons and raised dark green numerals (petrol to 8000, red from 6500; the _diesel layout to 6000, red from 5000), the clock, range with the outside temperature and the drive mode in it. Left, a dark green face: boost (0-2 bar), oil temperature and fuel through windows in the face, their scales on plates behind it; all three needles turn behind the face (a cover picture over them, the windows cut out). Right, a dark green face: the speedometer (0-260 km/h), gold batons at every 20, a window for the selector and gear. By day the markings are paint; after sunset (@night pictures) lamps round the edge of each face throw light inward: a bright ring at the rim, the markings and plates lit, the pearl lit from its rim in with its numerals glowing, the needles glowing on their own. Drop shadows under every needle, domed hubs, a glass reflection over each dial. Customise: concoursFace pearl | black. km/h, bar and °C are drawn in. Numbers in Krona One, words in Michroma (OFL). Widget reference: shared/hud.js header.",
  "widgets": [
   {
@@ -21,6 +22,7 @@
    "w": 1920,
    "h": 720,
    "toggle": [
+    "!@map",
     "!@night"
    ]
   },
@@ -36,6 +38,7 @@
    "w": 1920,
    "h": 720,
    "toggle": [
+    "!@map",
     "@night"
    ]
   },
@@ -50,6 +53,7 @@
    "w": 676,
    "h": 676,
    "toggle": [
+    "!@map",
     "concoursFace=pearl",
     "!@night"
    ]
@@ -65,6 +69,7 @@
    "w": 676,
    "h": 676,
    "toggle": [
+    "!@map",
     "concoursFace=black",
     "!@night"
    ]
@@ -186,6 +191,7 @@
    "w": 200,
    "h": 16,
    "toggle": [
+    "!@map",
     "concoursFace=pearl",
     "!@night"
    ]
@@ -201,6 +207,7 @@
    "w": 85,
    "h": 38,
    "toggle": [
+    "!@map",
     "concoursFace=pearl",
     "!@night"
    ]
@@ -224,6 +231,7 @@
    "w": 200,
    "h": 16,
    "toggle": [
+    "!@map",
     "concoursFace=black",
     "!@night"
    ]
@@ -239,6 +247,7 @@
    "w": 85,
    "h": 38,
    "toggle": [
+    "!@map",
     "concoursFace=black",
     "!@night"
    ]
@@ -276,6 +285,7 @@
    "w": 676,
    "h": 676,
    "toggle": [
+    "!@map",
     "concoursFace=pearl",
     "@night"
    ]
@@ -291,6 +301,7 @@
    "w": 676,
    "h": 676,
    "toggle": [
+    "!@map",
     "concoursFace=black",
     "@night"
    ]
@@ -412,6 +423,7 @@
    "w": 200,
    "h": 16,
    "toggle": [
+    "!@map",
     "concoursFace=pearl",
     "@night"
    ]
@@ -427,6 +439,7 @@
    "w": 85,
    "h": 38,
    "toggle": [
+    "!@map",
     "concoursFace=pearl",
     "@night"
    ]
@@ -450,6 +463,7 @@
    "w": 200,
    "h": 16,
    "toggle": [
+    "!@map",
     "concoursFace=black",
     "@night"
    ]
@@ -465,6 +479,7 @@
    "w": 85,
    "h": 38,
    "toggle": [
+    "!@map",
     "concoursFace=black",
     "@night"
    ]
@@ -978,6 +993,7 @@
     251
    ],
    "toggle": [
+    "!@map",
     "!@night"
    ],
    "spring": {
@@ -1011,6 +1027,7 @@
     251
    ],
    "toggle": [
+    "!@map",
     "!@night"
    ],
    "spring": {
@@ -1044,6 +1061,7 @@
     251
    ],
    "toggle": [
+    "!@map",
     "@night"
    ],
    "spring": {
@@ -1263,6 +1281,7 @@
    "w": 80,
    "h": 80,
    "toggle": [
+    "!@map",
     "!@night"
    ]
   },
@@ -1305,6 +1324,7 @@
    "w": 80,
    "h": 80,
    "toggle": [
+    "!@map",
     "@night"
    ]
   },
@@ -1347,6 +1367,7 @@
    "w": 552,
    "h": 193,
    "toggle": [
+    "!@map",
     "!@night"
    ]
   },
@@ -1376,6 +1397,70 @@
    "h": 136,
    "toggle": [
     "!@night"
+   ]
+  },
+  {
+   "id": "dash_hole",
+   "type": "picture",
+   "picture": "concours_dash_hole",
+   "own": true,
+   "class": "content",
+   "z": 0,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 720,
+   "toggle": [
+    "@map",
+    "!@night"
+   ]
+  },
+  {
+   "id": "dash_hole_night",
+   "type": "picture",
+   "picture": "concours_dash_hole_night",
+   "own": true,
+   "class": "content",
+   "z": 0,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 720,
+   "toggle": [
+    "@map",
+    "@night"
+   ]
+  },
+  {
+   "id": "mapframe_day",
+   "type": "picture",
+   "picture": "concours_mapframe_day",
+   "class": "content",
+   "z": 1,
+   "x": 622,
+   "y": 22,
+   "w": 676,
+   "h": 676,
+   "toggle": [
+    "@map",
+    "concoursMap=auto",
+    "!@night"
+   ]
+  },
+  {
+   "id": "mapframe_night",
+   "type": "picture",
+   "picture": "concours_mapframe_night",
+   "class": "content",
+   "z": 1,
+   "x": 622,
+   "y": 22,
+   "w": 676,
+   "h": 676,
+   "toggle": [
+    "@map",
+    "concoursMap=auto",
+    "@night"
    ]
   }
  ]

@@ -41,7 +41,9 @@ class Waze {
     constructor(opts, log, onChange) {
         opts = opts || {};
         this.statusPath = process.env.WAZE_STATUS || opts.status || STATUS_PATH;
-        this.controlPath = process.env.WAZE_CTL || opts.control || CONTROL_PATH;
+        // statusOnly (Zeiger 0.50.11): only the status file is read, nothing is ever sent (waze-on-cluster 0.10.10 dropped
+        // "start"; the map stays on its own slot and a theme shows it through a hole)
+        this.controlPath = opts.statusOnly ? null : (process.env.WAZE_CTL || opts.control || CONTROL_PATH);
         this.memo = opts.dataDir ? path.join(opts.dataDir, 'waze.json') : null;
         this.log = log;
         this.onChange = onChange || (() => {});
@@ -65,7 +67,7 @@ class Waze {
     /** Stop polling; if we moved the map, ask once for it back on "map" (best effort: the process may be exiting). */
     stop() {
         clearInterval(this.timer);
-        if (this.moved && this.st && this.st.target === 'panel') this._send('map');
+        if (this.controlPath && this.moved && this.st && this.st.target === 'panel') this._send('map');
     }
 
     /** Whether the theme wants the map on the panel now (the setting, and a layout with a map window). */
@@ -124,7 +126,7 @@ class Waze {
 
     _sync() {
         const s = this.st;
-        if (this.sending || Date.now() < this.nextTry || !s) return;
+        if (!this.controlPath || this.sending || Date.now() < this.nextTry || !s) return;
         if (s.state === 'unsupported' || s.state === 'off') return;
         if (this.wanted && s.target !== 'panel') this._send('panel');
         else if (!this.wanted && this.moved && s.target === 'panel') this._send('map');

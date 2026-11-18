@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "Concours can show a clock: in Customise, set Left dial to Clock for an analog clock in the dials' own style, with your range in a small window. Its night lighting is redone: dark faces with only the markings glowing, the pearl lit from its rim. Its colours are deeper, the needles orange, the reds stronger, and the numerals stand out from the dials without gold rims.",
-  "version": "0.50.10",
+  "whatsNew": "Concours shows your phone's map: while Maps on cluster brings in Waze or Google Maps, the rev counter opens into a round window onto the map, set in its gold ring, and comes back when the map stops. Turn it off in Customise, Map in the middle.",
+  "version": "0.50.11",
   "vendor": "custom",
   "loggingId": "OAZG",
   "maxDiskUsage": 67108864,
@@ -1003,6 +1003,22 @@
       ]
     },
     {
+      "key": "concoursMap",
+      "label": "Concours: map in the middle",
+      "type": "choice",
+      "default": "auto",
+      "options": [
+        [
+          "auto",
+          "While the phone's map is on"
+        ],
+        [
+          "off",
+          "Never"
+        ]
+      ]
+    },
+    {
       "key": "concoursLight",
       "label": "Concours: lighting",
       "type": "choice",
@@ -1446,6 +1462,11 @@
     "statusName": "Cluster",
     "socketPath": "/dev/shm/cluster-render/render.sock",
     "utcOffsetMinutes": null,
+    "waze": {
+      "comment": "Zeiger 0.50.11: waze-on-cluster's status file only (read every second), so a theme knows when the phone's map streams; nothing is sent to it (statusOnly). The map stays in BMW's map window; Concours shows it through its middle ring.",
+      "status": "/run/waze-on-cluster/status.json",
+      "statusOnly": true
+    },
     "_comment": "target panel: the whole 1920x720 instrument cluster, drawn over BMW's gauges. socketPath: cluster-render's documented default. utcOffsetMinutes: as in HUD Widgets (the clock box). tankLitres: the fuel gauge's full mark (the car sends litres, not the tank size; a G01 X3 holds 65). engine: the peak crank torque (Nm) and power (kW) the {{torquePct}} and {{powerPct}} tokens count from (an M40i: 500 Nm, 285 kW / 382 hp).",
     "dme": {
       "comment": "Boost from the engine unit (DME, ecu 18) over read-only UDS 0x22, only while the sport display does not send boost often (several times a second) and a boost readout is shown; then its value wins. Absolute kPa, the outside air pressure (baro) is subtracted. Candidates tried in order, the first plausible one wins. From cauliflowermossgrape's car_vitals (MIT). Intake air temperature the same way (config.dme.intake, every 2 s, only while an intake readout shows); candidates from cruzen991/Cluster's signal table (MIT), unverified on this car.",
