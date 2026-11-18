@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "Apex and Concours keep up with the engine again: their rev band and needles move 30 times a second instead of 60, which the car could not keep up with, and Concours's needles have smooth edges. Ember reads the road: the speed limit in a red-ringed sign, the next limit queued above it, no overtaking and its end, and (a first try) your cruise control or ACC.",
-  "version": "0.50.8",
+  "whatsNew": "Concours's needles move like a real gauge: they reach the value and stop, without swinging past and wobbling back. The cluster should keep up with the engine better: Zeiger asks much less of the cluster renderer while you drive. Smaller fixes make the app lighter on the head unit, and it no longer talks to Maps on cluster, which no Zeiger theme uses.",
+  "version": "0.50.9",
   "vendor": "custom",
   "loggingId": "OAZG",
   "maxDiskUsage": 67108864,
@@ -1430,11 +1430,6 @@
     "statusName": "Cluster",
     "socketPath": "/dev/shm/cluster-render/render.sock",
     "utcOffsetMinutes": null,
-    "waze": {
-      "comment": "Show Waze map inside the theme (shared/waze.js): waze-on-cluster's status file (read every second) and its control socket (one short 'start' command, then closed). Paths from waze-on-cluster 0.9.3.",
-      "status": "/run/waze-on-cluster/status.json",
-      "control": "/dev/shm/waze-on-cluster/ctl.sock"
-    },
     "_comment": "target panel: the whole 1920x720 instrument cluster, drawn over BMW's gauges. socketPath: cluster-render's documented default. utcOffsetMinutes: as in HUD Widgets (the clock box). tankLitres: the fuel gauge's full mark (the car sends litres, not the tank size; a G01 X3 holds 65). engine: the peak crank torque (Nm) and power (kW) the {{torquePct}} and {{powerPct}} tokens count from (an M40i: 500 Nm, 285 kW / 382 hp).",
     "dme": {
       "comment": "Boost from the engine unit (DME, ecu 18) over read-only UDS 0x22, only while the sport display does not send boost often (several times a second) and a boost readout is shown; then its value wins. Absolute kPa, the outside air pressure (baro) is subtracted. Candidates tried in order, the first plausible one wins. From cauliflowermossgrape's car_vitals (MIT). Intake air temperature the same way (config.dme.intake, every 2 s, only while an intake readout shows); candidates from cruzen991/Cluster's signal table (MIT), unverified on this car.",

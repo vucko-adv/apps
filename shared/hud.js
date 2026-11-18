@@ -139,7 +139,7 @@
  *             tick, so the needle moves on between ticks instead of in steps). "lag": ms of its filter (120); an rpm
  *             needle reads the rpm unfiltered (not the tach's 120 ms one), so "lag" is all it trails by. "spring":
  *             { "f": Hz, "z": damping } in place of the filter: a mechanical needle pulled to the value (z under 1 swings
- *             a little past and settles), turned 60 times a second (Concours, Zeiger 0.50.3)
+ *             a little past and settles), turned 30 times a second (Concours, Zeiger 0.50.3; 60 until 0.50.8)
  *   segments  image layer of its own: a bar of segments that light one by one. "picture" is the bar with every
  *             segment lit (the widget's size); "segs" [[x, y, w, h], ...] each segment's box in it (widget px),
  *             first to light first; "steps" [v, ...] the value each segment lights at (segment i is lit while the
@@ -363,9 +363,12 @@ const REFUSED_RETRIES = 2;       // ... at most this many times until something 
 // every FS_REARM_MS while the app runs. The app hanging, cluster-render shrinks our layers away on its own clock and
 // BMW's own cluster or HUD shows, never a frozen speed. Moving (FS_MOVING_KMH or more) with the speed signal older than
 // FS_STALE_MS (live data only; a moving car's speed changes all the time): hidden at once, back after FS_RESHOW_MS of
-// fresh speed. Only the speed: a hybrid's rpm stays 0, unchanged, while it drives on electricity. The hold is 6 renewals
-// long, so a busy moment (the page decoding the theme gallery) doesn't blink the theme; the longest gap between two
-// renewals is logged once a minute when it was over 2 of them (FS_LOG_MS), to tune this on the car.
+// fresh speed. Only the speed: a hybrid's rpm stays 0, unchanged, while it drives on electricity. The hold is over 3
+// renewals long, so a busy moment (the page decoding the theme gallery) doesn't blink the theme; the longest gap between
+// two renewals is logged once a minute when it was over 2 of them (FS_LOG_MS), to tune this on the car.
+// Zeiger 0.50.9: renewed every 600 ms, held 2 s (were 200 and 1200). cluster-render (0.6.9, graph_ramses19.cpp) makes
+// every animation of the target anew whenever one is replaced, so renewing each of Concours's 21 layers 5 times a second
+// rebuilt them all about 100 times a second, which likely kept the renderer busy and the needles late.
 // the start animation ("intro", Zeiger addition): it holds its first frame until cluster-render says every layer of the
 // layout is shown on the display, then starts INTRO_LEAD_MS later. Started when the layout was made (0.21-0.22), it was
 // hardly seen on the car (Nov 14 2026: nothing of Apex's, VFD's, Mist's and Dark Moon's, Vintage's yes), most likely
@@ -379,12 +382,13 @@ const NO_PASS_END_MS = 5000;
 // the cruise control / ACC (0.50.6, a first try: the fields' names on a G20 are not known yet, see _cruiseIn): where
 // the cluster's own display of it is, the instances tried (the catalog lists none), how often the fields are read
 const CRUISE_IFACE = 'de.bmw.dass.driverassistanceapplications.StatusDisplayXADAndSpeed', CRUISE_FIELDS = ['statusDisplayXAD', 'statusDisplaySpeed'];
+const CRUISE_RAW = { accOn: true, accRdy: true, accBars: true, ccOn: true, ccRdy: true };   // _raw()'s cruise names
 const CRUISE_INSTANCES = ['1', '2', '3', '4'];   // subscribed only (0.50.7: a G20 does not let them be read)
 // the "spring" needles and bands: ~30 Hz (0.50.8; 60 Hz in the car outran cluster-render, which writes an image layer at
 // most 30 times a second, and the head unit's CPU, so they trailed the engine), a late tick logged (once a minute at most)
 const NEEDLE_MS = 33, NEEDLE_LATE_MS = 150, NEEDLE_LOG_MS = 60000;
 const GLIDE_ANIM = 97;            // a needle's "glide" turn (one per layer, replaced at every tick)
-const FS_ANIM = 99,FS_REARM_MS = 200, FS_HOLD_MS = 1200, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
+const FS_ANIM = 99, FS_REARM_MS = 600, FS_HOLD_MS = 2000, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
 const TICK_MS = 50;              // 20 Hz: shift bar and gauges
 const TEXT_MS = 200;             // text re-draws at most 5 times a second (what BMW's own readouts do)
 const TARGET_SIZES = { hud: [800, 480], panel: [1920, 720] };
@@ -1112,7 +1116,7 @@ class HudApp {
         if (this.target === 'panel') this._clientAt(CURTAIN_CONN);     // the curtain's connection, ready before a change
         this.clients.forEach((c) => c.connect());
         this.tickTimer = setInterval(() => this._guard('tick', () => this._tick()), TICK_MS);
-        // needles with a "spring" move at 60 Hz (the rest of the gauges at the tick's 20)
+        // needles with a "spring" move at 30 Hz (the rest of the gauges at the tick's 20)
         this.needleTimer = setInterval(() => this._guard('needles', () => this._needleTick()), NEEDLE_MS);
         // Auto theme: check for sunrise / sunset once a minute; the status line too
         this.themeTimer = setInterval(() => this._guard('theme check', () => {
@@ -1909,7 +1913,7 @@ class HudApp {
         if (name === 'nextLimitOn') return isNum(this._raw('nextLimit')) ? 1 : 0;
         // the cruise control (0.50.6): ACC holding / ready (1 + the distance bars lit), a plain cruise control holding /
         // ready (1), ACC's unlit bars (1 while ACC shows)
-        if (/^(accOn|accRdy|accBars|ccOn|ccRdy)$/.test(name)) {
+        if (CRUISE_RAW[name] === true) {
             const c = this._cruiseNow(), acc = !!(c && isNum(c.dist));
             if (!c) return 0;
             if (name === 'accOn') return acc && c.active ? 1 + c.dist : 0;
@@ -2973,7 +2977,7 @@ class HudApp {
                 c.uniform(ref, 'u_src', w.crop ? [w.crop[0], w.crop[1], p.w, p.h] : [0, 0, p.w, p.h]);
             } else if (w.type === 'segments') {
                 // starts with nothing lit; _update lights what the value says
-                x.pic = p; x.lit = 0; x.value = null; x.t = 0; x.zoneSt = null; x.zoneInfo = null;
+                x.pic = p; x.lit = 0; x.value = null; x.t = 0; x.zoneSt = null; x.zoneInfo = null; x.segCache = null; x.plainCache = null;
                 this._blit(x, null, Buffer.alloc(w.w * w.h * 4, 0));
             } else if (!keptOwn) {
                 const full = w.pixelShift ? shiftPixels(p.rgba, p.w, p.h, w.pixelShift) : p.rgba;
@@ -3265,11 +3269,19 @@ class HudApp {
         this._guard('intro', () => this._introTick(now));
         if (this.curtain) this._guard('curtain', () => this._curtainTick(now));
         if (this.held) this._guard('hold', () => this._holdTick(now));
-        this.widgets.forEach((x) => { if (!x.w.spring) this._guard('widget ' + x.w.id, () => this._update(x, now, false)); });
+        // (no closure or label per widget and tick: Apex's 113 widgets at 20 Hz made thousands a second; a widget whose
+        // connection to cluster-render is full waits for the next tick, as the needles do, instead of queueing behind it)
+        this.widgets.forEach((x) => {
+            if (x.w.spring || (x.c && x.c.blocked)) return;
+            try { this._update(x, now, false); } catch (e) { this._widgetError(x, e); }
+        });
         this._failsafe(now, false);
     }
 
-    /** The "spring" needles, 60 times a second (NEEDLE_MS), so they sweep instead of stepping at the tick's 20. */
+    /** A widget's update failed: logged as _guard() logs it. */
+    _widgetError(x, e) { this.log.error('hud widget ' + x.w.id + ': ' + (e && e.stack || e)); }
+
+    /** The "spring" needles, 30 times a second (NEEDLE_MS), so they sweep instead of stepping at the tick's 20. */
     _needleTick() {
         if (!this.client.ready || !this.widgets.size) return;
         const now = Date.now(), gap = this.needleT ? now - this.needleT : 0;
@@ -3288,8 +3300,10 @@ class HudApp {
             if (!x.w.spring) return;
             // the socket to cluster-render full: nothing more queued behind it (the spring keeps the time, the next tick catches up)
             if (x.c && x.c.blocked) return;
-            if (x.w.type === 'needle') this._guard('widget ' + x.w.id, () => this._updateNeedle(x, now, false));
-            else if (x.w.type === 'segments') this._guard('widget ' + x.w.id, () => this._updateSegments(x, now, false));
+            try {
+                if (x.w.type === 'needle') this._updateNeedle(x, now, false);
+                else if (x.w.type === 'segments') this._updateSegments(x, now, false);
+            } catch (e) { this._widgetError(x, e); }
         });
     }
 
@@ -3453,12 +3467,26 @@ class HudApp {
         for (let i = lo; i < hi; i++) {
             if (one && !force && i !== lo && i !== hi - 1) continue;      // the old marker and the new one
             const [sx, sy, sw, sh] = segs[i];
-            const b = Buffer.alloc(sw * sh * 4, 0);
-            if (one ? i === n - 1 : i < n) for (let r = 0; r < sh; r++) p.rgba.copy(b, r * sw * 4, ((sy + r) * w.w + sx) * 4, ((sy + r) * w.w + sx + sw) * 4);
             rects.push({ x: sx, y: sy, w: sw, h: sh });
-            parts.push(b);
+            parts.push(this._segPixels(x, i, one ? i === n - 1 : i < n));
         }
         if (rects.length) this._blit(x, rects, Buffer.concat(parts));
+    }
+
+    /**
+     * Segment i's pixels: lit, as the picture has it; unlit, clear. Made once per segment and state (Zeiger 0.50.9;
+     * made anew at every change they were garbage for the head unit, as the zone bars' were before 0.50.8). The
+     * buffers are only read: _blit copies them, and _punch copies before it clears the gear letter's box.
+     */
+    _segPixels(x, i, lit) {
+        const cache = x.plainCache || (x.plainCache = new Map()), key = i * 2 + (lit ? 1 : 0);
+        let b = cache.get(key);
+        if (b) return b;
+        const w = x.w, p = x.pic, [sx, sy, sw, sh] = w.segs[i];
+        b = Buffer.alloc(sw * sh * 4, 0);
+        if (lit) for (let r = 0; r < sh; r++) p.rgba.copy(b, r * sw * 4, ((sy + r) * w.w + sx) * 4, ((sy + r) * w.w + sx + sw) * 4);
+        cache.set(key, b);
+        return b;
     }
 
     /** Where the yellow and red zones start now (rpm): the settings', lower while the oil is cold (ShiftScore.zones). */
@@ -3506,7 +3534,7 @@ class HudApp {
      */
     _updateZone(x, now, force) {
         const w = x.w, segs = w.segs, steps = w.steps, p = x.pic, z = this._zoneInfo(x), zn = this._zones();
-        // "spring" (Apex, Zeiger 0.50.4): the band follows the rpm as the car sends it on a spring, 60 times a second
+        // "spring" (Apex, Zeiger 0.50.4): the band follows the rpm as the car sends it on a spring, 30 times a second
         // (_needleTick), not the tach's 120 ms filter at the tick's 20
         const sv = w.spring ? this._follow(x, this._needleValue('rpm'), now) : this.rpmF;
         const test = this.testUntil > now, v = test ? Number.MAX_VALUE : sv;
@@ -3579,10 +3607,8 @@ class HudApp {
         st.forEach((s, i) => {
             if (!force && old[i] === s) return;
             const [sx, sy, sw, sh] = segs[i];
-            const b = Buffer.alloc(sw * sh * 4, 0);
-            if (s) for (let r = 0; r < sh; r++) p.rgba.copy(b, r * sw * 4, ((sy + r) * w.w + sx) * 4, ((sy + r) * w.w + sx + sw) * 4);
             rects.push({ x: sx, y: sy, w: sw, h: sh });
-            parts.push(b);
+            parts.push(this._segPixels(x, i, s === 1));
         });
         x.zoneSt = st;
         if (rects.length) this._blit(x, rects, Buffer.concat(parts));

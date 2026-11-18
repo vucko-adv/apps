@@ -117,7 +117,7 @@ class Car {
         };
         const put = (k, v, tick) => {
             if (v === null || v === undefined || (typeof v === 'number' && !isFinite(v))) return;
-            this.live[k] = v; this.lastCar = Date.now(); this.liveAt[k] = this.lastCar;
+            this.live[k] = v; this.lastCar = Date.now(); this.liveAt[k] = this.lastCar; this.dataCopy = null;
             // learned gear while driving; nothing at a standstill - the guess can't tell P, N or D
             // there, and "N" shown in park or in D was wrong
             if (k === 'rpm' || k === 'speed') { const g = this.guess.feed(this.live.rpm, this.live.speed); if (g !== null || this.live.speed < 3) this.guessed = this.live.speed < 3 ? undefined : g; }
@@ -169,10 +169,11 @@ class Car {
             const now = Date.now();
             if (now - simT > 3000) simT = now - 3000;
             const d = this._wantDemo();
-            if (d !== this.demoActive) { this.demoActive = d; this.log.info(d ? 'demo data on' : 'live car data'); this.listeners.forEach((l) => l.reset && l.reset()); }
+            if (d !== this.demoActive) { this.demoActive = d; this.dataCopy = null; this.log.info(d ? 'demo data on' : 'live car data'); this.listeners.forEach((l) => l.reset && l.reset()); }
             while (simT + 50 <= now) {
                 simT += 50;
                 this.simData = this.sim.sample(simT);
+                if (this.demoActive) this.dataCopy = null;
                 if (d) this._emit(this.simData, simT);
             }
         }, 50);
@@ -186,10 +187,14 @@ class Car {
         return m === 'on' || (m !== 'off' && !this.carPresent() && Date.now() - this.t0 > 5000);
     }
 
+    /** The values now. One copy is shared until a value changes (callers read it, never write it): the cluster
+     *  asks for it hundreds of times a second, and a new copy each time was garbage for the head unit's CPU. */
     data() {
+        if (this.dataCopy) return this.dataCopy;
         const src = this.demoActive ? this.simData : this.live;
         const d = Object.assign({}, src, { demo: this.demoActive });
         if (d.gear === undefined && !this.demoActive) { d.gear = this.guessed; d.gearGuessed = true; }
+        this.dataCopy = d;
         return d;
     }
 
