@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "Ember reads the road: the speed limit in a red-ringed sign, the next limit queued above it, no overtaking and its end, and (a first try) your cruise control or ACC with its set speed and distance left of the speed. Rain and snow can fall over Ember (Lab, a test). Since 0.49: Concours, fewer and richer themes, a smoother gallery.",
-  "version": "0.50.6",
+  "whatsNew": "Installs again: 0.50.6 asked to read three cruise control fields this car does not let apps read; Zeiger now only listens to them. Ember reads the road: the speed limit in a red-ringed sign, the next limit queued above it, no overtaking and its end, and (a first try) your cruise control or ACC with its set speed and distance. Rain and snow over Ember (Lab, a test).",
+  "version": "0.50.7",
   "vendor": "custom",
   "loggingId": "OAZG",
   "maxDiskUsage": 67108864,
@@ -74,13 +74,13 @@
     },
     "de.bmw.dass.driverassistanceapplications.StatusDisplayXADAndSpeed": {
       "_instances": "*",
-      "statusDisplaySpeed": "rs",
-      "statusDisplayXAD": "rs",
+      "statusDisplaySpeed": "s",
+      "statusDisplayXAD": "s",
       "_optional": "the probe's live test of the cruise control and ACC (Lab, Look for cruise and speed limit)"
     },
     "de.bmw.dass.StatusDriverAssistanceFunctions": {
       "_instances": "*",
-      "statusForesight": "rs",
+      "statusForesight": "s",
       "_optional": "the probe's live test of the cruise control and ACC (Lab, Look for cruise and speed limit)"
     },
     "de.bmw.environmentalmodel.SignRecognitionFrontCameraLegacy": {

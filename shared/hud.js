@@ -379,7 +379,7 @@ const NO_PASS_END_MS = 5000;
 // the cruise control / ACC (0.50.6, a first try: the fields' names on a G20 are not known yet, see _cruiseIn): where
 // the cluster's own display of it is, the instances tried (the catalog lists none), how often the fields are read
 const CRUISE_IFACE = 'de.bmw.dass.driverassistanceapplications.StatusDisplayXADAndSpeed', CRUISE_FIELDS = ['statusDisplayXAD', 'statusDisplaySpeed'];
-const CRUISE_INSTANCES = ['1', '2', '3', '4'], CRUISE_POLL_MS = 1000;     // the end of no overtaking shown this long (0.50.6)
+const CRUISE_INSTANCES = ['1', '2', '3', '4'];   // subscribed only (0.50.7: a G20 does not let them be read)
 const NEEDLE_MS = 16;              // ~60 Hz: the "spring" needles
 const GLIDE_ANIM = 97;            // a needle's "glide" turn (one per layer, replaced at every tick)
 const FS_ANIM = 99,FS_REARM_MS = 200, FS_HOLD_MS = 1200, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
@@ -1835,7 +1835,7 @@ class HudApp {
         CRUISE_INSTANCES.forEach((inst) => {
             const h = {};
             CRUISE_FIELDS.forEach((f) => { h[f] = (v) => this._guard('cruise', () => this._cruiseIn(f + '@' + inst, v)); });
-            Promise.resolve(this.ctx.signals.watch(CRUISE_IFACE, inst, h, this.log, { pollMs: CRUISE_POLL_MS }))
+            Promise.resolve(this.ctx.signals.watch(CRUISE_IFACE, inst, h, this.log))
                 .then((res) => this.log.info('cruise: ' + CRUISE_IFACE.split('.').pop() + ' instance ' + inst + ': ' + (res && res.error ? res.error : 'subscribed')))
                 .catch((e) => this.log.info('cruise: instance ' + inst + ': ' + e));
         });
