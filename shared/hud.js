@@ -380,7 +380,9 @@ const NO_PASS_END_MS = 5000;
 // the cluster's own display of it is, the instances tried (the catalog lists none), how often the fields are read
 const CRUISE_IFACE = 'de.bmw.dass.driverassistanceapplications.StatusDisplayXADAndSpeed', CRUISE_FIELDS = ['statusDisplayXAD', 'statusDisplaySpeed'];
 const CRUISE_INSTANCES = ['1', '2', '3', '4'];   // subscribed only (0.50.7: a G20 does not let them be read)
-const NEEDLE_MS = 16;              // ~60 Hz: the "spring" needles
+// the "spring" needles and bands: ~30 Hz (0.50.8; 60 Hz in the car outran cluster-render, which writes an image layer at
+// most 30 times a second, and the head unit's CPU, so they trailed the engine), a late tick logged (once a minute at most)
+const NEEDLE_MS = 33, NEEDLE_LATE_MS = 150, NEEDLE_LOG_MS = 60000;
 const GLIDE_ANIM = 97;            // a needle's "glide" turn (one per layer, replaced at every tick)
 const FS_ANIM = 99,FS_REARM_MS = 200, FS_HOLD_MS = 1200, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
 const TICK_MS = 50;              // 20 Hz: shift bar and gauges
@@ -2678,6 +2680,8 @@ class HudApp {
             if (k > CONN_LAYERS) this.log.warn('layout "' + layout.name + '" needs ' + k + ' layers on connection ' + (ci + 1) + ', cluster-render draws at most ' + CONN_LAYERS + ' per connection');
         });
         if (px > PIXEL_BYTES) this.log.warn('layout "' + layout.name + '" needs ' + mib(px) + ' of pixel memory; cluster-render has 16 MiB for every app together (each image counts twice)');
+        // the app's own memory once a theme is built (0.50.8: a change to a big theme closed the app in the car once)
+        { const m = process.memoryUsage(); this.log.info('memory: rss ' + mib(m.rss) + ', heap ' + mib(m.heapUsed) + ' of ' + mib(m.heapTotal) + ', buffers ' + mib(m.external || 0)); }
         this._guideHold(true);
         this.statusAskT = setTimeout(() => { this.statusAskT = null; this._guard('status request', () => this.client.status()); }, STATUS_ASK_MS);
     }
@@ -2928,7 +2932,8 @@ class HudApp {
                 ref = usedAsset ? c.effect(Object.assign({ fs: shaders.texpic }, base)) : 0;
                 if (!ref && assetRef) { c.drop(assetRef); assetRef = 0; usedAsset = 0; }
                 if (assetRef && this.assetFor) this.assetFor.set(ak, assetRef);
-            } else if (IMAGE_TYPES[w.type]) ref = c.image(Object.assign({ iw: sp ? (w.crop ? w.crop[2] : sp.w) : w.w, ih: sp ? (w.crop ? w.crop[3] : sp.h) : w.h }, base));
+            } else if (IMAGE_TYPES[w.type]) ref = c.image(Object.assign({ iw: sp ? (w.crop ? w.crop[2] : sp.w) : w.w, ih: sp ? (w.crop ? w.crop[3] : sp.h) : w.h },
+                base, w.type === 'needle' ? { sampling: 'bilinear' } : {}));      // a needle turned: filtered, not stair-stepped (0.50.8)
             else ref = c.effect(Object.assign({ fs: w.type === 'swatch' ? calibration.SWATCH : shaders[w.type] }, base, w.type === 'precip' ? { time: true } : {}));
             if (!ref) { this.log.warn('widget "' + w.id + '": layer refused'); return; }
             this.placed.push({ c, ref, x: w.x, y: w.y, w: w.w, h: w.h });
@@ -3267,9 +3272,22 @@ class HudApp {
     /** The "spring" needles, 60 times a second (NEEDLE_MS), so they sweep instead of stepping at the tick's 20. */
     _needleTick() {
         if (!this.client.ready || !this.widgets.size) return;
-        const now = Date.now();
+        const now = Date.now(), gap = this.needleT ? now - this.needleT : 0;
+        this.needleT = now;
+        if (gap > NEEDLE_LATE_MS) {
+            this.needleLate = Math.max(this.needleLate || 0, gap);
+            if (now - (this.needleLogAt || 0) >= NEEDLE_LOG_MS) {
+                this.needleLogAt = now;
+                this.log.info('needles: a tick came ' + this.needleLate + ' ms after the one before (every ' + NEEDLE_MS + ' ms asked); the app is busy');
+                this.needleLate = 0;
+            }
+        }
+        // a theme coming in (the old one held): its pictures are being sent, the needles wait for it
+        if (this.held) return;
         this.widgets.forEach((x) => {
             if (!x.w.spring) return;
+            // the socket to cluster-render full: nothing more queued behind it (the spring keeps the time, the next tick catches up)
+            if (x.c && x.c.blocked) return;
             if (x.w.type === 'needle') this._guard('widget ' + x.w.id, () => this._updateNeedle(x, now, false));
             else if (x.w.type === 'segments') this._guard('widget ' + x.w.id, () => this._updateSegments(x, now, false));
         });
@@ -3501,9 +3519,13 @@ class HudApp {
         const st = segs.map((s, i) => (i < n ? 1 : 0) + 2 * zoneOf(i) + 8 * headOf(i));
         const old = x.zoneSt || [];
         const rects = [], parts = [];
+        // each segment's pixels per state, made once (0.50.8: made anew at every tick they cost the head unit's CPU)
+        const cache = x.segCache || (x.segCache = new Map());
         st.forEach((s, i) => {
             if (!force && old[i] === s) return;
             const [sx, sy, sw, sh] = segs[i], lit = s & 1, k = (s >> 1) & 3, hot = s >> 3;
+            const ck = i * 256 + s;
+            if (cache.has(ck)) { rects.push({ x: sx, y: sy, w: sw, h: sh }); parts.push(cache.get(ck)); return; }
             const b = Buffer.alloc(sw * sh * 4, 0);
             // "zoneTrack": unlit, an opaque dark segment in its zone's colour (normal: the track), over the face's own
             if (z.track && !lit && (k > 0 || z.own[i] !== 0)) {
@@ -3539,6 +3561,7 @@ class HudApp {
                     b[d] += Math.round((255 - b[d]) * f); b[d + 1] += Math.round((255 - b[d + 1]) * f); b[d + 2] += Math.round((255 - b[d + 2]) * f);
                 }
             }
+            cache.set(ck, b);
             rects.push({ x: sx, y: sy, w: sw, h: sh });
             parts.push(b);
         });
