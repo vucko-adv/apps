@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "Concours's needles move like a real gauge: they reach the value and stop, without swinging past and wobbling back. The cluster should keep up with the engine better: Zeiger asks much less of the cluster renderer while you drive. Smaller fixes make the app lighter on the head unit, and it no longer talks to Maps on cluster, which no Zeiger theme uses.",
-  "version": "0.50.9",
+  "whatsNew": "Concours can show a clock: in Customise, set Left dial to Clock for an analog clock in the dials' own style, with your range in a small window. Its night lighting is redone: dark faces with only the markings glowing, the pearl lit from its rim. Its colours are deeper, the needles orange, the reds stronger, and the numerals stand out from the dials without gold rims.",
+  "version": "0.50.10",
   "vendor": "custom",
   "loggingId": "OAZG",
   "maxDiskUsage": 67108864,
@@ -983,6 +983,22 @@
         [
           "off",
           "Off"
+        ]
+      ]
+    },
+    {
+      "key": "concoursLeft",
+      "label": "Concours: left dial",
+      "type": "choice",
+      "default": "gauges",
+      "options": [
+        [
+          "gauges",
+          "Turbo, oil and fuel"
+        ],
+        [
+          "clock",
+          "Clock"
         ]
       ]
     },

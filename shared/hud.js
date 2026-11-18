@@ -272,6 +272,9 @@
  * Units follow the "units" setting: us = mph, °F, psi; metric = km/h, °C, bar.
  * {{intake}} (intake air, from the engine unit: app.json config.dme.intake) {{boostPeak}} (the highest boost since the last
  * 0-60 run started) {{avgSpeed}} (average moving speed this drive, from its first minute) {{run}} (the 0-60 clock running, else the last time, s) {{runBest}} {{runState}} (READY / GO / DONE)
+ * Measures "clockH" (hours 0..12 with the minutes' share: 10:30 is 10.5), "clockM" (minutes with the seconds' share),
+ * "clockS" (whole seconds, a quartz hand's step) (Zeiger 0.50.10, Concours's clock): the time of the timeZone setting;
+ * a needle on one turns at once, no filter (it would sweep back round the dial from 59 to 0).
  * {{runLabel}} (0-60 MPH, 0-100 KM/H): runs.js. {{warm}}: WARMING UP while the oil is under 80 C, then ENGINE WARM.
  * {{badge}}: the model picked on the Badge tab (badges.js), "BMW X3 M40i" with the lettering on, '' for none.
  * Warnings: a text showing oil, coolant or boost (a {{oil}} / {{coolant}} / {{boost}} token, or a readout slot with that
@@ -382,6 +385,7 @@ const NO_PASS_END_MS = 5000;
 // the cruise control / ACC (0.50.6, a first try: the fields' names on a G20 are not known yet, see _cruiseIn): where
 // the cluster's own display of it is, the instances tried (the catalog lists none), how often the fields are read
 const CRUISE_IFACE = 'de.bmw.dass.driverassistanceapplications.StatusDisplayXADAndSpeed', CRUISE_FIELDS = ['statusDisplayXAD', 'statusDisplaySpeed'];
+const CLOCK_RAW = { clockH: true, clockM: true, clockS: true };   // _raw()'s clock measures (Concours's clock)
 const CRUISE_RAW = { accOn: true, accRdy: true, accBars: true, ccOn: true, ccRdy: true };   // _raw()'s cruise names
 const CRUISE_INSTANCES = ['1', '2', '3', '4'];   // subscribed only (0.50.7: a G20 does not let them be read)
 // the "spring" needles and bands: ~30 Hz (0.50.8; 60 Hz in the car outran cluster-render, which writes an image layer at
@@ -1925,6 +1929,12 @@ class HudApp {
         // the end of no overtaking: 1 for NO_PASS_END_MS after the restriction ends
         if (name === 'noPassEnd') return this.noPassEndAt && Date.now() - this.noPassEndAt < NO_PASS_END_MS ? 1 : 0;
         if (name === 'boost') return this._boost();
+        if (CLOCK_RAW[name] === true) {
+            const t = this._now(), h = t.getHours(), m = t.getMinutes(), sec = typeof t.getSeconds === 'function' ? t.getSeconds() : 0;
+            if (name === 'clockH') return (h % 12) + m / 60;
+            if (name === 'clockM') return m + sec / 60;
+            return sec;
+        }
         if (name === 'gLat' || name === 'gLong') {
             // the 150 ms average while samples come in; else the car's last reading, unless it is a bad one
             if (this.gSm && Date.now() - this.gSm.at < 1000) return name === 'gLat' ? this.gSm.lat : this.gSm.long;
@@ -2164,7 +2174,7 @@ class HudApp {
         const off = isNum(zoned) ? zoned : this.config.utcOffsetMinutes;
         if (!isNum(off)) return new Date();
         const d = new Date(Date.now() + off * 60000);
-        return { getHours: () => d.getUTCHours(), getMinutes: () => d.getUTCMinutes() };
+        return { getHours: () => d.getUTCHours(), getMinutes: () => d.getUTCMinutes(), getSeconds: () => d.getUTCSeconds() };
     }
 
     /**
@@ -3415,7 +3425,9 @@ class HudApp {
     _updateNeedle(x, now, force) {
         const w = x.w, table = w.table;
         if (!Array.isArray(table) || !table.length) return;
-        this._follow(x, this._needleValue(w.measure), now);
+        // a clock hand: the time as it is (a filter would sweep it back round the dial from 59 to 0)
+        if (CLOCK_RAW[w.measure] === true) x.value = this._needleValue(w.measure);
+        else this._follow(x, this._needleValue(w.measure), now);
         const v = isNum(x.value) ? x.value : table[0][0];
         let deg = table[table.length - 1][1];
         if (v <= table[0][0]) deg = table[0][1];

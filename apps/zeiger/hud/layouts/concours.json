@@ -70,6 +70,44 @@
    ]
   },
   {
+   "id": "clock_day",
+   "type": "picture",
+   "picture": "concours_clock_day",
+   "class": "content",
+   "z": 1,
+   "x": 97,
+   "y": 112,
+   "w": 496,
+   "h": 496,
+   "toggle": [
+    "concoursLeft=clock",
+    "!@night"
+   ]
+  },
+  {
+   "id": "range_day",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{range}} {{u:distLc}}",
+   "font": "co_val",
+   "color": [
+    128,
+    252,
+    220,
+    255
+   ],
+   "align": "center",
+   "x": 299,
+   "y": 418,
+   "w": 92,
+   "h": 23,
+   "toggle": [
+    "!@night",
+    "concoursLeft=clock"
+   ]
+  },
+  {
    "id": "left_day",
    "type": "picture",
    "picture": "concours_left_day",
@@ -80,6 +118,7 @@
    "w": 496,
    "h": 496,
    "toggle": [
+    "concoursLeft=gauges",
     "!@night"
    ]
   },
@@ -120,6 +159,7 @@
    "class": "content",
    "z": 4,
    "toggle": [
+    "concoursLeft=gauges",
     "!@night"
    ],
    "x": 151,
@@ -173,9 +213,9 @@
    "text": "{{modeShort}}",
    "font": "co_mode",
    "color": [
-    96,
-    156,
-    142,
+    90,
+    160,
+    138,
     255
    ],
    "align": "center",
@@ -256,6 +296,44 @@
    ]
   },
   {
+   "id": "clock_night",
+   "type": "picture",
+   "picture": "concours_clock_night",
+   "class": "content",
+   "z": 1,
+   "x": 97,
+   "y": 112,
+   "w": 496,
+   "h": 496,
+   "toggle": [
+    "concoursLeft=clock",
+    "@night"
+   ]
+  },
+  {
+   "id": "range_night",
+   "type": "text",
+   "class": "content",
+   "z": 2,
+   "text": "{{range}} {{u:distLc}}",
+   "font": "co_val",
+   "color": [
+    120,
+    250,
+    216,
+    255
+   ],
+   "align": "center",
+   "x": 299,
+   "y": 418,
+   "w": 92,
+   "h": 23,
+   "toggle": [
+    "@night",
+    "concoursLeft=clock"
+   ]
+  },
+  {
    "id": "left_night",
    "type": "picture",
    "picture": "concours_left_night",
@@ -266,6 +344,7 @@
    "w": 496,
    "h": 496,
    "toggle": [
+    "concoursLeft=gauges",
     "@night"
    ]
   },
@@ -306,6 +385,7 @@
    "class": "content",
    "z": 4,
    "toggle": [
+    "concoursLeft=gauges",
     "@night"
    ],
    "x": 151,
@@ -321,9 +401,9 @@
    "text": "{{modeShort}}",
    "font": "co_mode",
    "color": [
-    64,
-    60,
-    50,
+    205,
+    195,
+    176,
     255
    ],
    "align": "center",
@@ -448,6 +528,7 @@
     193
    ],
    "toggle": [
+    "concoursLeft=gauges",
     "!@night"
    ]
   },
@@ -477,6 +558,7 @@
     193
    ],
    "toggle": [
+    "concoursLeft=gauges",
     "!@night"
    ]
   },
@@ -506,6 +588,7 @@
     193
    ],
    "toggle": [
+    "concoursLeft=gauges",
     "@night"
    ]
   },
@@ -535,6 +618,7 @@
     193
    ],
    "toggle": [
+    "concoursLeft=gauges",
     "!@night"
    ]
   },
@@ -564,6 +648,7 @@
     193
    ],
    "toggle": [
+    "concoursLeft=gauges",
     "!@night"
    ]
   },
@@ -593,6 +678,277 @@
     193
    ],
    "toggle": [
+    "concoursLeft=gauges",
+    "@night"
+   ]
+  },
+  {
+   "id": "clock_hour_sh",
+   "type": "needle",
+   "picture": "concours_needle_hour_sh",
+   "measure": "clockH",
+   "table": [
+    [
+     0,
+     0
+    ],
+    [
+     12,
+     360
+    ]
+   ],
+   "class": "content",
+   "z": 4,
+   "x": 328,
+   "y": 257,
+   "w": 51,
+   "h": 153,
+   "pivot": [
+    25,
+    115
+   ],
+   "toggle": [
+    "concoursLeft=clock",
+    "!@night"
+   ]
+  },
+  {
+   "id": "clock_hour",
+   "type": "needle",
+   "picture": "concours_needle_hour",
+   "measure": "clockH",
+   "table": [
+    [
+     0,
+     0
+    ],
+    [
+     12,
+     360
+    ]
+   ],
+   "class": "content",
+   "z": 5,
+   "x": 320,
+   "y": 245,
+   "w": 51,
+   "h": 153,
+   "pivot": [
+    25,
+    115
+   ],
+   "toggle": [
+    "concoursLeft=clock",
+    "!@night"
+   ]
+  },
+  {
+   "id": "clock_hour_n",
+   "type": "needle",
+   "picture": "concours_needle_hour_night",
+   "measure": "clockH",
+   "table": [
+    [
+     0,
+     0
+    ],
+    [
+     12,
+     360
+    ]
+   ],
+   "class": "content",
+   "z": 5,
+   "x": 320,
+   "y": 245,
+   "w": 51,
+   "h": 153,
+   "pivot": [
+    25,
+    115
+   ],
+   "toggle": [
+    "concoursLeft=clock",
+    "@night"
+   ]
+  },
+  {
+   "id": "clock_minute_sh",
+   "type": "needle",
+   "picture": "concours_needle_minute_sh",
+   "measure": "clockM",
+   "table": [
+    [
+     0,
+     0
+    ],
+    [
+     60,
+     360
+    ]
+   ],
+   "class": "content",
+   "z": 5,
+   "x": 330,
+   "y": 199,
+   "w": 47,
+   "h": 213,
+   "pivot": [
+    23,
+    173
+   ],
+   "toggle": [
+    "concoursLeft=clock",
+    "!@night"
+   ]
+  },
+  {
+   "id": "clock_minute",
+   "type": "needle",
+   "picture": "concours_needle_minute",
+   "measure": "clockM",
+   "table": [
+    [
+     0,
+     0
+    ],
+    [
+     60,
+     360
+    ]
+   ],
+   "class": "content",
+   "z": 6,
+   "x": 322,
+   "y": 187,
+   "w": 47,
+   "h": 213,
+   "pivot": [
+    23,
+    173
+   ],
+   "toggle": [
+    "concoursLeft=clock",
+    "!@night"
+   ]
+  },
+  {
+   "id": "clock_minute_n",
+   "type": "needle",
+   "picture": "concours_needle_minute_night",
+   "measure": "clockM",
+   "table": [
+    [
+     0,
+     0
+    ],
+    [
+     60,
+     360
+    ]
+   ],
+   "class": "content",
+   "z": 6,
+   "x": 322,
+   "y": 187,
+   "w": 47,
+   "h": 213,
+   "pivot": [
+    23,
+    173
+   ],
+   "toggle": [
+    "concoursLeft=clock",
+    "@night"
+   ]
+  },
+  {
+   "id": "clock_second_sh",
+   "type": "needle",
+   "picture": "concours_needle_second_sh",
+   "measure": "clockS",
+   "table": [
+    [
+     0,
+     0
+    ],
+    [
+     60,
+     360
+    ]
+   ],
+   "class": "content",
+   "z": 5,
+   "x": 331,
+   "y": 187,
+   "w": 44,
+   "h": 237,
+   "pivot": [
+    22,
+    185
+   ],
+   "toggle": [
+    "concoursLeft=clock",
+    "!@night"
+   ]
+  },
+  {
+   "id": "clock_second",
+   "type": "needle",
+   "picture": "concours_needle_second",
+   "measure": "clockS",
+   "table": [
+    [
+     0,
+     0
+    ],
+    [
+     60,
+     360
+    ]
+   ],
+   "class": "content",
+   "z": 6,
+   "x": 323,
+   "y": 175,
+   "w": 44,
+   "h": 237,
+   "pivot": [
+    22,
+    185
+   ],
+   "toggle": [
+    "concoursLeft=clock",
+    "!@night"
+   ]
+  },
+  {
+   "id": "clock_second_n",
+   "type": "needle",
+   "picture": "concours_needle_second_night",
+   "measure": "clockS",
+   "table": [
+    [
+     0,
+     0
+    ],
+    [
+     60,
+     360
+    ]
+   ],
+   "class": "content",
+   "z": 6,
+   "x": 323,
+   "y": 175,
+   "w": 44,
+   "h": 237,
+   "pivot": [
+    22,
+    185
+   ],
+   "toggle": [
+    "concoursLeft=clock",
     "@night"
    ]
   },
@@ -721,6 +1077,7 @@
     193
    ],
    "toggle": [
+    "concoursLeft=gauges",
     "!@night"
    ],
    "spring": {
@@ -754,6 +1111,7 @@
     193
    ],
    "toggle": [
+    "concoursLeft=gauges",
     "!@night"
    ],
    "spring": {
@@ -787,6 +1145,7 @@
     193
    ],
    "toggle": [
+    "concoursLeft=gauges",
     "@night"
    ],
    "spring": {
