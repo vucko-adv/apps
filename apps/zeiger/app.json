@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "Concours no longer opens the rev counter for the phone's map. Its needles should no longer stay crooked: each needle's position is sent again every second, and their shadows move with less traffic for the cluster.",
-  "version": "0.50.12",
+  "whatsNew": "Concours stays in its day look, with no separate night look. Its needles should no longer stay crooked: each needle's position is sent again every second. In Lab, the cruise control and speed limit test now gets the whole panel, and Show Zeiger's log puts the app's log on the screen.",
+  "version": "0.50.13",
   "vendor": "custom",
   "loggingId": "OAZG",
   "maxDiskUsage": 67108864,
@@ -1003,26 +1003,6 @@
       ]
     },
     {
-      "key": "concoursLight",
-      "label": "Concours: lighting",
-      "type": "choice",
-      "default": "auto",
-      "options": [
-        [
-          "auto",
-          "Auto (sunset)"
-        ],
-        [
-          "day",
-          "Day"
-        ],
-        [
-          "night",
-          "Night"
-        ]
-      ]
-    },
-    {
       "key": "hideBoxes",
       "label": "Hide BMW's black boxes (test)",
       "type": "bool",
@@ -1413,6 +1393,12 @@
       "label": "BMW lettering on the badge",
       "type": "bool",
       "default": true
+    },
+    {
+      "key": "logView",
+      "label": "Show Zeiger's log (on the page, newest first)",
+      "type": "bool",
+      "default": false
     },
     {
       "key": "probe",

@@ -6,7 +6,6 @@
  "packWaste": 4,
  "theme": "concours",
  "noNightDim": true,
- "nightSetting": "concoursLight",
  "_about": "Concours (Zeiger 0.49.0): three round gauges of a classic sports car in polished gold bezels, set in a leather dash with a stitched brow, drawn in cluster-design/concours/build.html. Middle: the rev counter, a pearl face with applied gold batons and raised dark green numerals (petrol to 8000, red from 6500; the _diesel layout to 6000, red from 5000), the clock, range with the outside temperature and the drive mode in it. Left, a dark green face: boost (0-2 bar), oil temperature and fuel through windows in the face, their scales on plates behind it; all three needles turn behind the face (a cover picture over them, the windows cut out). Right, a dark green face: the speedometer (0-260 km/h), gold batons at every 20, a window for the selector and gear. By day the markings are paint; after sunset (@night pictures) lamps round the edge of each face throw light inward: a bright ring at the rim, the markings and plates lit, the pearl lit from its rim in with its numerals glowing, the needles glowing on their own. Drop shadows under every needle, domed hubs, a glass reflection over each dial. Customise: concoursFace pearl | black. km/h, bar and °C are drawn in. Numbers in Krona One, words in Michroma (OFL). Widget reference: shared/hud.js header.",
  "widgets": [
   {
@@ -19,25 +18,7 @@
    "x": 0,
    "y": 0,
    "w": 1920,
-   "h": 720,
-   "toggle": [
-    "!@night"
-   ]
-  },
-  {
-   "id": "dash_night",
-   "type": "picture",
-   "picture": "concours_dash_night",
-   "own": true,
-   "class": "content",
-   "z": 0,
-   "x": 0,
-   "y": 0,
-   "w": 1920,
-   "h": 720,
-   "toggle": [
-    "@night"
-   ]
+   "h": 720
   },
   {
    "id": "tach_pearl_day",
@@ -50,8 +31,7 @@
    "w": 676,
    "h": 676,
    "toggle": [
-    "concoursFace=pearl",
-    "!@night"
+    "concoursFace=pearl"
    ]
   },
   {
@@ -65,8 +45,7 @@
    "w": 676,
    "h": 676,
    "toggle": [
-    "concoursFace=black",
-    "!@night"
+    "concoursFace=black"
    ]
   },
   {
@@ -80,8 +59,7 @@
    "w": 496,
    "h": 496,
    "toggle": [
-    "concoursLeft=clock",
-    "!@night"
+    "concoursLeft=clock"
    ]
   },
   {
@@ -103,7 +81,6 @@
    "w": 92,
    "h": 23,
    "toggle": [
-    "!@night",
     "concoursLeft=clock"
    ]
   },
@@ -118,8 +95,7 @@
    "w": 496,
    "h": 496,
    "toggle": [
-    "concoursLeft=gauges",
-    "!@night"
+    "concoursLeft=gauges"
    ]
   },
   {
@@ -133,8 +109,7 @@
    "w": 496,
    "h": 496,
    "toggle": [
-    "concoursMids=on",
-    "!@night"
+    "concoursMids=on"
    ]
   },
   {
@@ -148,8 +123,7 @@
    "w": 496,
    "h": 496,
    "toggle": [
-    "concoursMids=off",
-    "!@night"
+    "concoursMids=off"
    ]
   },
   {
@@ -159,8 +133,7 @@
    "class": "content",
    "z": 4,
    "toggle": [
-    "concoursLeft=gauges",
-    "!@night"
+    "concoursLeft=gauges"
    ],
    "x": 151,
    "y": 166,
@@ -186,8 +159,7 @@
    "w": 200,
    "h": 16,
    "toggle": [
-    "concoursFace=pearl",
-    "!@night"
+    "concoursFace=pearl"
    ]
   },
   {
@@ -201,8 +173,7 @@
    "w": 85,
    "h": 38,
    "toggle": [
-    "concoursFace=pearl",
-    "!@night"
+    "concoursFace=pearl"
    ]
   },
   {
@@ -224,8 +195,7 @@
    "w": 200,
    "h": 16,
    "toggle": [
-    "concoursFace=black",
-    "!@night"
+    "concoursFace=black"
    ]
   },
   {
@@ -239,8 +209,7 @@
    "w": 85,
    "h": 38,
    "toggle": [
-    "concoursFace=black",
-    "!@night"
+    "concoursFace=black"
    ]
   },
   {
@@ -260,236 +229,7 @@
    "x": 1537,
    "y": 461,
    "w": 76,
-   "h": 32,
-   "toggle": [
-    "!@night"
-   ]
-  },
-  {
-   "id": "tach_pearl_night",
-   "type": "picture",
-   "picture": "concours_tachd_pearl_night",
-   "class": "content",
-   "z": 1,
-   "x": 622,
-   "y": 22,
-   "w": 676,
-   "h": 676,
-   "toggle": [
-    "concoursFace=pearl",
-    "@night"
-   ]
-  },
-  {
-   "id": "tach_black_night",
-   "type": "picture",
-   "picture": "concours_tachd_black_night",
-   "class": "content",
-   "z": 1,
-   "x": 622,
-   "y": 22,
-   "w": 676,
-   "h": 676,
-   "toggle": [
-    "concoursFace=black",
-    "@night"
-   ]
-  },
-  {
-   "id": "clock_night",
-   "type": "picture",
-   "picture": "concours_clock_night",
-   "class": "content",
-   "z": 1,
-   "x": 97,
-   "y": 112,
-   "w": 496,
-   "h": 496,
-   "toggle": [
-    "concoursLeft=clock",
-    "@night"
-   ]
-  },
-  {
-   "id": "range_night",
-   "type": "text",
-   "class": "content",
-   "z": 2,
-   "text": "{{range}} {{u:distLc}}",
-   "font": "co_val",
-   "color": [
-    120,
-    250,
-    216,
-    255
-   ],
-   "align": "center",
-   "x": 299,
-   "y": 418,
-   "w": 92,
-   "h": 23,
-   "toggle": [
-    "@night",
-    "concoursLeft=clock"
-   ]
-  },
-  {
-   "id": "left_night",
-   "type": "picture",
-   "picture": "concours_left_night",
-   "class": "content",
-   "z": 1,
-   "x": 97,
-   "y": 112,
-   "w": 496,
-   "h": 496,
-   "toggle": [
-    "concoursLeft=gauges",
-    "@night"
-   ]
-  },
-  {
-   "id": "right_night",
-   "type": "picture",
-   "picture": "concours_right_night",
-   "class": "content",
-   "z": 1,
-   "x": 1327,
-   "y": 112,
-   "w": 496,
-   "h": 496,
-   "toggle": [
-    "concoursMids=on",
-    "@night"
-   ]
-  },
-  {
-   "id": "rightp_night",
-   "type": "picture",
-   "picture": "concours_rightp_night",
-   "class": "content",
-   "z": 1,
-   "x": 1327,
-   "y": 112,
-   "w": 496,
-   "h": 496,
-   "toggle": [
-    "concoursMids=off",
-    "@night"
-   ]
-  },
-  {
-   "id": "cover_night",
-   "type": "picture",
-   "picture": "concours_cover_night",
-   "class": "content",
-   "z": 4,
-   "toggle": [
-    "concoursLeft=gauges",
-    "@night"
-   ],
-   "x": 151,
-   "y": 166,
-   "w": 390,
-   "h": 390
-  },
-  {
-   "id": "mode_pearl_night",
-   "type": "text",
-   "class": "content",
-   "z": 2,
-   "text": "{{modeShort}}",
-   "font": "co_mode",
-   "color": [
-    205,
-    195,
-    176,
-    255
-   ],
-   "align": "center",
-   "x": 860,
-   "y": 441,
-   "w": 200,
-   "h": 16,
-   "toggle": [
-    "concoursFace=pearl",
-    "@night"
-   ]
-  },
-  {
-   "id": "mbadge_pearl_night",
-   "type": "picture",
-   "picture": "concours_badge_gold_night",
-   "class": "content",
-   "z": 2,
-   "x": 918,
-   "y": 523,
-   "w": 85,
-   "h": 38,
-   "toggle": [
-    "concoursFace=pearl",
-    "@night"
-   ]
-  },
-  {
-   "id": "mode_black_night",
-   "type": "text",
-   "class": "content",
-   "z": 2,
-   "text": "{{modeShort}}",
-   "font": "co_mode",
-   "color": [
-    44,
-    140,
-    118,
-    255
-   ],
-   "align": "center",
-   "x": 860,
-   "y": 441,
-   "w": 200,
-   "h": 16,
-   "toggle": [
-    "concoursFace=black",
-    "@night"
-   ]
-  },
-  {
-   "id": "mbadge_black_night",
-   "type": "picture",
-   "picture": "concours_badge_steel_night",
-   "class": "content",
-   "z": 2,
-   "x": 918,
-   "y": 523,
-   "w": 85,
-   "h": 38,
-   "toggle": [
-    "concoursFace=black",
-    "@night"
-   ]
-  },
-  {
-   "id": "gear_night",
-   "type": "text",
-   "class": "content",
-   "z": 2,
-   "text": "{{stage}}{{gearInD}}",
-   "font": "co_win",
-   "color": [
-    120,
-    250,
-    216,
-    255
-   ],
-   "align": "center",
-   "x": 1537,
-   "y": 461,
-   "w": 76,
-   "h": 32,
-   "toggle": [
-    "@night"
-   ]
+   "h": 32
   },
   {
    "id": "gear_glass",
@@ -528,8 +268,7 @@
     193
    ],
    "toggle": [
-    "concoursLeft=gauges",
-    "!@night"
+    "concoursLeft=gauges"
    ]
   },
   {
@@ -558,38 +297,7 @@
     193
    ],
    "toggle": [
-    "concoursLeft=gauges",
-    "!@night"
-   ]
-  },
-  {
-   "id": "needle_oil_n",
-   "type": "needle",
-   "picture": "concours_needle_under_night",
-   "measure": "oil",
-   "table": [
-    [
-     60,
-     205
-    ],
-    [
-     150,
-     253
-    ]
-   ],
-   "class": "content",
-   "z": 3,
-   "x": 322,
-   "y": 167,
-   "w": 46,
-   "h": 221,
-   "pivot": [
-    23,
-    193
-   ],
-   "toggle": [
-    "concoursLeft=gauges",
-    "@night"
+    "concoursLeft=gauges"
    ]
   },
   {
@@ -618,8 +326,7 @@
     193
    ],
    "toggle": [
-    "concoursLeft=gauges",
-    "!@night"
+    "concoursLeft=gauges"
    ]
   },
   {
@@ -648,38 +355,7 @@
     193
    ],
    "toggle": [
-    "concoursLeft=gauges",
-    "!@night"
-   ]
-  },
-  {
-   "id": "needle_fuel_n",
-   "type": "needle",
-   "picture": "concours_needle_under_night",
-   "measure": "fuel",
-   "table": [
-    [
-     0,
-     155
-    ],
-    [
-     1,
-     107
-    ]
-   ],
-   "class": "content",
-   "z": 3,
-   "x": 322,
-   "y": 167,
-   "w": 46,
-   "h": 221,
-   "pivot": [
-    23,
-    193
-   ],
-   "toggle": [
-    "concoursLeft=gauges",
-    "@night"
+    "concoursLeft=gauges"
    ]
   },
   {
@@ -708,8 +384,7 @@
     115
    ],
    "toggle": [
-    "concoursLeft=clock",
-    "!@night"
+    "concoursLeft=clock"
    ]
   },
   {
@@ -738,38 +413,7 @@
     115
    ],
    "toggle": [
-    "concoursLeft=clock",
-    "!@night"
-   ]
-  },
-  {
-   "id": "clock_hour_n",
-   "type": "needle",
-   "picture": "concours_needle_hour_night",
-   "measure": "clockH",
-   "table": [
-    [
-     0,
-     0
-    ],
-    [
-     12,
-     360
-    ]
-   ],
-   "class": "content",
-   "z": 5,
-   "x": 320,
-   "y": 245,
-   "w": 51,
-   "h": 153,
-   "pivot": [
-    25,
-    115
-   ],
-   "toggle": [
-    "concoursLeft=clock",
-    "@night"
+    "concoursLeft=clock"
    ]
   },
   {
@@ -798,8 +442,7 @@
     173
    ],
    "toggle": [
-    "concoursLeft=clock",
-    "!@night"
+    "concoursLeft=clock"
    ]
   },
   {
@@ -828,38 +471,7 @@
     173
    ],
    "toggle": [
-    "concoursLeft=clock",
-    "!@night"
-   ]
-  },
-  {
-   "id": "clock_minute_n",
-   "type": "needle",
-   "picture": "concours_needle_minute_night",
-   "measure": "clockM",
-   "table": [
-    [
-     0,
-     0
-    ],
-    [
-     60,
-     360
-    ]
-   ],
-   "class": "content",
-   "z": 6,
-   "x": 322,
-   "y": 187,
-   "w": 47,
-   "h": 213,
-   "pivot": [
-    23,
-    173
-   ],
-   "toggle": [
-    "concoursLeft=clock",
-    "@night"
+    "concoursLeft=clock"
    ]
   },
   {
@@ -888,8 +500,7 @@
     185
    ],
    "toggle": [
-    "concoursLeft=clock",
-    "!@night"
+    "concoursLeft=clock"
    ]
   },
   {
@@ -918,38 +529,7 @@
     185
    ],
    "toggle": [
-    "concoursLeft=clock",
-    "!@night"
-   ]
-  },
-  {
-   "id": "clock_second_n",
-   "type": "needle",
-   "picture": "concours_needle_second_night",
-   "measure": "clockS",
-   "table": [
-    [
-     0,
-     0
-    ],
-    [
-     60,
-     360
-    ]
-   ],
-   "class": "content",
-   "z": 6,
-   "x": 323,
-   "y": 175,
-   "w": 44,
-   "h": 237,
-   "pivot": [
-    22,
-    185
-   ],
-   "toggle": [
-    "concoursLeft=clock",
-    "@night"
+    "concoursLeft=clock"
    ]
   },
   {
@@ -976,9 +556,6 @@
    "pivot": [
     28,
     251
-   ],
-   "toggle": [
-    "!@night"
    ],
    "spring": {
     "f": 15,
@@ -1009,42 +586,6 @@
    "pivot": [
     28,
     251
-   ],
-   "toggle": [
-    "!@night"
-   ],
-   "spring": {
-    "f": 15,
-    "z": 1
-   }
-  },
-  {
-   "id": "needle_rpm_n",
-   "type": "needle",
-   "picture": "concours_needle_big_night",
-   "measure": "rpm",
-   "table": [
-    [
-     0,
-     -135
-    ],
-    [
-     6000,
-     135
-    ]
-   ],
-   "class": "content",
-   "z": 6,
-   "x": 932,
-   "y": 109,
-   "w": 56,
-   "h": 341,
-   "pivot": [
-    28,
-    251
-   ],
-   "toggle": [
-    "@night"
    ],
    "spring": {
     "f": 15,
@@ -1077,8 +618,7 @@
     193
    ],
    "toggle": [
-    "concoursLeft=gauges",
-    "!@night"
+    "concoursLeft=gauges"
    ],
    "spring": {
     "f": 10,
@@ -1111,42 +651,7 @@
     193
    ],
    "toggle": [
-    "concoursLeft=gauges",
-    "!@night"
-   ],
-   "spring": {
-    "f": 10,
-    "z": 1
-   }
-  },
-  {
-   "id": "needle_boost_n",
-   "type": "needle",
-   "picture": "concours_needle_under_night",
-   "measure": "boost",
-   "table": [
-    [
-     0,
-     -46
-    ],
-    [
-     2,
-     46
-    ]
-   ],
-   "class": "content",
-   "z": 3,
-   "x": 322,
-   "y": 167,
-   "w": 46,
-   "h": 221,
-   "pivot": [
-    23,
-    193
-   ],
-   "toggle": [
-    "concoursLeft=gauges",
-    "@night"
+    "concoursLeft=gauges"
    ],
    "spring": {
     "f": 10,
@@ -1178,9 +683,6 @@
     25,
     183
    ],
-   "toggle": [
-    "!@night"
-   ],
    "spring": {
     "f": 5.5,
     "z": 1
@@ -1211,42 +713,6 @@
     25,
     183
    ],
-   "toggle": [
-    "!@night"
-   ],
-   "spring": {
-    "f": 5.5,
-    "z": 1
-   }
-  },
-  {
-   "id": "needle_speed_n",
-   "type": "needle",
-   "picture": "concours_needle_small_night",
-   "measure": "speed",
-   "table": [
-    [
-     0,
-     -135
-    ],
-    [
-     300,
-     135
-    ]
-   ],
-   "class": "content",
-   "z": 6,
-   "x": 1550,
-   "y": 177,
-   "w": 51,
-   "h": 265,
-   "pivot": [
-    25,
-    183
-   ],
-   "toggle": [
-    "@night"
-   ],
    "spring": {
     "f": 5.5,
     "z": 1
@@ -1261,10 +727,7 @@
    "x": 920,
    "y": 320,
    "w": 80,
-   "h": 80,
-   "toggle": [
-    "!@night"
-   ]
+   "h": 80
   },
   {
    "id": "hub_left",
@@ -1275,10 +738,7 @@
    "x": 316,
    "y": 331,
    "w": 58,
-   "h": 58,
-   "toggle": [
-    "!@night"
-   ]
+   "h": 58
   },
   {
    "id": "hub_right",
@@ -1289,52 +749,7 @@
    "x": 1546,
    "y": 331,
    "w": 58,
-   "h": 58,
-   "toggle": [
-    "!@night"
-   ]
-  },
-  {
-   "id": "hub_tach_n",
-   "type": "picture",
-   "picture": "concours_hub_big_night",
-   "class": "content",
-   "z": 7,
-   "x": 920,
-   "y": 320,
-   "w": 80,
-   "h": 80,
-   "toggle": [
-    "@night"
-   ]
-  },
-  {
-   "id": "hub_left_n",
-   "type": "picture",
-   "picture": "concours_hub_small_night",
-   "class": "content",
-   "z": 7,
-   "x": 316,
-   "y": 331,
-   "w": 58,
-   "h": 58,
-   "toggle": [
-    "@night"
-   ]
-  },
-  {
-   "id": "hub_right_n",
-   "type": "picture",
-   "picture": "concours_hub_small_night",
-   "class": "content",
-   "z": 7,
-   "x": 1546,
-   "y": 331,
-   "w": 58,
-   "h": 58,
-   "toggle": [
-    "@night"
-   ]
+   "h": 58
   },
   {
    "id": "glass_tach",
@@ -1345,10 +760,7 @@
    "x": 684,
    "y": 84,
    "w": 552,
-   "h": 193,
-   "toggle": [
-    "!@night"
-   ]
+   "h": 193
   },
   {
    "id": "glass_left",
@@ -1359,10 +771,7 @@
    "x": 151,
    "y": 166,
    "w": 388,
-   "h": 136,
-   "toggle": [
-    "!@night"
-   ]
+   "h": 136
   },
   {
    "id": "glass_right",
@@ -1373,10 +782,7 @@
    "x": 1381,
    "y": 166,
    "w": 388,
-   "h": 136,
-   "toggle": [
-    "!@night"
-   ]
+   "h": 136
   }
  ]
 }

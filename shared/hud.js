@@ -409,7 +409,7 @@ const DIAL_SPEED = { us: { max: 160, ticks: 8 }, metric: { max: 240, ticks: 8 } 
 // the HUD's place (the page's Position tab): settings that move / scale the layers already there, no rebuild
 const PLACE_KEYS = ['hudX', 'hudY', 'hudScale'];
 // settings that change nothing on the cluster (the home-screen widget's, Zeiger's probe): no rebuild
-const QUIET_KEYS = ['widgetShows', 'widgetPicks', 'widgetTap', 'probe', 'labOn'];   // (labOn: the page's Lab group shown)
+const QUIET_KEYS = ['widgetShows', 'widgetPicks', 'widgetTap', 'probe', 'labOn', 'logView'];   // (labOn: the page's Lab group shown)
 // "Leave BMW's bottom strip clear" (cluster, issues #5 / #1): BMW's own strip (range, clock, belt light, P) starts at
 // y 662. Since Zeiger 0.32.0 the theme stays as it is and is cut there (it used to be squeezed to 662 / 720 of its
 // height): every image layer's pixels in the strip see-through as they are sent (_punch), a fill over it given the

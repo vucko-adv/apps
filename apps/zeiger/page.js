@@ -82,6 +82,7 @@ const GROUPS = [
         ['calib', 'Calibration', 'a grid or the map frame on the cluster, to measure what BMW hides'],
         ['slotWatch', 'Watch BMW\'s slots', 'test: every slot now, and what changed when'],
         ['probe', 'Look for cruise and speed limit', 'test: what the car offers apps, listed here'],
+        ['logView', 'Show Zeiger\'s log', 'its last lines here, newest first: a photo of them helps'],
         ['weatherFx', 'Rain and snow', 'test: falling over the theme (Ember)'],
     ] },
 ];
@@ -93,7 +94,7 @@ const CUSTOM = {
     // 0.45.0, a beta: the photo themes' Customise starts here (the readouts' font, the M badge under the car)
     ember: { key: 'ember', beta: true, rows: [['Font', 'Font', 'the readouts\' lettering'], ['Mid', 'Bottom middle', 'under the car'], ['Photo', 'Photo', 'Ember, Sunrise or Peaks']], switch: 'Photo', switchLabel: 'Photo' },
     // 0.49.0: the rev counter's face, pearl or black (lit as the side dials)
-    concours: { key: 'concours', rows: [['Face', 'Middle dial', 'pearl, or dark green as the others'], ['Mids', 'Small speed numbers', '30, 90, 150 .. on the speedometer'], ['Left', 'Left dial', 'turbo, oil and fuel, or an analog clock'], ['Light', 'Lighting', 'day or night look, or by the sun']], switch: 'Light' },
+    concours: { key: 'concours', rows: [['Face', 'Middle dial', 'pearl, or dark green as the others'], ['Mids', 'Small speed numbers', '30, 90, 150 .. on the speedometer'], ['Left', 'Left dial', 'turbo, oil and fuel, or an analog clock']] },   // (0.50.13: no night look, no Lighting)
     // 0.50.4: Vintage Green and Vintage Cyan in one theme, the colour a switch
     vintage: { key: 'vintage', rows: [['Color', 'Colour', 'cream on green, or cyan on teal']], switch: 'Color', switchLabel: 'Colour' },
 };
@@ -625,16 +626,20 @@ class Page {
             y = py + 104 + (lines.length - 1) * 24;
         }
         // (0.50.5: the slot watch and the probe are in Lab; About keeps the credits)
-        const credits = g.name === 'About', lab = g.name === 'Lab', watch = lab && this.get('slotWatch') === true, probe = lab && this.get('probe') === true;
-        const rows = watch ? g.rows.filter((r) => r[0] === 'slotWatch') : g.rows;
+        const credits = g.name === 'About', lab = g.name === 'Lab', watch = lab && this.get('slotWatch') === true, probe = lab && !watch && this.get('probe') === true;
+        const logv = lab && !watch && !probe && this.get('logView') === true;
+        // (0.50.13) while the slot watch, the probe or the log is on, only its own row shows: its lines get the panel
+        const only = watch ? 'slotWatch' : probe ? 'probe' : logv ? 'logView' : null;
+        const rows = only ? g.rows.filter((r) => r[0] === only) : g.rows;
         const room = py + ph - 10 - y - (credits ? Math.max(CREDITS.length * 26 + 24, 196) : 0);
         // the slot watch and the probe (0.46.0) give their lines the room: their rows as low as they go
-        const rh = watch ? WATCH_ROW : probe ? 50 : Math.min(84, Math.floor(room / Math.max(1, rows.length)));   // (probe: Lab's seven rows, 50 each)
+        const rh = only ? WATCH_ROW : Math.min(84, Math.floor(room / Math.max(1, rows.length)));
         rows.forEach((row, j) => this.row(cv, px + 32, y + j * rh, pw - 64, rh, row));
         if (watch) {
             const wy = y + rh + 18;
             this.watchLines(cv, px + 32, wy, pw - 64, Math.max(3, Math.floor((py + ph - 14 - wy - 18) / WATCH_LH)));
         } else if (probe) this.probeLines(cv, px + 32, y + rows.length * rh + 18, pw - 64, py + ph - 14);
+        else if (logv) this.logLines(cv, px + 32, y + rows.length * rh + 18, pw - 64, py + ph - 14);
         if (lab && !probe) { this.probeR = undefined; this.probeStop(); }
         if (credits) {
             const cy = y + g.rows.length * rh + 18;
@@ -685,6 +690,35 @@ class Page {
         });
         if (pages > 1) cv.text('page ' + (page + 1) + ' of ' + pages + ' · tap for the next', x + w, y + 18 + rows * LH, 15, C.dim, Object.assign({ align: 'right' }, F));
         cv.target(x, y - 8, w, bottom - y + 8, () => { this.probePage = (page + 1) % pages; this.kick(); }, 'probe', 0, true);
+    }
+
+    /**
+     * The log on the page (0.50.13, Lab "Show Zeiger's log"): the last lines of data/zeiger.log, newest first, the
+     * time shortened to hh:mm:ss, the warnings and errors in the accent colour; a tap shows the next (older) page. Read
+     * again every 2 s while it shows, the last 96 KiB only.
+     */
+    logLines(cv, x, y, w, bottom) {
+        const F = { font: M, literal: true }, LH = 22, now = Date.now();
+        if (!this.logRead || now - this.logRead.at > 2000) {
+            let lines = [];
+            try {
+                const f = require('path').join(this.ctx.dataDir, 'zeiger.log'), fs = require('fs'), st = fs.statSync(f), n = Math.min(st.size, 96 * 1024);
+                const fd = fs.openSync(f, 'r'), buf = Buffer.alloc(n);
+                try { fs.readSync(fd, buf, 0, n, st.size - n); } finally { fs.closeSync(fd); }
+                lines = buf.toString('utf8').split('\n').filter((l) => l.trim()).slice(n < st.size ? 1 : 0).reverse();
+            } catch (e) { lines = ['(no log yet: ' + (e && e.code || e) + ')']; }
+            this.logRead = { at: now, lines };
+            clearTimeout(this.logT); this.logT = setTimeout(() => this.kick(), 2100);
+        }
+        cv.fillRect(x, y - 8, w, 1, C.faint);
+        const rows = Math.max(3, Math.floor((bottom - y - 14) / LH)), all = this.logRead.lines;
+        const pages = Math.max(1, Math.ceil(all.length / rows)), page = (this.logPage || 0) % pages;
+        all.slice(page * rows, page * rows + rows).forEach((l, i) => {
+            const m = /^\d{4}-\d\d-\d\dT(\d\d:\d\d:\d\d)\.\d+Z (\S+) (.*)$/.exec(l), t = m ? m[1] + ' ' + m[3] : l, bad = m && /WARN|ERROR/.test(m[2]);
+            cv.text(fit(cv, t, 16, w, M), x, y + 16 + i * LH, 16, bad ? C.accSoft : C.text, F);
+        });
+        cv.text('page ' + (page + 1) + ' of ' + pages + ' · newest first · tap for older', x + w, bottom - 2, 15, C.dim, Object.assign({ align: 'right' }, F));
+        cv.target(x, y - 8, w, bottom - y + 8, () => { this.logPage = (page + 1) % pages; this.kick(); }, 'log', 0, true);
     }
 
     /** The live read off (the probe switched off) */
