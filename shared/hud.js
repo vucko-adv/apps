@@ -372,6 +372,7 @@ const REFUSED_RETRIES = 2;       // ... at most this many times until something 
 // Zeiger 0.50.9: renewed every 600 ms, held 2 s (were 200 and 1200). cluster-render (0.6.9, graph_ramses19.cpp) makes
 // every animation of the target anew whenever one is replaced, so renewing each of Concours's 21 layers 5 times a second
 // rebuilt them all about 100 times a second, which likely kept the renderer busy and the needles late.
+// Zeiger 0.50.14: held 3 s: the car's log showed the app standing still 2.1 s, over the 2 s hold (the theme blinked away).
 // the start animation ("intro", Zeiger addition): it holds its first frame until cluster-render says every layer of the
 // layout is shown on the display, then starts INTRO_LEAD_MS later. Started when the layout was made (0.21-0.22), it was
 // hardly seen on the car (Nov 14 2026: nothing of Apex's, VFD's, Mist's and Dark Moon's, Vintage's yes), most likely
@@ -398,7 +399,7 @@ const NEEDLE_RESYNC_MS = 1000;
 // anyway, and every turn sent costs the renderer a scene change (half of Concours's needle traffic was shadows)
 const SHADOW_STEP_DEG = 0.5;
 const GLIDE_ANIM = 97;            // a needle's "glide" turn (one per layer, replaced at every tick)
-const FS_ANIM = 99, FS_REARM_MS = 600, FS_HOLD_MS = 2000, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
+const FS_ANIM = 99, FS_REARM_MS = 600, FS_HOLD_MS = 3000, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
 const TICK_MS = 50;              // 20 Hz: shift bar and gauges
 const TEXT_MS = 200;             // text re-draws at most 5 times a second (what BMW's own readouts do)
 const TARGET_SIZES = { hud: [800, 480], panel: [1920, 720] };
@@ -2227,7 +2228,9 @@ class HudApp {
     }
 
     _rebuild() {
+        const t0 = Date.now();
         this._guard('rebuild', () => this._rebuildInner());
+        this._slow('theme rebuild', Date.now() - t0);
         // a rebuild that failed half way: nothing of the layout before left on cluster-render
         if (this.oldPending) this._dropOld(this.oldPending, null);
         if (this.keep) { this.keep.forEach((s) => s.c.drop(s.ref)); this.keep = null; }
@@ -3270,6 +3273,13 @@ class HudApp {
 
     _tick() {
         const now = Date.now();
+        try { this._tickInner(now); } finally { this._slow('cluster tick', Date.now() - now); }
+    }
+
+    /** a piece of work that took ms: named in the log's stall lines (kit/runtime/mgu.js, 0.50.14) */
+    _slow(name, ms) { if (this.ctx && typeof this.ctx.slow === 'function') this.ctx.slow(name, ms); }
+
+    _tickInner(now) {
         this._smoothRpm(now);
         // the 0-60 timer only on the car's own data (the demo drive would set a best time)
         if (!this.car.data().demo) this.runs.update(this.car.data().speed, now, this.setting('units') === 'us' ? 'us' : 'metric');
@@ -3312,6 +3322,7 @@ class HudApp {
         }
         // a theme coming in (the old one held): its pictures are being sent, the needles wait for it
         if (this.held) return;
+        const t0 = Date.now();
         this.widgets.forEach((x) => {
             if (!x.w.spring) return;
             // the socket to cluster-render full: nothing more queued behind it (the spring keeps the time, the next tick catches up)
@@ -3321,6 +3332,7 @@ class HudApp {
                 else if (x.w.type === 'segments') this._updateSegments(x, now, false);
             } catch (e) { this._widgetError(x, e); }
         });
+        this._slow('needles', Date.now() - t0);
     }
 
     /**

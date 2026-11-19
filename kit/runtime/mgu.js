@@ -41,11 +41,52 @@ const RUN_TAG = Date.now().toString(36);
 // drop drawn frames left by earlier runs
 try { fs.readdirSync(RHMI_RES).filter((f) => /^dyn_/.test(f)).forEach((f) => { try { fs.unlinkSync(path.join(RHMI_RES, f)); } catch (e) {} }); } catch (e) {}
 function fileLog(level, msg) {
+    const t0 = Date.now();
     try {
         const st = fs.existsSync(LOG_FILE) ? fs.statSync(LOG_FILE) : null;
         if (st && st.size > 256 * 1024) fs.renameSync(LOG_FILE, LOG_FILE + '.1');
         fs.appendFileSync(LOG_FILE, new Date().toISOString() + ' ' + level + ' ' + msg + '\n');
     } catch (e) { /* data dir not writable (host preview) */ }
+    noteSlow('log write', Date.now() - t0);
+}
+/*
+ * Stall watch (Zeiger 0.50.14): in the car the app stood still for over 2 s at a time (the needles' ticks and the
+ * fail-safe's renewals 2.1 s apart), the rev counter stepping. A 100 ms timer that comes STALL_MS or more late logs
+ * the stall at once (one per STALL_LOG_MS), with the long pieces of work that ended in it (noteSlow: 50 ms or more)
+ * and the longest garbage collection, so the log says what blocks.
+ */
+const STALL_MS = 400, STALL_LOG_MS = 5000, SLOW_MS = 50;
+const slowList = [], gcList = [];
+function noteSlow(name, ms) {
+    if (!(ms >= SLOW_MS)) return;
+    slowList.push({ at: Date.now(), name, ms });
+    if (slowList.length > 16) slowList.shift();
+}
+try {
+    const { PerformanceObserver } = require('perf_hooks');
+    new PerformanceObserver((list) => list.getEntries().forEach((e) => {
+        gcList.push({ at: Date.now(), ms: Math.round(e.duration) });
+        if (gcList.length > 16) gcList.shift();
+    })).observe({ entryTypes: ['gc'] });
+} catch (e) { /* no perf_hooks */ }
+{
+    let last = Date.now(), logAt = 0;
+    const t = setInterval(() => {
+        const now = Date.now(), lag = now - last - 100;
+        last = now;
+        if (lag < STALL_MS || now - logAt < STALL_LOG_MS) return;
+        logAt = now;
+        const from = now - lag - 150;
+        // (a little later: the garbage collector's entries come after the stall)
+        setTimeout(() => {
+            const why = slowList.filter((s) => s.at >= from && s.at <= now + 50).map((s) => s.name + ' ' + s.ms + ' ms');
+            const gc = gcList.filter((g) => g.at >= from).reduce((m, g) => Math.max(m, g.ms), 0);
+            if (gc >= SLOW_MS) why.push('garbage collection ' + gc + ' ms');
+            fileLog('WARN', 'stall: the app stood still ' + lag + ' ms' + (why.length ? ' (' + why.join(', ') + ')' : ' (nothing of ours measured: the head unit busy?)') +
+                ', memory ' + Math.round(process.memoryUsage().rss / 1048576) + ' MB');
+        }, 300);
+    }, 100);
+    if (t.unref) t.unref();
 }
 // The SDK can swallow the first RHMI resource error and fail later with a misleading
 // null entry-point factory. Preserve the original warnings/errors in the app log.
@@ -111,8 +152,12 @@ class Settings {
     get(key) { return this.values[key]; }
     set(key, value) {
         this.values[key] = value;
+        const t0 = Date.now();
         try { fs.writeFileSync(this.file, JSON.stringify(this.values, null, 1)); } catch (e) { log.warn('settings save: ' + e); }
+        noteSlow('settings save', Date.now() - t0);
+        const t1 = Date.now();
         this.listeners.forEach((fn) => { try { fn(key, value); } catch (e) { log.error(e); } });
+        noteSlow('setting ' + key + ' applied', Date.now() - t1);
     }
     onChange(fn) { this.listeners.push(fn); }
     item(key) { return this.schema.find((s) => s.key === key); }
@@ -254,6 +299,7 @@ class Ui {
             const t1 = Date.now();
             fs.writeFileSync(file + '.tmp', png);
             fs.renameSync(file + '.tmp', file);
+            noteSlow('page image ' + name + ' (png ' + (t1 - t0) + ')', Date.now() - t0);
             if (first) log.info('image ' + name + ': png written ' + (Date.now() - t0) + ' ms');
             await rb.createResourceHandles([file]);
             const handle = rb.getResourceHandle(file);
@@ -393,6 +439,7 @@ class Widget {
             const t0 = Date.now(), png = frame.png(), t1 = Date.now();
             fs.writeFileSync(file + '.tmp', png);
             fs.renameSync(file + '.tmp', file);
+            noteSlow('widget image (png ' + (t1 - t0) + ')', Date.now() - t0);
             await rb.createResourceHandles([file]);
             await this.comp.setValue(Number(spawnId), cell, rb.getResourceHandle(file), 'Asset');
             this.timing.png += t1 - t0; this.timing.push += Date.now() - t1;
@@ -527,6 +574,8 @@ async function runInner(impl) {
     ui.display = display;
     const ctx = {
         app, ui, settings, log, spec: SPEC, dataDir: DATA_DIR, display, widget,
+        /** slow(name, ms) (Zeiger 0.50.14): a piece of work that took ms, named in the log's stall lines */
+        slow: noteSlow,
         signals: require('./signals'),
         theme: () => themes.theme(settings.get('theme')),
         /**
@@ -582,6 +631,7 @@ async function runInner(impl) {
                 try { await fn(); } catch (e) { log.error('loop ' + stateName, e); }
                 running = false;
                 const dt = Date.now() - t0;
+                noteSlow('page frame', dt);
                 frames++; spent += dt;
                 // software frames allocate image and PNG buffers; Node 8 frees them lazily, which lets
                 // memory float up to the platform's limit (the app is then killed). Collect regularly.
