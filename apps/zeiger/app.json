@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "A short pause of the app no longer takes the theme off the cluster for a moment. When the app stands still, its log now says for how long and what it was doing (Lab, Show Zeiger's log: the lines starting with stall), to find what makes Concours's rev counter step.",
-  "version": "0.50.14",
+  "whatsNew": "Dark Moon, Mist and Underpass are now one theme, Dark Moon: pick its photo in Customise, with four fonts for the speed and the selector, and the clock or a white M badge at the bottom. It shows the speed limit the camera reads, the next limit and no overtaking in the bottom line, right of the fuel. If you had Mist or Underpass, Dark Moon keeps that photo. Lab is split in two: Lab and Lab tools.",
+  "version": "0.51.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "maxDiskUsage": 67108864,
@@ -209,14 +209,6 @@
           "Dark Moon"
         ],
         [
-          "underpass",
-          "Underpass"
-        ],
-        [
-          "mist",
-          "Mist"
-        ],
-        [
           "ember",
           "Ember"
         ],
@@ -267,14 +259,6 @@
           "Dark Moon"
         ],
         [
-          "underpass",
-          "Underpass"
-        ],
-        [
-          "mist",
-          "Mist"
-        ],
-        [
           "ember",
           "Ember"
         ],
@@ -311,14 +295,6 @@
           "Dark Moon"
         ],
         [
-          "underpass",
-          "Underpass"
-        ],
-        [
-          "mist",
-          "Mist"
-        ],
-        [
           "ember",
           "Ember"
         ],
@@ -353,14 +329,6 @@
         [
           "dark_moon",
           "Dark Moon"
-        ],
-        [
-          "underpass",
-          "Underpass"
-        ],
-        [
-          "mist",
-          "Mist"
         ],
         [
           "ember",
@@ -895,6 +863,66 @@
         [
           "peaks",
           "Peaks"
+        ]
+      ]
+    },
+    {
+      "key": "darkMoonPhoto",
+      "label": "Dark Moon: photo",
+      "type": "choice",
+      "default": "dark_moon",
+      "options": [
+        [
+          "dark_moon",
+          "Dark Moon"
+        ],
+        [
+          "mist",
+          "Mist"
+        ],
+        [
+          "underpass",
+          "Underpass"
+        ]
+      ]
+    },
+    {
+      "key": "darkMoonFont",
+      "label": "Dark Moon: font",
+      "type": "choice",
+      "default": "barlow",
+      "options": [
+        [
+          "barlow",
+          "Classic"
+        ],
+        [
+          "clean",
+          "Clean"
+        ],
+        [
+          "retro",
+          "Retro"
+        ],
+        [
+          "motor",
+          "Motor"
+        ]
+      ]
+    },
+    {
+      "key": "darkMoonMid",
+      "label": "Dark Moon: bottom middle",
+      "type": "choice",
+      "default": "clock",
+      "options": [
+        [
+          "clock",
+          "Clock"
+        ],
+        [
+          "mbadge",
+          "M badge"
         ]
       ]
     },

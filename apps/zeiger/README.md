@@ -91,13 +91,13 @@ Peaks' photo goes to the cluster ETC2-compressed: 1.32 MiB of cluster-render's p
 - **Since 0.40.0 every photo theme:** Dark Moon, Mist, Underpass, Map Mist and Sunrise's hills too (each theme now 2.3-3.1 MiB instead of 6-12.4), so every change between themes can hold the old one. Their bottoms fade to black from row 560 to 716 (`--fade 560,716,0.95`), so the photo meets BMW's black strip and the small window left open over its gear letter without an edge. Sunrise's hills got two see-through rows on top (ETC2 is 4x4 blocks), their widget starts at 428. The themes' installers in cluster-design run the tool with the same fade.
 - **Not yet:** `etc2rgb` (0.5 byte a pixel, opaque) is not checked on an iDrive 7 cluster upstream.
 
-## Underpass and Mist
+## Dark Moon's photos: Mist and Underpass
 
-Dark Moon's readouts and weather over a photo (`cluster-design/underpass` and `cluster-design/mist`, built by `cluster-design/photo/photo_theme.js`): soft scrims behind the readouts so they read on it, and black wherever BMW's gear box lands.
+Since 0.51.0 Mist and Underpass are photos of Dark Moon (Customise: Photo, `darkMoonPhoto`), each in its own palette (the layout's `themeBy`). Their pictures were made by `cluster-design/mist` and `cluster-design/underpass` (`cluster-design/photo/photo_theme.js`): soft scrims behind the readouts so they read on it, and black wherever BMW's gear box lands. `cluster-design/dmphotos/build.html` makes the merged layout from Dark Moon's: the speed and the selector letter in four fonts (`darkMoonFont`, as Ember's), the bottom middle the clock or the M badge (`darkMoonMid`), and the speed limit, the next limit and no overtaking right of the speed, as Ember shows them.
 
 ## Removed themes
 
-A car set to a removed theme shows the nearest one left (shared/hud.js `RENAMED`): Sunrise shows Mist; Map, Map Underpass and Map Mist (removed in 0.50.4) show Mist; Vintage Amber, Vintage Green and Vintage Cyan show Vintage, Apex Sport shows Apex (0.50.4: one theme each, the colour or style a Customise pick). The engine features only they used stay in `shared/hud.js`: `"ownStrip"`, `"fixed"`, `"withMap"`.
+A car set to a removed theme shows the nearest one left (shared/hud.js `RENAMED`): Sunrise shows Dark Moon; Map, Map Underpass and Map Mist (removed in 0.50.4) show Dark Moon with the Mist or Underpass photo; Mist and Underpass (0.51.0) show Dark Moon with their photo; Vintage Amber, Vintage Green and Vintage Cyan show Vintage, Apex Sport shows Apex (0.50.4: one theme each, the colour or style a Customise pick). The engine features only they used stay in `shared/hud.js`: `"ownStrip"`, `"fixed"`, `"withMap"`.
 
 ## Home-screen widget
 

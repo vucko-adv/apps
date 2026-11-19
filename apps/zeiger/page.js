@@ -39,7 +39,7 @@ const LAB_TAPS = 10, LAB_TAP_GAP_MS = 1500;
 const GROUPS = [
     { name: 'Cluster', about: 'How the themes show on the cluster.', rows: [
         ['startAnim', 'Start animation', 'when a theme first shows, never while moving'],
-        ['weather', 'Today\'s weather', 'Dark Moon, Underpass, Mist · needs the internet uplink'],
+        ['weather', 'Today\'s weather', 'Dark Moon and its photos · needs the internet uplink'],
         ['shiftX', 'Theme position', 'to the right of BMW\'s own cluster'],
         ['stripClear', 'Leave BMW\'s bottom strip clear', 'the theme stays as it is, cut above the strip'],
     ] },
@@ -75,15 +75,18 @@ const GROUPS = [
     ], rows: [] },
     // 0.50.5 (the design review): what the people testing Zeiger use, out of the drivers' way; hidden until About is
     // tapped LAB_TAPS times in a row (again to hide it), saved as the setting "labOn"
-    { name: 'Lab', about: 'Tests and measuring tools for the people who help develop Zeiger.', rows: [
+    // 0.51.0 (the user: eight rows were cramped): two groups, the tests on the cluster and the tools that list lines here
+    { name: 'Lab', lab: true, about: 'Tests on the cluster for the people who help develop Zeiger.', rows: [
         ['demo', 'Demo data', 'made-up values while the car sends none'],
         ['gearLetter', 'Leave BMW\'s gear letter open', 'keeps BMW\'s black gear box away (bimmer-lab\'s car test)'],
         ['hideBoxes', 'Hide BMW\'s black boxes', 'test'],
         ['calib', 'Calibration', 'a grid or the map frame on the cluster, to measure what BMW hides'],
-        ['slotWatch', 'Watch BMW\'s slots', 'test: every slot now, and what changed when'],
-        ['probe', 'Look for cruise and speed limit', 'test: what the car offers apps, listed here'],
-        ['logView', 'Show Zeiger\'s log', 'its last lines here, newest first: a photo of them helps'],
         ['weatherFx', 'Rain and snow', 'test: falling over the theme (Ember)'],
+    ] },
+    { name: 'Lab tools', lab: true, about: 'What the car and Zeiger say, listed here: a photo of the lines helps.', rows: [
+        ['slotWatch', 'Watch BMW\'s slots', 'every slot now, and what changed when'],
+        ['probe', 'Look for cruise and speed limit', 'what the car offers apps'],
+        ['logView', 'Show Zeiger\'s log', 'its last lines, newest first'],
     ] },
 ];
 // Customise (Zeiger 0.34.0): the themes whose places can show other things, the setting prefix and the rows (the
@@ -93,13 +96,15 @@ const CUSTOM = {
     apex: { key: 'apex', rows: [['Big', 'Big number', 'in the middle'], ['Left', 'Left block', 'two bars, the tyres, or empty'], ['Mid', 'Bottom middle', 'where the clock is'], ['Style', 'Style', 'clean, or sport with the red glow']], switch: 'Style', switchLabel: 'Style' },
     // 0.45.0, a beta: the photo themes' Customise starts here (the readouts' font, the M badge under the car)
     ember: { key: 'ember', beta: true, rows: [['Font', 'Font', 'the readouts\' lettering'], ['Mid', 'Bottom middle', 'under the car'], ['Photo', 'Photo', 'Ember, Sunrise or Peaks']], switch: 'Photo', switchLabel: 'Photo' },
+    // 0.51.0: Dark Moon, Mist and Underpass in one theme, the photo a switch; the font and the bottom middle as Ember's
+    dark_moon: { key: 'darkMoon', rows: [['Font', 'Font', 'the speed and the selector letter'], ['Mid', 'Bottom middle', 'the clock or the M badge'], ['Photo', 'Photo', 'Dark Moon, Mist or Underpass']], switch: 'Photo', switchLabel: 'Photo' },
     // 0.49.0: the rev counter's face, pearl or black (lit as the side dials)
     concours: { key: 'concours', rows: [['Face', 'Middle dial', 'pearl, or dark green as the others'], ['Mids', 'Small speed numbers', '30, 90, 150 .. on the speedometer'], ['Left', 'Left dial', 'turbo, oil and fuel, or an analog clock']] },   // (0.50.13: no night look, no Lighting)
     // 0.50.4: Vintage Green and Vintage Cyan in one theme, the colour a switch
     vintage: { key: 'vintage', rows: [['Color', 'Colour', 'cream on green, or cyan on teal']], switch: 'Color', switchLabel: 'Colour' },
 };
 // a theme whose gallery picture follows a setting: previews/<theme>-<value>.json when there is one (Vintage's colour)
-const PREVIEW_BY = { vintage: 'vintageColor', apex: 'apexStyle', ember: 'emberPhoto' };
+const PREVIEW_BY = { vintage: 'vintageColor', apex: 'apexStyle', ember: 'emberPhoto', dark_moon: 'darkMoonPhoto' };
 // ... and its big card goes through them by itself: each held this long, then faded into the next (ms)
 const CYCLE_HOLD = 2200, CYCLE_FADE = 600;
 // Zeiger is in beta (0.45.0): a BETA mark in the header, and on a Customise that is newer still ("beta" above)
@@ -112,7 +117,7 @@ const THEME_GROUPS = [
     ['CLASSIC', ['concours']],
     ['VINTAGE', ['vintage', 'vfd']],
     ['SPORT', ['apex']],
-    ['PHOTO', ['dark_moon', 'underpass', 'mist', 'ember']],
+    ['PHOTO', ['dark_moon', 'ember']],
 ];
 // the calibration layouts (hudLayout values), for the row in BMW's cluster
 const CALIB = [['', 'Off'], ['grid', 'Grid'], ['mapcal', 'Map frame']];
@@ -363,7 +368,8 @@ class Page {
         if (g.name === 'Rev range') return this.valueText('engine') + ' · yellow ' + num(this.hud.setting('yellowLine')) + ' · red ' + num(this.hud.setting('redline'));
         if (g.name === 'Units and time') return (this.us() ? 'mph' : 'km/h') + ' · ' + this.valueText('clock') + ' · ' + this.valueText('timeZone');
         if (g.name === 'Home-screen widget') return this.valueText('widgetShows') + ' · tap: ' + (this.get('widgetTap') === 'open' ? 'opens Zeiger' : 'next view');
-        if (g.name === 'Lab') return 'demo data ' + this.valueText('demo').replace(/ \(.*\)$/, '').toLowerCase() + (this.calibNow() ? ' · calibrating' : '') + (['hideBoxes', 'slotWatch', 'probe'].some(on) ? ' · tests on' : '');
+        if (g.name === 'Lab') return 'demo data ' + this.valueText('demo').replace(/ \(.*\)$/, '').toLowerCase() + (this.calibNow() ? ' · calibrating' : '') + (['hideBoxes', 'gearLetter'].some(on) ? ' · tests on' : '');
+        if (g.name === 'Lab tools') { const t = [['slotWatch', 'slot watch'], ['probe', 'probe'], ['logView', 'log']].filter((x) => on(x[0])).map((x) => x[1]); return t.length ? t.join(' · ') + ' on' : 'all off'; }
         return 'version ' + ((this.ctx.spec && this.ctx.spec.version) || '?') + ' · credits';
     }
 
@@ -585,7 +591,7 @@ class Page {
     }
 
     /** the settings groups shown: Lab only once unlocked */
-    groupsShown() { return GROUPS.filter((g) => g.name !== 'Lab' || this.ctx.settings.get('labOn') === true); }
+    groupsShown() { return GROUPS.filter((g) => !g.lab || this.ctx.settings.get('labOn') === true); }
     /** a tap on About's group: LAB_TAPS in a row (each within LAB_TAP_GAP_MS of the last) show or hide Lab */
     aboutTap() {
         const now = Date.now();
@@ -626,7 +632,7 @@ class Page {
             y = py + 104 + (lines.length - 1) * 24;
         }
         // (0.50.5: the slot watch and the probe are in Lab; About keeps the credits)
-        const credits = g.name === 'About', lab = g.name === 'Lab', watch = lab && this.get('slotWatch') === true, probe = lab && !watch && this.get('probe') === true;
+        const credits = g.name === 'About', lab = g.name === 'Lab tools', watch = lab && this.get('slotWatch') === true, probe = lab && !watch && this.get('probe') === true;
         const logv = lab && !watch && !probe && this.get('logView') === true;
         // (0.50.13) while the slot watch, the probe or the log is on, only its own row shows: its lines get the panel
         const only = watch ? 'slotWatch' : probe ? 'probe' : logv ? 'logView' : null;

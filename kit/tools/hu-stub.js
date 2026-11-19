@@ -30,8 +30,9 @@ function headUnit(stage, o) {
     const { Settings } = (() => {
         // reuse the real Settings class without loading the SDK
         const m = src.match(/class Settings[\s\S]*?\n}\n/);
-        const fn = new Function('fs', 'path', 'DATA_DIR', 'log', m[0] + '\nreturn { Settings };');
-        return fn(fs, path, out, live ? log : console);
+        // (noteSlow: the stall watch's, Zeiger 0.50.14; the bench has none)
+        const fn = new Function('fs', 'path', 'DATA_DIR', 'log', 'noteSlow', m[0] + '\nreturn { Settings };');
+        return fn(fs, path, out, live ? log : console, () => {});
     })();
 
     const hu = new EventEmitter();

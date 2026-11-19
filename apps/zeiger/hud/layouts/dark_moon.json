@@ -7,7 +7,7 @@
  "theme": "dark_moon",
  "wantsWeather": true,
  "noNightDim": true,
- "_about": "Dark Moon: a sunrise seen from orbit drawn in code (cluster-design/darkmoon/orbit_scene.js, its pixels moved with Theme position: space and stars, the sun behind the top of a dark moon rising over the Earth's limb; BMW's black box on black space), the speed and km/h in the middle in the moon's disc, the selector letter and the drive mode on the right, on the left the weather, mirroring them: an icon for the day, the outside temperature from the car, the day's weather in words and its high / low / chance of rain (shared/weather.js: Open-Meteo, for where the internet connection is, through the Store's Internet uplink; setting \"weather\"); range with a fuel bar and the coolant temperature with its bar at the bottom, mirrored. Barlow Medium (OFL); speed and selector in the Map theme's fonts. Widget reference: shared/hud.js header.",
+ "_about": "Dark Moon: a sunrise seen from orbit drawn in code (cluster-design/darkmoon/orbit_scene.js, its pixels moved with Theme position: space and stars, the sun behind the top of a dark moon rising over the Earth's limb; BMW's black box on black space), the speed and km/h in the middle in the moon's disc, the selector letter and the drive mode on the right, on the left the weather, mirroring them: an icon for the day, the outside temperature from the car, the day's weather in words and its high / low / chance of rain (shared/weather.js: Open-Meteo, for where the internet connection is, through the Store's Internet uplink; setting \"weather\"); range with a fuel bar and the coolant temperature with its bar at the bottom, mirrored. Barlow Medium (OFL); speed and selector in the Map theme's fonts. Widget reference: shared/hud.js header. Zeiger 0.51.0 (cluster-design/dmphotos/build.html): Mist and Underpass are its photos (darkMoonPhoto, each in its own palette), the speed and the selector letter in one of four fonts (darkMoonFont: barlow, clean, retro, motor), the bottom middle the clock or the M badge (darkMoonMid), and the speed limit the camera reads with the next limit and no overtaking right of the speed, as Ember shows them.",
  "widgets": [
   {
    "id": "bg",
@@ -20,7 +20,36 @@
    "x": 0,
    "y": 0,
    "w": 1920,
-   "h": 720
+   "h": 720,
+   "toggle": "darkMoonPhoto=dark_moon"
+  },
+  {
+   "id": "bg_mist",
+   "type": "picture",
+   "picture": "mist_bg",
+   "own": true,
+   "followsShift": true,
+   "class": "content",
+   "z": 0,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 720,
+   "toggle": "darkMoonPhoto=mist"
+  },
+  {
+   "id": "bg_underpass",
+   "type": "picture",
+   "picture": "underpass_bg",
+   "own": true,
+   "followsShift": true,
+   "class": "content",
+   "z": 0,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 720,
+   "toggle": "darkMoonPhoto=underpass"
   },
   {
    "id": "fuel_still",
@@ -793,7 +822,56 @@
    "x": 750,
    "y": 242,
    "w": 420,
-   "h": 143
+   "h": 143,
+   "toggle": "darkMoonFont=barlow"
+  },
+  {
+   "id": "speed_clean",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{speed}}",
+   "font": "dmc_speed",
+   "color": "fg",
+   "align": "center",
+   "x": 750,
+   "y": 245,
+   "w": 420,
+   "h": 141,
+   "toggle": "darkMoonFont=clean"
+  },
+  {
+   "id": "speed_retro",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{speed}}",
+   "font": "dmr_speed",
+   "color": "fg",
+   "align": "center",
+   "x": 750,
+   "y": 228,
+   "w": 420,
+   "h": 158,
+   "toggle": "darkMoonFont=retro"
+  },
+  {
+   "id": "speed_motor",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{speed}}",
+   "font": "dms_speed",
+   "color": "fg",
+   "align": "center",
+   "x": 750,
+   "y": 220,
+   "w": 420,
+   "h": 166,
+   "toggle": "darkMoonFont=motor"
   },
   {
    "id": "unit",
@@ -823,7 +901,56 @@
    "x": 1602,
    "y": 242,
    "w": 220,
-   "h": 129
+   "h": 129,
+   "toggle": "darkMoonFont=barlow"
+  },
+  {
+   "id": "gear_clean",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{stage}}",
+   "font": "dmc_gear",
+   "color": "fg",
+   "align": "center",
+   "x": 1602,
+   "y": 244,
+   "w": 220,
+   "h": 128,
+   "toggle": "darkMoonFont=clean"
+  },
+  {
+   "id": "gear_retro",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{stage}}",
+   "font": "dmr_gear",
+   "color": "fg",
+   "align": "center",
+   "x": 1602,
+   "y": 226,
+   "w": 220,
+   "h": 149,
+   "toggle": "darkMoonFont=retro"
+  },
+  {
+   "id": "gear_motor",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{stage}}",
+   "font": "dms_gear",
+   "color": "fg",
+   "align": "center",
+   "x": 1602,
+   "y": 224,
+   "w": 220,
+   "h": 147,
+   "toggle": "darkMoonFont=motor"
   },
   {
    "id": "mode",
@@ -943,7 +1070,156 @@
    "x": 860,
    "y": 602,
    "w": 200,
-   "h": 38
+   "h": 38,
+   "toggle": "darkMoonMid=clock"
+  },
+  {
+   "id": "nopassend_ring",
+   "type": "segments",
+   "own": false,
+   "picture": "ember_nopassend",
+   "measure": "noPassEnd",
+   "segs": [
+    [
+     0,
+     0,
+     68,
+     68
+    ]
+   ],
+   "steps": [
+    1
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 462,
+   "y": 592,
+   "w": 68,
+   "h": 68
+  },
+  {
+   "id": "next_ring",
+   "type": "segments",
+   "own": false,
+   "picture": "ember_next",
+   "measure": "nextLimitOn",
+   "segs": [
+    [
+     0,
+     0,
+     48,
+     48
+    ]
+   ],
+   "steps": [
+    1
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 400,
+   "y": 559,
+   "w": 48,
+   "h": 48
+  },
+  {
+   "id": "next",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{nextLimit}}",
+   "font": "p_next",
+   "color": "fg",
+   "align": "center",
+   "x": 403,
+   "y": 570,
+   "w": 42,
+   "h": 19
+  },
+  {
+   "id": "nopass_ring",
+   "type": "segments",
+   "own": false,
+   "picture": "ember_nopass",
+   "measure": "noPassing",
+   "segs": [
+    [
+     0,
+     0,
+     68,
+     68
+    ]
+   ],
+   "steps": [
+    1
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 462,
+   "y": 592,
+   "w": 68,
+   "h": 68
+  },
+  {
+   "id": "limit_ring",
+   "type": "segments",
+   "own": false,
+   "picture": "ember_limit",
+   "measure": "speedLimit",
+   "segs": [
+    [
+     0,
+     0,
+     68,
+     68
+    ]
+   ],
+   "steps": [
+    1
+   ],
+   "class": "content",
+   "z": 3,
+   "x": 390,
+   "y": 592,
+   "w": 68,
+   "h": 68
+  },
+  {
+   "id": "limit",
+   "type": "text",
+   "class": "content",
+   "z": 4,
+   "conn": 1,
+   "text": "{{speedLimit}}",
+   "font": "p_lim",
+   "color": "fg",
+   "align": "center",
+   "x": 394,
+   "y": 614,
+   "w": 60,
+   "h": 26
+  },
+  {
+   "id": "mbadge",
+   "type": "picture",
+   "picture": "ember_mbadge",
+   "own": false,
+   "toggle": "darkMoonMid=mbadge",
+   "class": "content",
+   "z": 3,
+   "conn": 1,
+   "x": 905,
+   "y": 604,
+   "w": 110,
+   "h": 42
   }
- ]
+ ],
+ "themeBy": {
+  "setting": "darkMoonPhoto",
+  "themes": {
+   "dark_moon": "dark_moon",
+   "mist": "mist",
+   "underpass": "underpass"
+  }
+ }
 }

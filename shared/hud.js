@@ -419,13 +419,16 @@ const STRIP_TOP = 662;
 const STRIP_CUT = [0, STRIP_TOP, 1920, 720 - STRIP_TOP];
 // themes saved under an older name, or removed (Nov 14 2026: Sunrise, Map, Map Underpass, Vintage Amber): the setting
 // reads as the theme in its place now
-const RENAMED = { sunrise: 'dark_moon', sunrise_hills: 'ember', peaks: 'ember', map: 'mist', map_underpass: 'mist', map_mist: 'mist', vintage_amber: 'vintage',
+const RENAMED = { sunrise: 'dark_moon', sunrise_hills: 'ember', peaks: 'ember', map: 'dark_moon', map_underpass: 'dark_moon', map_mist: 'dark_moon',
+    mist: 'dark_moon', underpass: 'dark_moon', vintage_amber: 'vintage',
     vintage_green: 'vintage', vintage_cyan: 'vintage', apex_sport: 'apex' };
 // Vintage Green and Vintage Cyan are one theme since Zeiger 0.50.4, its colour the setting vintageColor: a car that had
 // Cyan saved (as its theme, or a drive mode's) keeps cyan until the colour is picked
 const VINTAGE_COLOUR = { vintage_green: 'green', vintage_cyan: 'cyan' };
 // ... and Sunrise and Peaks are photos of Ember since 0.50.4 (emberPhoto)
 const EMBER_PHOTO = { sunrise_hills: 'sunrise', peaks: 'peaks' };
+// ... and Mist and Underpass photos of Dark Moon since 0.51.0 (darkMoonPhoto; Map Mist and Map Underpass showed Mist)
+const DARK_MOON_PHOTO = { mist: 'mist', underpass: 'underpass', map: 'mist', map_mist: 'mist', map_underpass: 'underpass' };
 // a style setting that can follow the drive mode ("auto"): [its pick in SPORT, otherwise] (Apex, Zeiger 0.50.4)
 const BY_MODE = { apexStyle: ['sport', 'clean'] };
 // a "withMap" layout stays this long after the phone's map stops (a map pausing for a moment doesn't switch back and forth)
@@ -770,6 +773,12 @@ class HudApp {
             st.set('emberPhoto', EMBER_PHOTO[st.get(pk[0])]);
             pk.forEach((k) => st.set(k, 'ember'));
             this.log.info('Sunrise and Peaks are photos of Ember now: ' + pk.join(', ') + ' set to Ember, ' + st.get('emberPhoto'));
+        });
+        const dk = st.item('darkMoonPhoto') ? themes.filter((k) => DARK_MOON_PHOTO[st.get(k)]) : [];
+        if (dk.length) this._guard('dark moon migrate', () => {
+            st.set('darkMoonPhoto', DARK_MOON_PHOTO[st.get(dk[0])]);
+            dk.forEach((k) => st.set(k, 'dark_moon'));
+            this.log.info('Mist and Underpass are photos of Dark Moon now: ' + dk.join(', ') + ' set to Dark Moon, ' + st.get('darkMoonPhoto'));
         });
     }
 
