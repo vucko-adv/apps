@@ -391,6 +391,12 @@ const CRUISE_INSTANCES = ['1', '2', '3', '4'];   // subscribed only (0.50.7: a G
 // the "spring" needles and bands: ~30 Hz (0.50.8; 60 Hz in the car outran cluster-render, which writes an image layer at
 // most 30 times a second, and the head unit's CPU, so they trailed the engine), a late tick logged (once a minute at most)
 const NEEDLE_MS = 33, NEEDLE_LATE_MS = 150, NEEDLE_LOG_MS = 60000;
+// (0.50.12) every needle's angle sent again at least this often, moving or not: in the car Concours's needles stood
+// crooked until the theme was applied again, as if a turn had been lost on the way; a lost one now heals within a second
+const NEEDLE_RESYNC_MS = 1000;
+// (0.50.12) a needle's shadow (a widget id ending "_sh") is sent only when it moves this far: it is blurred and offset
+// anyway, and every turn sent costs the renderer a scene change (half of Concours's needle traffic was shadows)
+const SHADOW_STEP_DEG = 0.5;
 const GLIDE_ANIM = 97;            // a needle's "glide" turn (one per layer, replaced at every tick)
 const FS_ANIM = 99, FS_REARM_MS = 600, FS_HOLD_MS = 2000, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
 const TICK_MS = 50;              // 20 Hz: shift bar and gauges
@@ -1297,15 +1303,14 @@ class HudApp {
      * when the chosen layout has a "withMap", without its self-test. True when it rebuilt.
      */
     _mapVariantCheck() {
-        const allowed = () => this.mapToggle || this.setting('mapInTheme') !== false;   // (0.50.11: "@map" layouts have their own setting)
-        const on = !!(this.waze && this.waze.streaming && allowed());
+        const on = !!(this.waze && this.waze.streaming && this.setting('mapInTheme') !== false);
         if (!on) {
             if (!this.mapVariant || this.mapVariantT) return false;
             this.mapVariantT = setTimeout(() => this._guard('map variant', () => {
                 this.mapVariantT = null;
-                if (this.waze && this.waze.streaming && allowed()) return;
+                if (this.waze && this.waze.streaming && this.setting('mapInTheme') !== false) return;
                 this.mapVariant = false;
-                if (!this.hasWithMap && !this.mapToggle) return;
+                if (!this.hasWithMap) return;
                 this.log.info('the phone\'s map is off: the plain layout again');
                 this.noSelfTestOnce = true;
                 this._rebuild();
@@ -1315,7 +1320,7 @@ class HudApp {
         clearTimeout(this.mapVariantT); this.mapVariantT = null;
         if (this.mapVariant) return false;
         this.mapVariant = true;
-        if (!this.hasWithMap && !this.mapToggle) return false;
+        if (!this.hasWithMap) return false;
         this.log.info('the phone\'s map is on: the layout with the map');
         this.noSelfTestOnce = true;
         this._rebuild();
@@ -2528,10 +2533,7 @@ class HudApp {
         // "withMap" (Zeiger: Vintage Green / Amber): the layout to show in its place while the phone's map is on
         // (waze-on-cluster streaming, the setting "mapInTheme" on); back to this one when the map has been off a while
         this.hasWithMap = typeof layout.withMap === 'string' && layout.withMap.length > 0;
-        // "@map" toggles (Zeiger 0.50.11): the layout switches its own pieces while the phone's map streams
-        this.mapToggle = layout.widgets.some((w) => [].concat(w.toggle || []).some((t) => /^!?@map$/.test(t)));
-        this.mapSetting = typeof layout.mapSetting === 'string' ? layout.mapSetting : null;
-        if (this.mapVariant && !this.mapToggle && this.setting('mapInTheme') === false) this.mapVariant = false;
+        if (this.mapVariant && this.setting('mapInTheme') === false) this.mapVariant = false;
         if (this.hasWithMap && this.mapVariant) {
             try { layout = this.layouts.load(layout.withMap); } catch (e) { this.log.warn('layout "' + layout.withMap + '" unusable (' + e.message + '); showing "' + name + '"'); }
         }
@@ -2903,9 +2905,6 @@ class HudApp {
         if (c) this._blit(x, [c.rect], c.px);
     }
 
-    /** The phone's map is in the theme now: streaming (waze-on-cluster) and the layout's mapSetting not "off". */
-    _mapOn() { return !!(this.mapVariant && (!this.mapSetting || this.setting(this.mapSetting) !== 'off')); }
-
     /** "key" is on while that bool setting is on; "!key" while it is off. */
     _toggleOn(t) {
         if (Array.isArray(t)) return t.every((k) => this._toggleOn(k));      // a list: every one on (Zeiger addition)
@@ -2913,9 +2912,6 @@ class HudApp {
         const k = not ? t.slice(1) : t, eq = k.indexOf('=');
         // "@night": the sun is down (Zeiger 0.43.0: a photo theme's day and night pictures); the theme check rebuilds when it flips
         if (k === '@night') { this.sunToggle = true; const n = this._layoutNight(); return not ? !n : n; }
-        // "@map" (Zeiger 0.50.11): the phone's map streams (waze-on-cluster) and the layout's "mapSetting" is not "off";
-        // the theme leaves a hole where the map shows in BMW's map window (Concours's middle ring)
-        if (k === '@map') { const m = this._mapOn(); return not ? !m : m; }
         // "key=a|b": the setting is one of those (Zeiger 0.36.0)
         const on = eq > 0 ? k.slice(eq + 1).split('|').indexOf(String(this._look(k.slice(0, eq)))) >= 0 : this.setting(k) !== false;
         return not ? !on : on;
@@ -3446,9 +3442,12 @@ class HudApp {
                 if (v <= table[i][0]) { deg = table[i - 1][1] + (table[i][1] - table[i - 1][1]) * (v - table[i - 1][0]) / (table[i][0] - table[i - 1][0]); break; }
             }
         }
-        if (!force && isNum(x.angle) && Math.abs(deg - x.angle) < 0.1) return;
+        if (x.shadow === undefined) x.shadow = /_sh$/.test(String(w.id));
+        const stale = now - (x.sentAt || 0) >= NEEDLE_RESYNC_MS;
+        if (!force && !stale && isNum(x.angle) && Math.abs(deg - x.angle) < (x.shadow ? SHADOW_STEP_DEG : 0.1)) return;
         const from = x.angle;
         x.angle = deg;
+        x.sentAt = now;
         x.c.set(x.ref, { rotate: deg });
         if (isNum(w.glide) && w.glide > 0 && isNum(from)) {
             // one animation, always the same number: each turn replaces the last (a layer plays at most 16)

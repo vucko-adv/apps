@@ -93,7 +93,7 @@ const CUSTOM = {
     // 0.45.0, a beta: the photo themes' Customise starts here (the readouts' font, the M badge under the car)
     ember: { key: 'ember', beta: true, rows: [['Font', 'Font', 'the readouts\' lettering'], ['Mid', 'Bottom middle', 'under the car'], ['Photo', 'Photo', 'Ember, Sunrise or Peaks']], switch: 'Photo', switchLabel: 'Photo' },
     // 0.49.0: the rev counter's face, pearl or black (lit as the side dials)
-    concours: { key: 'concours', rows: [['Face', 'Middle dial', 'pearl, or dark green as the others'], ['Mids', 'Small speed numbers', '30, 90, 150 .. on the speedometer'], ['Left', 'Left dial', 'turbo, oil and fuel, or an analog clock'], ['Map', 'Map in the middle', 'the phone\'s map in the rev counter while it is on'], ['Light', 'Lighting', 'day or night look, or by the sun']], switch: 'Light' },
+    concours: { key: 'concours', rows: [['Face', 'Middle dial', 'pearl, or dark green as the others'], ['Mids', 'Small speed numbers', '30, 90, 150 .. on the speedometer'], ['Left', 'Left dial', 'turbo, oil and fuel, or an analog clock'], ['Light', 'Lighting', 'day or night look, or by the sun']], switch: 'Light' },
     // 0.50.4: Vintage Green and Vintage Cyan in one theme, the colour a switch
     vintage: { key: 'vintage', rows: [['Color', 'Colour', 'cream on green, or cyan on teal']], switch: 'Color', switchLabel: 'Colour' },
 };
