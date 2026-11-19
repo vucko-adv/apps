@@ -399,6 +399,8 @@ const NEEDLE_RESYNC_MS = 1000;
 // anyway, and every turn sent costs the renderer a scene change (half of Concours's needle traffic was shadows)
 const SHADOW_STEP_DEG = 0.5;
 const GLIDE_ANIM = 97;            // a needle's "glide" turn (one per layer, replaced at every tick)
+// the rpm drawn ahead between the car's samples at most this long (Zeiger 0.51.1, as Redline's 150)
+const RPM_AHEAD_MS = 150;
 const FS_ANIM = 99, FS_REARM_MS = 600, FS_HOLD_MS = 3000, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
 const TICK_MS = 50;              // 20 Hz: shift bar and gauges
 const TEXT_MS = 200;             // text re-draws at most 5 times a second (what BMW's own readouts do)
@@ -3404,7 +3406,10 @@ class HudApp {
         this.lastTickT = now;
         this.rpmIn = isNum(raw) ? raw : null;       // unfiltered, for an rpm needle (its own filter is the only one)
         if (!isNum(raw)) { this.rpmF = null; this.rpmShown = null; return; }
-        this.rpmF = isNum(this.rpmF) ? this.rpmF + (raw - this.rpmF) * (1 - Math.exp(-dt / 120)) : raw;
+        // (0.51.1) the car's rpm drawn ahead between its samples (_rpmAhead), so the bars (Vintage, VFD, Ember) climb
+        // evenly instead of in steps; the start animation's and the shift test's values as they are
+        const ahead = isNum(intro) || isNum(test) ? raw : this._rpmAhead(raw, now);
+        this.rpmF = isNum(this.rpmF) ? this.rpmF + (ahead - this.rpmF) * (1 - Math.exp(-dt / 120)) : ahead;
         if (!isNum(this.rpmShown) || Math.abs(this.rpmF - this.rpmShown) >= 40) this.rpmShown = Math.max(0, Math.round(this.rpmF / 50) * 50);
     }
 
@@ -3418,8 +3423,40 @@ class HudApp {
         if (measure === 'speed') return d.speed;
         if (measure === 'oil' || measure === 'coolant') return d[measure];
         // rpm: as the car (or the start animation, the shift test) gives it; filtered twice it trailed a shift by half a second
-        if (measure === 'rpm') return this.intro || this.testAt !== null ? this.rpmIn : d.rpm;
+        if (measure === 'rpm') return this.intro || this.testAt !== null ? this.rpmIn : this._rpmAhead(d.rpm, Date.now());
         return this._raw(measure);
+    }
+
+    /**
+     * The rpm between two of the car's samples (Zeiger 0.51.1, as Redline's HUD does it: cauliflowermossgrape/idrive7-apps
+     * apps/redline/hud.js smooth()). The car sends the rpm only 10-20 times a second, so a needle on a quick spring
+     * reached each sample and stood until the next: it stepped. Between samples the value now goes on along the last
+     * climb or fall, for at most 1.2 sample intervals and RPM_AHEAD_MS; a new sample replaces the estimate. No estimate
+     * after a gap over 300 ms, for a jump over 8000 rpm/s (a glitch) or under 200 rpm/s; a climb's estimate stops at the
+     * redline. How often samples come is logged (the first time after 200, then every 10 minutes).
+     */
+    _rpmAhead(rpm, now) {
+        const sm = this.rpmSm || (this.rpmSm = { r: null, t: 0, rate: 0, dt: 0, n: 0, logged: 0, sent: 0 });
+        if (!isNum(rpm)) { sm.r = null; return rpm; }
+        if (rpm !== sm.r || now - sm.t >= 500) {
+            const dt = now - sm.t, ok = sm.r !== null && dt > 15 && dt < 300;
+            sm.rate = ok ? (rpm - sm.r) * 1000 / dt : 0;
+            if (Math.abs(sm.rate) > 8000) sm.rate = 0;
+            if (ok) { sm.dt = sm.dt ? sm.dt * 0.95 + dt * 0.05 : dt; sm.n++; }
+            sm.r = rpm; sm.t = now;
+            if (sm.n >= 200 && now - sm.logged > 600000) {
+                const secs = sm.logged ? (now - sm.logged) / 1000 : 0;
+                this.log.info('rpm: the car sends it every ' + Math.round(sm.dt) + ' ms (' + Math.round(1000 / sm.dt) + ' a second)' +
+                    (secs ? ', rpm needle angles sent ' + Math.round(sm.sent / secs) + ' a second' : '') + ', drawn ahead between samples');
+                sm.logged = now; sm.sent = 0;
+            }
+            return rpm;
+        }
+        const win = Math.min(sm.dt ? sm.dt * 1.2 : 100, RPM_AHEAD_MS);
+        if (Math.abs(sm.rate) < 200 || now - sm.t > win) return rpm;
+        const red = this.setting('redline'), top = isNum(red) && red > 0 ? red : 9000;
+        const est = Math.max(0, Math.round(rpm + sm.rate * (now - sm.t) / 1000));
+        return sm.rate > 0 ? Math.max(rpm, Math.min(est, top)) : est;
     }
 
     /**
@@ -3468,6 +3505,7 @@ class HudApp {
         if (!force && !stale && isNum(x.angle) && Math.abs(deg - x.angle) < (x.shadow ? SHADOW_STEP_DEG : 0.1)) return;
         const from = x.angle;
         x.angle = deg;
+        if (w.measure === 'rpm' && !x.shadow && this.rpmSm) this.rpmSm.sent++;
         x.sentAt = now;
         x.c.set(x.ref, { rotate: deg });
         if (isNum(w.glide) && w.glide > 0 && isNum(from)) {
