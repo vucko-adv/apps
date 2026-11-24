@@ -53,6 +53,35 @@ const PIXEL_BYTES = (process.env.BENCH_PIXEL_MIB === undefined ? 16 : Math.max(0
 // an ETC2 asset counts its blocks once (l.cost), as cluster-render does
 function pixelBytes() { let n = 0; layers.forEach((l) => { if (l.cost) n += l.cost; else if (l.image) n += l.iw * l.ih * (l.bpp || 4) * 2; }); return n; }
 function layerCount() { let n = 0; layers.forEach((l) => { if (l.kind !== 'asset') n++; }); return n; }
+// BENCH_UPLOAD_KBPS (Zeiger 0.52.0): the car's upload budget to the cluster (cluster-render's pacer: 2000-5500 KB/s).
+// Every image and asset write then waits its turn in one queue drained at that rate, an image layer stays 'waiting'
+// until its first whole write is through (cluster-render 0.6.3: hidden until then), and the time from a layout's
+// first write to the queue running dry is logged. 0 (the default): writes land at once, as before.
+const UPLOAD_KBPS = Math.max(0, Number(process.env.BENCH_UPLOAD_KBPS) || 0);
+const upq = { items: [], bytes: 0, timer: null, startedAt: 0, total: 0, per: {} };
+function upload(bytes, fn, who, key, cap) {
+    if (!UPLOAD_KBPS) return fn();
+    if (!upq.items.length && !upq.timer) { upq.startedAt = Date.now(); upq.total = 0; upq.per = {}; }
+    if (who) { const p = upq.per[who] || (upq.per[who] = [0, 0]); p[0] += bytes; p[1]++; }
+    // cluster-render keeps one pixel buffer a layer and writes what is dirty in it when the budget allows
+    // (layer.cpp): a write to a layer still waiting merges into its turn, up to the layer's whole size
+    const q = key && upq.items.find((it) => it.key === key);
+    if (q) { const add = Math.max(0, Math.min(bytes, (cap || Infinity) - q.bytes)); q.bytes += add; upq.total += add; q.fns.push(fn); return; }
+    upq.items.push({ bytes, fns: [fn], key }); upq.total += bytes;
+    if (!upq.timer) upq.timer = setTimeout(drainUploads, Math.max(1, Math.round(bytes / UPLOAD_KBPS)));
+}
+function drainUploads() {
+    upq.timer = null;
+    const it = upq.items.shift();
+    if (!it) return;
+    it.fns.forEach((fn) => { try { fn(); } catch (e) { log('error', 'upload: ' + e.stack); } });
+    if (upq.items.length) { upq.timer = setTimeout(drainUploads, Math.max(1, Math.round(upq.items[0].bytes / UPLOAD_KBPS))); return; }
+    const top = Object.keys(upq.per).sort((x, y) => upq.per[y][0] - upq.per[x][0]).slice(0, 4)
+        .map((k) => k + ' ' + Math.round(upq.per[k][0] / 1024) + ' KB/' + upq.per[k][1]).join(', ');
+    log('info', 'upload: ' + Math.round(upq.total / 1024) + ' KB through in ' + (Date.now() - upq.startedAt) + ' ms at ' + UPLOAD_KBPS + ' KB/s' + (top ? ' (most: ' + top + ')' : ''));
+}
+// BENCH_RENDERER=old: the hello of a cluster-render before 0.8.5 (no "curves": replacing an animation was costly)
+const HELLO_FLAGS = process.env.BENCH_RENDERER === 'old' ? {} : { curves: 1 };
 const TOTAL_ASSETS = 32, ASSETS_PER_CLIENT = 16;   // CompositorLimits assets / assets_per_client
 const mib = (b) => (b / 1048576).toFixed(1) + ' MiB';
 const SOCK = path.join(os.tmpdir(), 'hud-bench-' + process.pid + '.sock');
@@ -205,7 +234,7 @@ const renderServer = net.createServer((sock) => {
             st.app = m.app || '?';
             if (m.proto !== 1) bad('hello proto ' + m.proto + ', service speaks 1');
             log('info', 'renderer: hello from ' + st.app + ' (proto ' + m.proto + ')');
-            writeEv(sock, { ev: 'hello', backend: 'bench', targets: Object.keys(TARGETS).join(',') });
+            writeEv(sock, Object.assign({ ev: 'hello', backend: 'bench', targets: Object.keys(TARGETS).join(',') }, HELLO_FLAGS));
             return;
         }
         if (!st.hello) return bad(m.op + ' before hello');
@@ -248,6 +277,7 @@ const renderServer = net.createServer((sock) => {
                     nl.iw = m.iw; nl.ih = m.ih; nl.bpp = 4;
                     if (!(m.iw > 0 && m.ih > 0 && m.iw <= 1920 && m.ih <= 720)) return refuse('layer', m.ref, 'image iw/ih out of range');
                     nl.image = Buffer.alloc(m.iw * m.ih * 4);
+                    if (UPLOAD_KBPS && nl.state === 'shown') { nl.state = 'waiting'; nl.reason = 'bench: first write on its way'; nl.firstWrite = true; }
                 } else if (m.kind === 'effect') {
                     if (!m.fs) return refuse('layer', m.ref, 'effect without fs');
                     // the renderer fills u_mvp, u_mv, u_m, u_v, u_p itself as mat4s (PROTOCOL.md "Shaders"): declared as
@@ -367,6 +397,22 @@ const renderServer = net.createServer((sock) => {
 
     function onFrame(body) {
         if (body.length < 14) return bad('frame message too short');
+        if (!UPLOAD_KBPS) return applyFrame(body);
+        const ref = body.readUInt32LE(0);
+        upload(body.length, () => {
+            const l = layers.get(conn + ':' + ref);
+            if (!l) return;
+            applyFrame(body);
+            if (l.firstWrite && l.sentWhole) {
+                l.firstWrite = false; l.state = 'shown'; l.reason = '';
+                writeEv(sock, { ev: 'layer', ref, state: 'shown' });
+                sceneChanged();
+            }
+        }, (() => { const l = layers.get(conn + ':' + ref); return conn + ':' + ref + (l ? ' ' + l.kind + ' ' + l.x + ',' + l.y + ' ' + l.w + 'x' + l.h : ''); })(),
+        conn + ':' + ref, (() => { const l = layers.get(conn + ':' + ref); return l && l.image ? l.image.length : 0; })());
+    }
+
+    function applyFrame(body) {
         const ref = body.readUInt32LE(0);
         const n = body.readUInt16LE(12);
         const l = layers.get(conn + ':' + ref);

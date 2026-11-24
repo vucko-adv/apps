@@ -304,6 +304,48 @@ void main() {
 }
 `;
 
+const TEXPATCH = `// A compressed picture with exact patches (Zeiger 0.52.0, tools/patch_picture.js), TEXPIC's uniforms and: u_idx, one
+// RGBA texel a T x T tile of the picture (R + 256 G: the tile's slot in the atlas + 1, 0 none), u_atl the atlas of the
+// tiles kept exact (straight RGBA, slot by slot, row by row), u_patch: T, the atlas's columns of tiles, and the index's
+// and the atlas's sizes in u_isz (iw, ih, aw, ah). A patched tile shows the atlas's pixels, every other the ETC2's.
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+varying vec2 v_uv;
+uniform sampler2D u_tex;
+uniform sampler2D u_idx;
+uniform sampler2D u_atl;
+uniform vec2 u_size;
+uniform float u_shift;
+uniform float u_alpha;
+uniform vec4 u_cut;
+uniform vec4 u_src;
+uniform vec2 u_patch;
+uniform vec4 u_isz;
+
+void main() {
+    vec2 p = vec2(v_uv.x * u_size.x, v_uv.y * u_size.y);
+    vec2 t = floor(vec2(u_src.x + p.x - u_shift, u_src.y + p.y));
+    t = clamp(t, vec2(0.0), u_src.zw - 1.0);
+    vec4 c = texture2D(u_tex, (t + 0.5) / u_src.zw);
+    float T = u_patch.x;
+    vec2 tile = floor(t / T);
+    vec4 ix = texture2D(u_idx, (tile + 0.5) / u_isz.xy);
+    float s = floor(ix.r * 255.0 + 0.5) + 256.0 * floor(ix.g * 255.0 + 0.5);
+    if (s > 0.5) {
+        float slot = s - 1.0;
+        float row = floor(slot / u_patch.y);
+        vec2 a = vec2(slot - row * u_patch.y, row) * T + (t - tile * T);
+        c = texture2D(u_atl, (a + 0.5) / u_isz.zw);
+    }
+    float al = c.a * u_alpha;
+    if (u_cut.z > 0.0 && p.x >= u_cut.x && p.x < u_cut.x + u_cut.z && p.y >= u_cut.y && p.y < u_cut.y + u_cut.w) al = 0.0;
+    gl_FragColor = vec4(c.rgb, al);
+}
+`;
+
 const CURTAIN = `// The curtain between two themes (Zeiger 0.37.0), a cluster-render "effect" layer (GLSL ES 1.00): black at
 // u_alpha over the whole panel, and a thin line in the middle that fills from the left as the new theme's layers come
 // (u_prog 0..1; not u_p: cluster-render fills u_mvp, u_mv, u_m, u_v and u_p itself, as mat4s), so the wait reads as loading, not as a fault. u_size the layer in px, u_line the line's middle (x, y) and
@@ -1447,4 +1489,4 @@ void main() {
 }
 `;
 
-module.exports = { precip: PRECIP, texpic: TEXPIC, curtain: CURTAIN, bandflash: BANDFLASH, shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, dial: DIAL, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES };
+module.exports = { precip: PRECIP, texpic: TEXPIC, texpatch: TEXPATCH, curtain: CURTAIN, bandflash: BANDFLASH, shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, dial: DIAL, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES };

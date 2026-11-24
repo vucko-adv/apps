@@ -334,6 +334,7 @@ const STATUS_ASK_MS = 2000;      // after a rebuild: ask cluster-render for its 
 // confirmed on the car Nov 5 2026); since then 64 (96 in all). Zeiger 0.39.0 plans for 16: over 8 the planner used to
 // merge sheets into big, mostly empty ones (pixel memory: Map Mist cut round BMW's gear letter needed 17.9 MiB)
 const LAYER_BUDGET = 16;
+const ASSETS_PER_CONN = 16, ASSETS_ALL = 32;   // cluster-render's CompositorLimits assets_per_client / assets
 const CONN_LAYERS = 64;          // cluster-render's limit a client connection (0.4.2 on): only warned about
 // the curtain (Zeiger 0.30.0): while the theme changes, a black fill over the whole panel on a connection no layout
 // uses, so BMW's own cluster doesn't show between the old theme's layers going and the new one's arriving; it fades
@@ -399,6 +400,21 @@ const NEEDLE_RESYNC_MS = 1000;
 // anyway, and every turn sent costs the renderer a scene change (half of Concours's needle traffic was shadows)
 const SHADOW_STEP_DEG = 0.5;
 const GLIDE_ANIM = 97;            // a needle's "glide" turn (one per layer, replaced at every tick)
+// (0.52.0) with cluster-render 0.8.5 or newer (hello "curves"), which on iDrive 7 no longer makes every animation of the
+// target again when one is replaced: a "spring" needle is played by the cluster, at its own frame rate. Every
+// NEEDLE_PLAY_MS the app works the spring out NEEDLE_PLAY_AHEAD_MS ahead and sends one turn from where the needle is
+// now to there (the same animation number, so each replaces the last): a third of the messages of a turn every 33 ms,
+// and the needle sweeps between them instead of standing. The turn runs a little past the next one, so a late message
+// never leaves the needle standing. An older cluster-render: a turn every 33 ms, as before.
+const NEEDLE_PLAY_MS = 100, NEEDLE_PLAY_AHEAD_MS = 140;
+/** A needle's angle for value v from its table (value -> degrees clockwise from 12 o'clock, straight lines between, held at the ends). */
+function needleDeg(table, v) {
+    if (v <= table[0][0]) return table[0][1];
+    for (let i = 1; i < table.length; i++) {
+        if (v <= table[i][0]) return table[i - 1][1] + (table[i][1] - table[i - 1][1]) * (v - table[i - 1][0]) / (table[i][0] - table[i - 1][0]);
+    }
+    return table[table.length - 1][1];
+}
 // the rpm drawn ahead between the car's samples at most this long (Zeiger 0.51.1, as Redline's 150)
 const RPM_AHEAD_MS = 150;
 const FS_ANIM = 99, FS_REARM_MS = 600, FS_HOLD_MS = 3000, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
@@ -2261,7 +2277,23 @@ class HudApp {
         old.refs.forEach((r) => { per[r.ci] = (per[r.ci] || 0) + 1; });
         this._connCounts(plan).forEach((k, ci) => { per[ci] = (per[ci] || 0) + k; });
         const all = Object.keys(per).reduce((a, k) => a + per[k], 0) + 2;     // + the guide hold, the curtain's room
-        return all <= HOLD_ALL_LAYERS && Object.keys(per).every((k) => per[k] <= HOLD_CONN_LAYERS);
+        if (!(all <= HOLD_ALL_LAYERS && Object.keys(per).every((k) => per[k] <= HOLD_CONN_LAYERS))) return false;
+        // (0.52.0) the assets too: cluster-render takes 16 a connection and 32 in all (a patched picture makes three);
+        // the glyph atlases are kept across the change, so they count once
+        const as = {};
+        (old.assets || []).forEach((a) => { as[a.ci] = (as[a.ci] || 0) + 1; });
+        this.atlases.forEach((a) => { as[a.ci] = (as[a.ci] || 0) + 1; });
+        plan.forEach((e) => { if (e.kind !== 'sheet') { const k = this._ownAssets(e.w); if (k) { const ci = this._connOf(e.w); as[ci] = (as[ci] || 0) + k; } } });
+        const allA = Object.keys(as).reduce((a, k) => a + as[k], 0);
+        return allA <= ASSETS_ALL && Object.keys(as).every((k) => as[k] <= ASSETS_PER_CONN);
+    }
+
+    /** The assets an own layer makes: a compressed picture's texture (its first piece only), and a patched one's index and atlas. */
+    _ownAssets(w) {
+        if (w.type !== 'picture' || this.noEtc) return 0;
+        const p = pictures.get(w.picture);
+        if (!p || !p.etc || (w.crop && w.crop[0] + w.crop[1] > 0)) return 0;
+        return 1 + (p.patch && !w.stretch ? 2 : 0);
     }
 
     /** While the old theme is held: once every new layer is shown (or HOLD_MAX_MS), the old go. */
@@ -2403,7 +2435,8 @@ class HudApp {
      *  a compressed picture's blocks once. */
     _ownPx(w) {
         const p = w.type === 'picture' ? pictures.get(w.picture) : null;
-        if (p && p.etc && !this.noEtc) return w.crop && w.crop[0] + w.crop[1] > 0 ? 0 : p.etc.length;   // counted once, by its first piece
+        // counted once, by its first piece; a patched one's index and atlas (RGBA assets) twice, as an image's pixels
+        if (p && p.etc && !this.noEtc) return w.crop && w.crop[0] + w.crop[1] > 0 ? 0 : p.etc.length + (p.patch ? 2 * (p.patch.index.length + p.patch.atlas.length) : 0);
         return (w.stretch && p ? (w.crop ? w.crop[2] * w.crop[3] : p.w * p.h) : w.w * w.h) * 8;
     }
 
@@ -2495,7 +2528,8 @@ class HudApp {
         old.assets = [];
         this.widgets.forEach((x) => {
             if (!x.sheet && x.ref && x.c) old.own.push({ w: x.w, c: x.c, ci: x.ci, ref: x.ref });
-            if (x.asset && x.c) old.assets.push({ c: x.c, ref: x.asset });
+            if (x.asset && x.c) old.assets.push({ c: x.c, ci: x.ci, ref: x.asset });
+            if (x.patchAssets && x.c) x.patchAssets.forEach((r) => old.assets.push({ c: x.c, ci: x.ci, ref: r }));
         });
         this.oldPending = old;
         if (!this.retrying) this.retries = 0;
@@ -2629,6 +2663,7 @@ class HudApp {
         this.gearWin = this.target === 'panel' && this.setting('gearLetter') !== false ? GEAR_LETTER : null;
         if (this.gearWin) layout = this._gearCut(layout, this.gearWin);
         this.assetFor = new Map();       // a compressed picture's asset, shared by its pieces: connection:picture -> ref
+        this.patchFor = new Map();       // ... and its patch assets (0.52.0): connection:picture -> { idx, atl }
         const shown = layout.widgets.filter((w) => !(w.toggle && !this._toggleOn(w.toggle)) && !(w.themes && w.themes.indexOf(this.themeName) < 0));
         this._setNeeds(shown);
         // plan the layers first (a sheet's size is only known once every member is placed), then make them
@@ -2940,7 +2975,7 @@ class HudApp {
 
     /** A widget: on its own layer (sheet null: an effect, or an image widget with "own": true), or a member of a sheet. */
     _create(w, sheet) {
-        let ref, c, keptOwn = false, etc = null, assetRef = 0, usedAsset = 0;
+        let ref, c, keptOwn = false, etc = null, assetRef = 0, usedAsset = 0, usedPatch = null, madePatch = null, decoded = false;
         if (sheet) { ref = sheet.ref; c = sheet.c; }
         else {
             c = this._clientAt(this._connOf(w));
@@ -2958,14 +2993,27 @@ class HudApp {
                 if (was.state) this.layerStates.set(was.ci + ':' + ref, was.state);
             } else if (etc) {
                 // the pieces of one picture (round BMW's gear letter) sample one asset, made by the first
-                if (shared) usedAsset = shared;
+                if (shared) { usedAsset = shared; usedPatch = this.patchFor && this.patchFor.get(ak) || null; }
                 else {
-                    assetRef = c.asset({ target: this.target, format: etc.format, w: etc.w, h: etc.h, sampling: w.stretch ? 'bilinear' : 'nearest' });
+                    assetRef = c.asset({ target: this.target, format: etc.format, w: etc.tw || etc.w, h: etc.th || etc.h, sampling: w.stretch ? 'bilinear' : 'nearest' });
                     usedAsset = assetRef;
+                    // (0.52.0) its exact tiles: the index and the atlas, two RGBA assets (tools/patch_picture.js)
+                    const q = etc.patch;
+                    if (assetRef && q && !w.stretch) {
+                        const idx = c.asset({ target: this.target, format: 'rgba8', w: q.iw, h: q.ih, sampling: 'nearest' });
+                        const atl = idx ? c.asset({ target: this.target, format: 'rgba8', w: q.aw, h: q.ah, sampling: 'nearest' }) : 0;
+                        if (idx && atl) usedPatch = madePatch = { idx, atl };
+                        else { if (idx) c.drop(idx); c.drop(assetRef); assetRef = 0; usedAsset = 0; this.log.warn('widget "' + w.id + '": its patch assets were refused; sent decoded'); }
+                    }
                 }
-                ref = usedAsset ? c.effect(Object.assign({ fs: shaders.texpic }, base)) : 0;
-                if (!ref && assetRef) { c.drop(assetRef); assetRef = 0; usedAsset = 0; }
-                if (assetRef && this.assetFor) this.assetFor.set(ak, assetRef);
+                ref = usedAsset ? c.effect(Object.assign({ fs: usedPatch ? shaders.texpatch : shaders.texpic }, base)) : 0;
+                if (!ref && assetRef) { c.drop(assetRef); if (madePatch) { c.drop(madePatch.idx); c.drop(madePatch.atl); } assetRef = 0; usedAsset = 0; usedPatch = madePatch = null; }
+                if (assetRef && this.assetFor) { this.assetFor.set(ak, assetRef); if (madePatch && this.patchFor) this.patchFor.set(ak, madePatch); }
+                // a patched picture whose assets were refused: an image layer of its pixels decoded, as without ETC2
+                if (!ref && etc.patch && !shared) {
+                    etc = null; decoded = true;
+                    ref = c.image(Object.assign({ iw: w.w, ih: w.h }, base));
+                }
             } else if (IMAGE_TYPES[w.type]) ref = c.image(Object.assign({ iw: sp ? (w.crop ? w.crop[2] : sp.w) : w.w, ih: sp ? (w.crop ? w.crop[3] : sp.h) : w.h },
                 base, w.type === 'needle' ? { sampling: 'bilinear' } : {}));      // a needle turned: filtered, not stair-stepped (0.50.8)
             else ref = c.effect(Object.assign({ fs: w.type === 'swatch' ? calibration.SWATCH : shaders[w.type] }, base, w.type === 'precip' ? { time: true } : {}));
@@ -2976,7 +3024,10 @@ class HudApp {
         this.widgets.set(w.id, x);
         // x.asset: the asset this widget made (dropped with it); a piece using another's has x.texRef only
         if (assetRef) { x.asset = assetRef; c.pixels(assetRef, null, etc.etc); }
+        if (madePatch) { x.patchAssets = [madePatch.idx, madePatch.atl]; c.pixels(madePatch.idx, null, etc.patch.index); c.pixels(madePatch.atl, null, etc.patch.atlas); }
         if (usedAsset) { x.texRef = usedAsset; c.bind(ref, 'u_tex', usedAsset); }
+        if (usedPatch) { x.patch = usedPatch; c.bind(ref, 'u_idx', usedPatch.idx); c.bind(ref, 'u_atl', usedPatch.atl); }
+        if (decoded) x.decoded = true;
         const t = this.theme;
         if (w.type === 'atext') {
             const a = this._atlas(w.font, x.ci);
@@ -3004,7 +3055,12 @@ class HudApp {
                 c.uniform(ref, 'u_shift', [w.pixelShift || 0]);
                 c.uniform(ref, 'u_alpha', [1]);
                 c.uniform(ref, 'u_cut', g ? [g[0] - w.x, g[1] - w.y, g[2], g[3]] : [0, 0, 0, 0]);
-                c.uniform(ref, 'u_src', w.crop ? [w.crop[0], w.crop[1], p.w, p.h] : [0, 0, p.w, p.h]);
+                const tw = p.tw || p.w, th = p.th || p.h;      // the texture's size (padded to whole 4x4 blocks)
+                c.uniform(ref, 'u_src', w.crop ? [w.crop[0], w.crop[1], tw, th] : [0, 0, tw, th]);
+                if (x.patch && p.patch) {
+                    c.uniform(ref, 'u_patch', [p.patch.t, p.patch.aw / p.patch.t]);
+                    c.uniform(ref, 'u_isz', [p.patch.iw, p.patch.ih, p.patch.aw, p.patch.ah]);
+                }
             } else if (w.type === 'segments') {
                 // starts with nothing lit; _update lights what the value says
                 x.pic = p; x.lit = 0; x.value = null; x.t = 0; x.zoneSt = null; x.zoneInfo = null; x.segCache = null; x.plainCache = null;
@@ -3490,17 +3546,12 @@ class HudApp {
         const w = x.w, table = w.table;
         if (!Array.isArray(table) || !table.length) return;
         // a clock hand: the time as it is (a filter would sweep it back round the dial from 59 to 0)
+        const target = CLOCK_RAW[w.measure] === true ? null : this._needleValue(w.measure);
         if (CLOCK_RAW[w.measure] === true) x.value = this._needleValue(w.measure);
-        else this._follow(x, this._needleValue(w.measure), now);
-        const v = isNum(x.value) ? x.value : table[0][0];
-        let deg = table[table.length - 1][1];
-        if (v <= table[0][0]) deg = table[0][1];
-        else {
-            for (let i = 1; i < table.length; i++) {
-                if (v <= table[i][0]) { deg = table[i - 1][1] + (table[i][1] - table[i - 1][1]) * (v - table[i - 1][0]) / (table[i][0] - table[i - 1][0]); break; }
-            }
-        }
+        else this._follow(x, target, now);
+        const deg = needleDeg(table, isNum(x.value) ? x.value : table[0][0]);
         if (x.shadow === undefined) x.shadow = /_sh$/.test(String(w.id));
+        if (w.spring && x.c.curves && CLOCK_RAW[w.measure] !== true) { this._playNeedle(x, now, force, deg, target); return; }
         const stale = now - (x.sentAt || 0) >= NEEDLE_RESYNC_MS;
         if (!force && !stale && isNum(x.angle) && Math.abs(deg - x.angle) < (x.shadow ? SHADOW_STEP_DEG : 0.1)) return;
         const from = x.angle;
@@ -3512,6 +3563,32 @@ class HudApp {
             // one animation, always the same number: each turn replaces the last (a layer plays at most 16)
             x.c.animate(x.ref, { anim: GLIDE_ANIM, property: 'rotate', keys: '0:' + from.toFixed(2) + ' ' + Math.round(w.glide) + ':' + deg.toFixed(2), loop: false, interp: 'linear' });
         }
+    }
+
+    /**
+     * A "spring" needle played by the cluster (NEEDLE_PLAY_* above): every NEEDLE_PLAY_MS one turn from where the
+     * last one has it now to where the spring will be NEEDLE_PLAY_AHEAD_MS from now (its value pulled to target all
+     * that time). deg: the spring's angle now. Still (the turn's both ends within the step) it sends nothing but the
+     * resync once a second.
+     */
+    _playNeedle(x, now, force, deg, target) {
+        const p = x.play;
+        if (!force && p && now - p.at < NEEDLE_PLAY_MS) return;
+        // where the cluster has the needle now: along the last turn, else the spring's angle
+        const from = p ? p.a0 + (p.a1 - p.a0) * Math.min(1, (now - p.at) / NEEDLE_PLAY_AHEAD_MS) : deg;
+        const ahead = { w: x.w, value: x.value, vel: x.vel, t: now };
+        if (isNum(x.value)) this._follow(ahead, target, now + NEEDLE_PLAY_AHEAD_MS);
+        const to = needleDeg(x.w.table, isNum(ahead.value) ? ahead.value : x.w.table[0][0]);
+        const step = x.shadow ? SHADOW_STEP_DEG : 0.1;
+        const stale = now - (x.sentAt || 0) >= NEEDLE_RESYNC_MS;
+        if (!force && !stale && p && Math.abs(to - from) < step && Math.abs(p.a1 - from) < step) return;
+        x.play = { at: now, a0: from, a1: to };
+        x.angle = to;
+        x.sentAt = now;
+        if (x.w.measure === 'rpm' && !x.shadow && this.rpmSm) this.rpmSm.sent++;
+        // the layer's own rotation too, for a reconnect (an animation is played again from its start) and the bench
+        if (force || !p) x.c.set(x.ref, { rotate: from });
+        x.c.animate(x.ref, { anim: GLIDE_ANIM, property: 'rotate', keys: '0:' + from.toFixed(2) + ' ' + NEEDLE_PLAY_AHEAD_MS + ':' + to.toFixed(2), loop: false, interp: 'linear' });
     }
 
     /**

@@ -17,6 +17,9 @@
  *   ...
  *   cr.pixels(badge, [{ x: 0, y: 0, w: 40, h: 64 }], changedRows);   // only what changed
  *   cr.set(badge, { visible: false, rotate: 15 });
+ *   cr.host('panel', { target: 'map', x: 600, y: 120, w: 720, h: 480 });   // Waze's map under our panel layers (0.8.2)
+ *   cr.on('hosting', (target, ev) => { ... });   // ev.state 'live' or 'waiting', ev.reason
+ *   cr.unhost('map');
  *
  *   const font = cr.asset({ target: 'panel', format: 'r8', w: 256, h: 128 });
  *   cr.pixels(font, null, glyphs);
@@ -50,8 +53,10 @@ const FRAME_T = 0x46;   /* 'F' */
 const MESH_T = 0x4d;    /* 'M' */
 const MAX_DIRTY = 16;
 const BACKOFF_MS = [250, 500, 1000, 2000];
+// others_fps (cluster-render 0.8.0): 15-60 while the layer is shown, the other apps' videos (Waze's map) are written
+// at most that often; send it only when this.othersFps (an older service ignores it)
 const SET_KEYS = ['klass', 'z', 'x', 'y', 'w', 'h', 'visible', 'exclusive', 'prewarm', 'contend', 'guide_hold',
-    'opacity', 'rotate', 'sx', 'sy', 'px', 'py'];
+    'others_fps', 'opacity', 'rotate', 'sx', 'sy', 'px', 'py'];
 const MESH_KEYS = ['projection', 'fov', 'ortho_h', 'near', 'far', 'cx', 'cy', 'cz', 'crx', 'cry', 'crz'];
 const UNIFORM_WIDTH = { float: 1, vec2: 2, vec3: 3, vec4: 4, mat4: 16 };
 
@@ -123,6 +128,10 @@ class ClusterRender extends EventEmitter {
         this.inbuf = Buffer.alloc(0);
         this.backend = '';
         this.targets = '';
+        this.othersFps = false;        /* the service knows a layer's others_fps (cluster-render 0.8.0) */
+        this.curves = false;           /* cluster-render 0.8.5+: animations cheap to replace */
+        this.hostLayers = false;       /* the service takes host() from layers (cluster-render 0.8.2) */
+        this.layerHosts = new Map();   /* hosted target -> { into, msg }: sent again after each hello */
     }
 
     connect() {
@@ -208,8 +217,15 @@ class ClusterRender extends EventEmitter {
         if (ev.ev === 'hello') {
             this.backend = ev.backend;
             this.targets = ev.targets;
+            this.othersFps = ev.others_fps === 1;
+            this.hostLayers = ev.host_layers === 1;
+            /* cluster-render 0.8.5+ (eased curves): on iDrive 7 replacing an animation no longer makes every
+             * animation of the target again, so an app may replace one many times a second */
+            this.curves = ev.curves === 1;
             this.ready = true;
             this.backoff = 0;
+            /* after the layers, which went at connect (a host needs this app's layers over its rect) */
+            if (this.hostLayers) this.layerHosts.forEach((h) => this._send(h.msg));
             this._pump();
             this.emit('ready');
         } else if (ev.ev === 'layer') {
@@ -219,9 +235,18 @@ class ClusterRender extends EventEmitter {
         } else if (ev.ev === 'budget') {
             this.emit('budget', ev.cap_kb_per_s, ev.max_kb_per_s, ev.reason);
         } else if (ev.ev === 'error') {
+            /* a host refused: the service ended it, so it is not sent again (unless one into another target was sent since) */
+            const lh = ev.op === 'host' && 'into' in ev ? this.layerHosts.get(ev.target) : null;
+            if (lh && lh.into === ev.into) this.layerHosts.delete(ev.target);
             this.emit('refused', ev.op, ev.ref, ev.reason);
         } else if (ev.ev === 'status') {
             this.emit('status', ev.text);
+        } else if (ev.ev === 'hosting') {
+            this.emit('hosting', ev.target, ev);   /* this app's host: ev.state 'live' or 'waiting', ev.reason, ev.by */
+        } else if (ev.ev === 'host') {
+            this.emit('host', ev.target, ev);      /* where target is drawn now: ev.into, '' for its own slot */
+        } else if (ev.ev === 'fps_cap') {
+            this.emit('fps_cap', ev.fps || 0, ev.app || '');
         }
     }
 
@@ -534,6 +559,36 @@ class ClusterRender extends EventEmitter {
         l.have = true;
         this._pump();
         return true;
+    }
+
+    /* Hosting from layers (cluster-render 0.8.2, PROTOCOL.md "Hosting from layers"): this app's layers on `into`
+     * ('panel') host opts.target ('map', Waze's picture) at opts x, y, w, h (at least 64x32), showing the part
+     * src_x, src_y, src_w, src_h of it (all four, or none: all of it); opts.shown false keeps it on its own target.
+     * The picture is drawn just under this app's lowest layer over the rect, so the artwork must be transparent
+     * there, and it is live only while one of this app's layers is drawn over the rect ('hosting' event). Kept
+     * here and sent again after every hello; sent only to a service whose hello has host_layers 1. */
+    host(into, opts) {
+        if (!into || !opts || !opts.target || opts.target === into) return false;
+        if (!(opts.w >= 64 && opts.h >= 32)) return false;
+        const m = { op: 'host', into: into, target: opts.target, x: opts.x, y: opts.y, w: opts.w, h: opts.h,
+            shown: flag(opts.shown !== false) };
+        if (opts.src_w && opts.src_h) {
+            if (!(opts.src_w >= 64 && opts.src_h >= 32)) return false;
+            m.src_x = opts.src_x || 0;
+            m.src_y = opts.src_y || 0;
+            m.src_w = opts.src_w;
+            m.src_h = opts.src_h;
+        }
+        this.layerHosts.set(opts.target, { into: into, msg: m });
+        if (this.ready && this.hostLayers) this._send(m);
+        return true;
+    }
+
+    /* Ends this app's host of target (sent even with nothing kept: the service ends whatever it holds). */
+    unhost(target) {
+        const h = this.layerHosts.get(target);
+        this.layerHosts.delete(target);
+        if (this.ready && this.hostLayers) this._send({ op: 'unhost', into: h ? h.into : '', target: target });
     }
 
     status() { this._send({ op: 'status' }); }

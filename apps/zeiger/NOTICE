@@ -12,7 +12,9 @@ Besides its own code, the app ships with:
    Its licence is reproduced at the end of this file.
 
 2. cluster_render_client.js: Mozilla Public License 2.0, Copyright (C) 2026 Robert Nisipeanu.
-   Unmodified copy from https://github.com/robertnisipeanu/idrive-apps (native/cluster-render).
+   From https://github.com/robertnisipeanu/idrive-apps (native/cluster-render), with Zeiger's changes in the
+   same file under the same licence (ETC2 asset sizes; host() and unhost(), the curves, others_fps and
+   host_layers hello flags and the hosting, host and fps_cap events of cluster-render 0.8.x).
    The MPL text: https://mozilla.org/MPL/2.0/
 
 3. The Barlow typeface (hud.pack, fonts/head, unit, m_*, s_mid, s_small, apex_kmh, apex_temp, apex_unit,
