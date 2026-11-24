@@ -842,7 +842,23 @@ class Page {
             const sk = c.key + c.switch, opts = this.steps(sk), sw = bw / opts.length, sy = gy + 112;
             cv.text(c.switchLabel || 'Lighting', bx, gy + 100, 16, C.dim, { font: M, literal: true });
             cv.roundRect(bx, sy, bw, 46, 23, A('#ffffff', 0.08));
-            opts.forEach((o, i) => {
+            // (0.56.0, the user: Ember's four photos squeezed the row) more than three options: the pick's name between
+            // a back and a next arrow, a dot per option under it (the pick a longer dot), so any number of photos fits
+            if (opts.length > 3) {
+                const at = Math.max(0, opts.indexOf(this.draft[sk])), n = opts.length;
+                const step = (d) => () => { this.draft[sk] = opts[(at + d + n) % n]; this.kick(); };
+                const changed = this.draft[sk] !== this.get(sk), name = String(this.optLabel(sk, opts[at])).replace(/ \(.*\)$/, '');
+                [[-1, bx + 5], [1, bx + bw - 41]].forEach(([d, ax]) => {
+                    cv.roundRect(ax, sy + 5, 36, 36, 18, A('#ffffff', 0.10));
+                    cv.text(d < 0 ? '‹' : '›', ax + 18, sy + 32, 26, C.soft, { font: B, align: 'center', literal: true });
+                    cv.target(ax - 5, sy, 46, 46, step(d), 'cswitch' + (d < 0 ? 'Prev' : 'Next'), 20);
+                });
+                cv.text(fit(cv, name, 19, bw - 100, B), bx + bw / 2, sy + 30, 19, changed ? C.acc : '#ffffff', { font: B, align: 'center', literal: true });
+                cv.target(bx + 46, sy, bw - 92, 46, step(1), 'cswitchName', 20);
+                const dw = opts.reduce((a, o, i) => a + (i === at ? 18 : 6) + 6, -6);
+                let dx = bx + (bw - dw) / 2;
+                opts.forEach((o, i) => { const w = i === at ? 18 : 6; cv.roundRect(dx, sy + 56, w, 6, 3, i === at ? C.acc : A('#ffffff', 0.25)); dx += w + 6; });
+            } else opts.forEach((o, i) => {
                 const on = this.draft[sk] === o, ox = bx + i * sw;
                 if (on) cv.roundRect(ox + 3, sy + 3, sw - 6, 40, 20, this.draft[sk] !== this.get(sk) ? C.acc : A('#ffffff', 0.22));
                 cv.text(String(this.optLabel(sk, o)).replace(/ \(.*\)$/, ''), ox + sw / 2, sy + 30, 18, on ? '#ffffff' : C.soft, { font: B, align: 'center', literal: true });
@@ -853,7 +869,7 @@ class Page {
         // the controller reaches it; a tap goes on to the next pick (as a tap on the part), changed ones in the accent
         {
             const parts = c.rows.filter(([end]) => end !== c.switch).map(([end, label]) => [c.key + end, label]);
-            let ry0 = c.switch ? gy + 168 : gy + 150;
+            let ry0 = c.switch ? (this.steps(c.key + c.switch).length > 3 ? gy + 184 : gy + 168) : gy + 150;
             const rh0 = 44;
             parts.forEach(([key, label]) => {
                 if (ry0 + rh0 > by - 6) return;
