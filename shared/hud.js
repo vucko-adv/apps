@@ -407,6 +407,9 @@ const GLIDE_ANIM = 97;            // a needle's "glide" turn (one per layer, rep
 // now to there (the same animation number, so each replaces the last): a third of the messages of a turn every 33 ms,
 // and the needle sweeps between them instead of standing. The turn runs a little past the next one, so a late message
 // never leaves the needle standing. An older cluster-render: a turn every 33 ms, as before.
+// (0.55.0) off: in the car (0.54.0) the needles played this way moved coarse and sharp, so every needle is sent
+// a turn every 33 ms again, as before 0.52.0
+const NEEDLE_PLAY = false;
 const NEEDLE_PLAY_MS = 100, NEEDLE_PLAY_AHEAD_MS = 140;
 /** A needle's angle for value v from its table (value -> degrees clockwise from 12 o'clock, straight lines between, held at the ends). */
 function needleDeg(table, v) {
@@ -2297,12 +2300,21 @@ class HudApp {
         return 1 + (p.patch && !w.stretch ? 2 : 0);
     }
 
-    /** While the old theme is held: once every new layer is shown (or HOLD_MAX_MS), the old go. */
+    /**
+     * While the old theme is held: once the new theme's lowest connection (its pictures) is shown, the old go (or
+     * HOLD_MAX_MS). (0.55.0) A car test: the old theme's numbers stayed over the new picture a second or two, the old
+     * picture gone at once. The car draws a connection's layers over every layer of a lower one whatever their z (the
+     * bench by z alone), so the hold's z lift covers the old only on the same connection; the texts are on another
+     * one in every theme. So the old go as soon as the new pictures cover them, not when the new texts are in too.
+     */
     _holdTick(now) {
         const h = this.held, refs = this._layerRefs();
-        const shown = refs.filter((r) => { const st = this.layerStates.get(r.key); return st && st.state === 'shown'; }).length;
-        if (refs.length && shown < refs.length && now - h.at < HOLD_MAX_MS) return;
-        this._holdEnd(shown + ' of ' + refs.length + ' new layers shown ' + (now - h.at) + ' ms after the change');
+        const isShown = (r) => { const st = this.layerStates.get(r.key); return st && st.state === 'shown'; };
+        const shown = refs.filter(isShown).length;
+        const low = refs.length ? Math.min.apply(null, refs.map((r) => r.ci)) : 0;
+        const base = refs.filter((r) => r.ci === low);
+        if (refs.length && !base.every(isShown) && now - h.at < HOLD_MAX_MS) return;
+        this._holdEnd(shown + ' of ' + refs.length + ' new layers shown (all ' + base.length + ' on connection ' + (low + 1) + ') ' + (now - h.at) + ' ms after the change');
     }
 
     /** The held old theme goes, and the new one's layers back to their own z. */
@@ -3552,7 +3564,7 @@ class HudApp {
         else this._follow(x, target, now);
         const deg = needleDeg(table, isNum(x.value) ? x.value : table[0][0]);
         if (x.shadow === undefined) x.shadow = /_sh$/.test(String(w.id));
-        if (w.spring && x.c.curves && CLOCK_RAW[w.measure] !== true) { this._playNeedle(x, now, force, deg, target); return; }
+        if (NEEDLE_PLAY && w.spring && x.c.curves && CLOCK_RAW[w.measure] !== true) { this._playNeedle(x, now, force, deg, target); return; }
         const stale = now - (x.sentAt || 0) >= NEEDLE_RESYNC_MS;
         if (!force && !stale && isNum(x.angle) && Math.abs(deg - x.angle) < (x.shadow ? SHADOW_STEP_DEG : 0.1)) return;
         const from = x.angle;
