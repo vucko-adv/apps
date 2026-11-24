@@ -34,6 +34,8 @@ A fluorescent display in the manner of the late-80s Japanese digital dashes, dra
 
 ## Apex and Apex Sport
 
+**Glass since 0.54.0:** the rev band a glass tube the blocks glow inside (cylinder shading, one long reflection), the coolant and fuel bars thin glass tubes; the unlit orange and red blocks keep the glass's shading (`zoneTrackShade`). `cluster-design/apex/draw.js` `GLASS`.
+
 **One theme since 0.50.4: Apex**, the style a Customise switch (`apexStyle`: clean, sport, or auto: Sport in the car's SPORT and SPORT+, Clean otherwise; hud.js `BY_MODE`, `_look`). Both styles share the Customise picks (`apexBig`, `apexLeft`, `apexMid`; Sport's `apexSport*` moved over once) and the band's height (Sport's was thicker). `cluster-design/apex/merge.js` merges the builds as Vintage's. The rev band follows the rpm on a spring at 60 Hz (`"spring"`), the last 300 rpm of the lit band burning toward white (`"head"`), and the shift flash is on both styles. The other style's widgets keep no room in the sheets, so a style change may show the curtain (keeping it cost 4 MiB of pixel memory).
 
 A racing cluster, drawn in code by `cluster-design/apex/build.html` (`?v=sport` for Apex Sport) from the same drawing as its design pictures (`draw.js`).

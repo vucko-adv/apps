@@ -161,7 +161,8 @@
  *             segment in a zone with a colour given is always drawn in it (Apex's orange 6000-6500 as the yellow zone's
  *             amber); "zoneTrack": [r, g, b], an unlit normal segment over a face drawn in a zone colour, and every
  *             unlit yellow or red one in its colour at "zoneDark" (0.25), opaque, so the face's own dark orange and red
- *             never show where the zones moved (the cold-engine guard). "zoneFaint": true (Zeiger 0.33.0, Peaks' hairline):
+ *             never show where the zones moved (the cold-engine guard); "zoneTrackShade": true (0.54.0) shades that
+ *             colour as the lit picture is shaded there (Apex's glass). "zoneFaint": true (Zeiger 0.33.0, Peaks' hairline):
  *             every unlit yellow and red segment in its zone's colour at "dim" opacity, ahead of the rpm, always; a list
  *             ([1]: Vintage, 0.50.4) only those zones (its face has no yellow ghost dots: an unlit segment of the
  *             picture's own yellow showed the face's cyan, the cold engine's lower yellow a lone yellow strip before it).
@@ -3715,12 +3716,25 @@ class HudApp {
             // "zoneTrack": unlit, an opaque dark segment in its zone's colour (normal: the track), over the face's own
             if (z.track && !lit && (k > 0 || z.own[i] !== 0)) {
                 const c = k > 0 ? z.col[k].map((v) => Math.round(v * z.dark)) : z.track;
+                // "zoneTrackShade" (Zeiger 0.54.0, Apex's glass band): the dark colour shaded as the lit picture is
+                // there (each pixel's brightness against the segment's mean), so the glass's light and shade stay
+                let mean = 0;
+                if (w.zoneTrackShade) {
+                    let sum = 0, cnt = 0;
+                    for (let r = 0; r < sh; r++) {
+                        const o = ((sy + r) * w.w + sx) * 4;
+                        for (let q = 0; q < sw; q++) { const kk = o + q * 4; if (p.rgba[kk + 3] < 200) continue; sum += Math.max(p.rgba[kk], p.rgba[kk + 1], p.rgba[kk + 2]); cnt++; }
+                    }
+                    mean = cnt ? sum / cnt : 0;
+                }
                 for (let r = 0; r < sh; r++) {
                     const o = ((sy + r) * w.w + sx) * 4;
                     for (let q = 0; q < sw; q++) {
-                        if (p.rgba[o + q * 4 + 3] < 200) continue;          // the band itself, not its glow
+                        const kk = o + q * 4;
+                        if (p.rgba[kk + 3] < 200) continue;          // the band itself, not its glow
                         const d = (r * sw + q) * 4;
-                        b[d] = c[0]; b[d + 1] = c[1]; b[d + 2] = c[2]; b[d + 3] = 255;
+                        const f = mean > 0 ? Math.max(0.35, Math.min(1.8, Math.max(p.rgba[kk], p.rgba[kk + 1], p.rgba[kk + 2]) / mean)) : 1;
+                        b[d] = Math.min(255, Math.round(c[0] * f)); b[d + 1] = Math.min(255, Math.round(c[1] * f)); b[d + 2] = Math.min(255, Math.round(c[2] * f)); b[d + 3] = 255;
                     }
                 }
             } else if (lit && k === z.own[i] && !z.given[k]) {
