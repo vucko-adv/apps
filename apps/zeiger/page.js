@@ -80,7 +80,7 @@ const GROUPS = [
         ['demo', 'Demo data', 'made-up values while the car sends none'],
         ['gearLetter', 'Leave BMW\'s gear letter open', 'keeps BMW\'s black gear box away'],
         ['hideBoxes', 'Hide BMW\'s black boxes', 'test'],
-        ['calib', 'Calibration', 'a grid or the map frame on the cluster, to measure what BMW hides'],
+        ['calib', 'Calibration', 'a grid, the map frame or the car test theme on the cluster'],
         ['weatherFx', 'Rain and snow', 'test: falling over the theme (Ember)'],
     ] },
     { name: 'Lab tools', lab: true, about: 'What the car and Zeiger say, listed here: a photo of the lines helps.', rows: [
@@ -120,7 +120,8 @@ const THEME_GROUPS = [
     ['PHOTO', ['dark_moon', 'ember']],
 ];
 // the calibration layouts (hudLayout values), for the row in BMW's cluster
-const CALIB = [['', 'Off'], ['grid', 'Grid'], ['mapcal', 'Map frame']];
+// (0.58.0) Car test: a theme of every reading Zeiger has, the new ones lit when on (hud.js _cdField), to try in the car
+const CALIB = [['', 'Off'], ['grid', 'Grid'], ['mapcal', 'Map frame'], ['cardata', 'Car test']];
 const CREDITS = [
     'Zeiger by vucko-adv. Every theme is drawn by vucko-adv.',
     'MGU App Kit by cauliflowermossgrape (MIT).',

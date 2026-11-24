@@ -1,0 +1,1092 @@
+{
+ "schemaVersion": 2,
+ "name": "Car test",
+ "theme": "gt3",
+ "_about": "Lab test (Zeiger 0.58.0): a theme of every reading Zeiger has, to try in the car. Left: the new lamp and brake fields (hud.js _cdField, _cdRead), green while on, grey while off; red at the bottom: the new fields the car has not sent. Right and middle: the values. Lab, Calibration: Car test. Every change of a new field is in the log too (\"car data ...\").",
+ "widgets": [
+  {
+   "id": "bg",
+   "type": "picture",
+   "z": 0,
+   "picture": "cartest_grad",
+   "stretch": true,
+   "own": true,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 720
+  },
+  {
+   "id": "title",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 92,
+   "w": 600,
+   "h": 40,
+   "text": "ZEIGER CAR TEST",
+   "font": "s_small",
+   "color": [
+    255,
+    196,
+    0,
+    255
+   ]
+  },
+  {
+   "id": "time",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1320,
+   "y": 92,
+   "w": 300,
+   "h": 40,
+   "text": "{{time}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ],
+   "align": "right"
+  },
+  {
+   "id": "revs",
+   "type": "meter",
+   "z": 1,
+   "signal": "rpm",
+   "min": 0,
+   "max": 8000,
+   "segments": 40,
+   "gap": 6,
+   "x": 300,
+   "y": 140,
+   "w": 1320,
+   "h": 30,
+   "colors": [
+    [
+     57,
+     222,
+     72
+    ],
+    [
+     255,
+     196,
+     0
+    ],
+    [
+     255,
+     42,
+     42
+    ]
+   ],
+   "at": [
+    0.75,
+    0.8125
+   ],
+   "trackColor": [
+    255,
+    255,
+    255,
+    30
+   ]
+  },
+  {
+   "id": "rpm_l",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 180,
+   "w": 120,
+   "h": 40,
+   "text": "RPM",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "rpm",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 400,
+   "y": 180,
+   "w": 200,
+   "h": 40,
+   "text": "{{rpm}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "speed",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 740,
+   "y": 232,
+   "w": 440,
+   "h": 143,
+   "text": "{{speed}}",
+   "font": "m_big",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ],
+   "align": "center"
+  },
+  {
+   "id": "kmh",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 740,
+   "y": 378,
+   "w": 440,
+   "h": 40,
+   "text": "{{u:speedLc}}",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ],
+   "align": "center"
+  },
+  {
+   "id": "gear",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1200,
+   "y": 240,
+   "w": 140,
+   "h": 129,
+   "text": "{{stage}}",
+   "font": "m_gear",
+   "color": [
+    255,
+    196,
+    0,
+    255
+   ],
+   "align": "center"
+  },
+  {
+   "id": "gearnum",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1200,
+   "y": 378,
+   "w": 140,
+   "h": 40,
+   "text": "gear {{gearnum}}",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ],
+   "align": "center"
+  },
+  {
+   "id": "off_turnL",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 232,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:off:turnL}}",
+   "font": "s_small",
+   "color": [
+    120,
+    128,
+    142,
+    255
+   ]
+  },
+  {
+   "id": "on_turnL",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 232,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:on:turnL}}",
+   "font": "s_small",
+   "color": [
+    70,
+    230,
+    110,
+    255
+   ]
+  },
+  {
+   "id": "off_turnR",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 278,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:off:turnR}}",
+   "font": "s_small",
+   "color": [
+    120,
+    128,
+    142,
+    255
+   ]
+  },
+  {
+   "id": "on_turnR",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 278,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:on:turnR}}",
+   "font": "s_small",
+   "color": [
+    70,
+    230,
+    110,
+    255
+   ]
+  },
+  {
+   "id": "off_low",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 324,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:off:low}}",
+   "font": "s_small",
+   "color": [
+    120,
+    128,
+    142,
+    255
+   ]
+  },
+  {
+   "id": "on_low",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 324,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:on:low}}",
+   "font": "s_small",
+   "color": [
+    70,
+    230,
+    110,
+    255
+   ]
+  },
+  {
+   "id": "off_dipped",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 370,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:off:dipped}}",
+   "font": "s_small",
+   "color": [
+    120,
+    128,
+    142,
+    255
+   ]
+  },
+  {
+   "id": "on_dipped",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 370,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:on:dipped}}",
+   "font": "s_small",
+   "color": [
+    70,
+    230,
+    110,
+    255
+   ]
+  },
+  {
+   "id": "off_high",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 416,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:off:high}}",
+   "font": "s_small",
+   "color": [
+    120,
+    128,
+    142,
+    255
+   ]
+  },
+  {
+   "id": "on_high",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 416,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:on:high}}",
+   "font": "s_small",
+   "color": [
+    70,
+    230,
+    110,
+    255
+   ]
+  },
+  {
+   "id": "off_fog",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 462,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:off:fog}}",
+   "font": "s_small",
+   "color": [
+    120,
+    128,
+    142,
+    255
+   ]
+  },
+  {
+   "id": "on_fog",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 462,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:on:fog}}",
+   "font": "s_small",
+   "color": [
+    70,
+    230,
+    110,
+    255
+   ]
+  },
+  {
+   "id": "off_hb",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 508,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:off:hb}}",
+   "font": "s_small",
+   "color": [
+    120,
+    128,
+    142,
+    255
+   ]
+  },
+  {
+   "id": "on_hb",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 508,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:on:hb}}",
+   "font": "s_small",
+   "color": [
+    70,
+    230,
+    110,
+    255
+   ]
+  },
+  {
+   "id": "off_epb",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 554,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:off:epb}}",
+   "font": "s_small",
+   "color": [
+    120,
+    128,
+    142,
+    255
+   ]
+  },
+  {
+   "id": "on_epb",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 554,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:on:epb}}",
+   "font": "s_small",
+   "color": [
+    70,
+    230,
+    110,
+    255
+   ]
+  },
+  {
+   "id": "off_daynight",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 600,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:off:daynight}}",
+   "font": "s_small",
+   "color": [
+    120,
+    128,
+    142,
+    255
+   ]
+  },
+  {
+   "id": "on_daynight",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 600,
+   "w": 400,
+   "h": 40,
+   "text": "{{cd:on:daynight}}",
+   "font": "s_small",
+   "color": [
+    70,
+    230,
+    110,
+    255
+   ]
+  },
+  {
+   "id": "l_Coolant",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1380,
+   "y": 232,
+   "w": 160,
+   "h": 40,
+   "text": "Coolant",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "v_Coolant",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1540,
+   "y": 232,
+   "w": 260,
+   "h": 40,
+   "text": "{{coolant}} {{u:temp}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "l_Oil",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1380,
+   "y": 278,
+   "w": 160,
+   "h": 40,
+   "text": "Oil",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "v_Oil",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1540,
+   "y": 278,
+   "w": 260,
+   "h": 40,
+   "text": "{{oil}} {{u:temp}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "l_Boost",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1380,
+   "y": 324,
+   "w": 160,
+   "h": 40,
+   "text": "Boost",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "v_Boost",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1540,
+   "y": 324,
+   "w": 260,
+   "h": 40,
+   "text": "{{boost}} {{u:pressure}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "l_Intake",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1380,
+   "y": 370,
+   "w": 160,
+   "h": 40,
+   "text": "Intake",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "v_Intake",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1540,
+   "y": 370,
+   "w": 260,
+   "h": 40,
+   "text": "{{intake}} {{u:temp}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "l_Fuel",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1380,
+   "y": 416,
+   "w": 160,
+   "h": 40,
+   "text": "Fuel",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "v_Fuel",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1540,
+   "y": 416,
+   "w": 260,
+   "h": 40,
+   "text": "{{fuelPct}} %",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "l_Range",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1380,
+   "y": 462,
+   "w": 160,
+   "h": 40,
+   "text": "Range",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "v_Range",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1540,
+   "y": 462,
+   "w": 260,
+   "h": 40,
+   "text": "{{range}} {{u:distLc}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "l_Outside",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1380,
+   "y": 508,
+   "w": 160,
+   "h": 40,
+   "text": "Outside",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "v_Outside",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1540,
+   "y": 508,
+   "w": 260,
+   "h": 40,
+   "text": "{{ambientN}} {{u:temp}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "l_Pedal",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1380,
+   "y": 554,
+   "w": 160,
+   "h": 40,
+   "text": "Pedal",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "v_Pedal",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1540,
+   "y": 554,
+   "w": 260,
+   "h": 40,
+   "text": "{{cd:val:pedal}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "l_DSC",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1380,
+   "y": 600,
+   "w": 160,
+   "h": 40,
+   "text": "DSC",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "v_DSC",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 1540,
+   "y": 600,
+   "w": 260,
+   "h": 40,
+   "text": "{{cd:val:dsc}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "ml_Cruise",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 740,
+   "y": 426,
+   "w": 160,
+   "h": 40,
+   "text": "Cruise",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "mv_Cruise",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 900,
+   "y": 426,
+   "w": 440,
+   "h": 40,
+   "text": "on {{cruiseOn}}  ready {{cruiseRdy}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "ml_Limit",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 740,
+   "y": 464,
+   "w": 160,
+   "h": 40,
+   "text": "Limit",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "mv_Limit",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 900,
+   "y": 464,
+   "w": 440,
+   "h": 40,
+   "text": "{{speedLimit}}  next {{nextLimit}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "ml_Mode",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 740,
+   "y": 502,
+   "w": 160,
+   "h": 40,
+   "text": "Mode",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "mv_Mode",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 900,
+   "y": 502,
+   "w": 440,
+   "h": 40,
+   "text": "{{mode}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "ml_Tyres",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 740,
+   "y": 540,
+   "w": 160,
+   "h": 40,
+   "text": "Tyres",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "mv_Tyres",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 900,
+   "y": 540,
+   "w": 440,
+   "h": 40,
+   "text": "{{tyreP:FL}} {{tyreP:FR}} {{tyreP:RL}} {{tyreP:RR}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "ml_Average",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 740,
+   "y": 578,
+   "w": 160,
+   "h": 40,
+   "text": "Average",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "mv_Average",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 900,
+   "y": 578,
+   "w": 440,
+   "h": 40,
+   "text": "{{cd:val:avg}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "ml_Trip",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 740,
+   "y": 616,
+   "w": 160,
+   "h": 40,
+   "text": "Trip",
+   "font": "s_small",
+   "color": [
+    178,
+    186,
+    204,
+    255
+   ]
+  },
+  {
+   "id": "mv_Trip",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 900,
+   "y": 616,
+   "w": 440,
+   "h": 40,
+   "text": "{{cd:val:trip}}",
+   "font": "s_small",
+   "color": [
+    244,
+    246,
+    250,
+    255
+   ]
+  },
+  {
+   "id": "missing",
+   "type": "text",
+   "z": 3,
+   "conn": 1,
+   "x": 300,
+   "y": 652,
+   "w": 1500,
+   "h": 40,
+   "text": "{{cd:missing}}",
+   "font": "s_small",
+   "color": [
+    255,
+    96,
+    84,
+    255
+   ]
+  }
+ ]
+}

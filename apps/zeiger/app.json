@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "The changing numbers (speed, gear, range, clock, temperatures) are now drawn by the cluster itself from fonts sent once: each change sends a few bytes instead of a picture, so the cluster has more room for the needles and rev bands and themes change faster. Needs Cluster renderer 0.8.11 or newer; with an older one everything is drawn as before.",
-  "version": "0.57.0",
+  "whatsNew": "For testers: the Lab has a Car test theme (Calibration, Car test) with the revs, speed and every reading Zeiger has, and the turn signals, lights, handbrake, night and DSC lit when the car says so, to see in the car what works. The cluster-drawn numbers of 0.57.0 are now sent in a safer form.",
+  "version": "0.58.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "maxDiskUsage": 67108864,
@@ -93,20 +93,23 @@
     },
     "de.bmw.infotainment.vehicle.CDS": {
       "statusEngineSpeed2": "rs",
-      "statusEngineTemperature": "rs"
+      "statusEngineTemperature": "rs",
+      "statusHandBrake": "rs"
     },
     "de.bmw.infotainment.vehicle.CDS2": {
       "statusLongitudinalAccelerationMassCenter": "rs",
       "statusLateralAccelerationMassCenter": "rs"
     },
     "de.bmw.infotainment.vehicle.Vehicle2": {
-      "statusCarSpeed2": "rs"
+      "statusCarSpeed2": "rs",
+      "statusStandstillFunctions": "rs"
     },
     "de.bmw.infotainment.drivingexcitement.FES": {
       "statusSwitchDriveDynamicSport2": "rs",
       "statusActualValueTorque2": "rs",
       "statusFESVehicleDynamicSwitchHMI": "rs",
-      "statusVehicleDynamicEngine": "rs"
+      "statusVehicleDynamicEngine": "rs",
+      "statusDSCSwitchHMI": "rs"
     },
     "de.bmw.infrastructure.VehicleInformation": {
       "statusGearboxDrive": "s",
@@ -122,11 +125,14 @@
       ]
     },
     "de.bmw.infotainment.KombiIF": {
-      "statusRangeTankStatus": "rs"
+      "statusRangeTankStatus": "rs",
+      "statusBordcomputerTravelData": "rs",
+      "statusBordcomputerAverage": "rs"
     },
     "de.bmw.infotainment.vehicle.Vehicle": {
       "statusNewCurrentUnitsStatusExt": "rs",
-      "_optional": "the car's pressure and temperature units, for the tyre block"
+      "_optional": "the car's pressure and temperature units, for the tyre block",
+      "statusDayNightChangeOver": "rs"
     },
     "de.bmw.infotainment.misc.MDrive": {
       "dataDisplayGearbox": "s",
@@ -139,6 +145,18 @@
     },
     "de.bmw.infrastructure.EnvironmentalInformation": {
       "ExteriorTemperature": "s"
+    },
+    "de.bmw.body.Light": {
+      "_optional": "the Lab's Car data test: turn signals, low and high beam, rear fog light",
+      "StatusFunctionsIndicators": "s",
+      "LowBeam": "rs",
+      "LampExterior": "s",
+      "LampExterior2": "s",
+      "StatusFunctionsIndicators2": "s"
+    },
+    "de.bmw.powertrain.AcceleratorPedal": {
+      "_optional": "the Lab's Car test: the accelerator pedal",
+      "AngleAcceleratorPedal": "s"
     }
   },
   "screens": [
@@ -223,6 +241,10 @@
         [
           "mapcal",
           "Map calibration"
+        ],
+        [
+          "cardata",
+          "Car test (Lab)"
         ]
       ]
     },

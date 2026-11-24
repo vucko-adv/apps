@@ -432,6 +432,25 @@ const TICK_MS = 50;              // 20 Hz: shift bar and gauges
 // biggest readouts: the most pixels a change saves), so the old theme's and the new one's fit together while the old
 // is held. The rest of its readouts stay pixels. TEXT_LAYERS false: every text as pixels, as before.
 const TEXT_LAYERS = true, TEXT_FONTS = 4, TEXT_MAX_GLYPHS = 48;
+// (0.58.0) Car data under test (_cdField): the fields, how many changes of each are logged, and the indicator's codes
+// (activeFunctionIndicateDirection: these left, right, both; 0 none) as other community apps read them
+const CD_KEYS = ['ind', 'ind2', 'low', 'lamp1', 'lamp2', 'hb', 'still', 'dsc', 'avg', 'trip', 'daynight', 'pedal'];
+const CD_WORDS = { turnL: 'TURN LEFT', turnR: 'TURN RIGHT', low: 'LOW BEAM', dipped: 'DIPPED BEAM', high: 'HIGH BEAM', fog: 'REAR FOG',
+    hb: 'HANDBRAKE', epb: 'PARK BRAKE', daynight: 'NIGHT' };
+const CD_NAMES = { ind: 'turn', ind2: 'turn 2', low: 'low beam', lamp1: 'rear fog', lamp2: 'high/dipped', hb: 'handbrake', still: 'park brake', dsc: 'DSC', avg: 'avg', trip: 'trip', daynight: 'day/night', pedal: 'pedal' };
+const CD_LOG_CHANGES = 12, CD_LEFT = [7, 9, 18, 20, 22], CD_RIGHT = [8, 10, 19, 21, 23], CD_BOTH = [1, 5, 6, 11, 12, 13, 16, 17, 24, 25];
+// enum names the binding may hand over instead of numbers (BMW's German names)
+const CD_ENUM = { TAG: 1, NACHT: 2, HANDBREMSE_GELOEST: 1, HANDBREMSE_ANGEZOGEN: 2, DSC_EIN: 0, DSC_AUS: 1, ANFAHRHILFE_AKTIV: 2, TRAKTIONSMODUS_EIN: 4,
+    LDM_OFF: 0, LDM_ACTIVE: 1, LDM_UEBERTRETEN: 2, LDM_STANDBY: 3, LDM_CRITICAL: 4, LDM_BRAKE_ONLY: 5, OFF: 0, ACTIVE_GREEN: 1, INACTIVE_GREY: 2,
+    PARKBREMSE_MECHANISCH_NICHT_FESTGESTELLT: 0, PARKBREMSE_MECHANISCH_FESTGESTELLT: 1, PARKBREMSE_IM_STELLVORGANG_LOESEN: 2, PARKBREMSE_IM_STELLVORGANG_FESTSTELLEN: 4 };
+/** A field's value as text for the log and the Car data layout (JSON, Buffers as hex). */
+function cdRaw(v) {
+    try { return JSON.stringify(v, (k, x) => (x && x.type === 'Buffer' && Array.isArray(x.data) ? 'hex ' + Buffer.from(x.data).toString('hex') : x)) || String(v); } catch (e) { return String(v); }
+}
+/** The raw value in the Car data font (letters, digits, / ° . - % : and spaces): its values only (the log has the names), short. */
+function cdShort(raw) {
+    return String(raw).replace(/"[A-Za-z0-9]+":/g, ' ').replace(/[^A-Za-z0-9/°.%: -]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 34);
+}
 const TEXT_MS = 200;             // text re-draws at most 5 times a second (what BMW's own readouts do)
 const TARGET_SIZES = { hud: [800, 480], panel: [1920, 720] };
 const MODE_KEY = { comfort: 'inComfort', sport: 'inSport', eco: 'inEco' };
@@ -939,7 +958,24 @@ class HudApp {
         return ok ? v : s.default;
     }
 
+    /**
+     * (0.58.0) Car data under test (the Lab's "Car test" layout, layouts/cardata.json): fields Zeiger does not use yet,
+     * each kept as the car sent it (this.cdata[key] = { v, at, n }) and logged the first times it comes and changes, so
+     * a drive shows what this car sends before a theme relies on it. Field names as BMW's interfaces have them (the
+     * same ones other community apps read); the decoding of the {{cd:...}} tokens (_cdText) is a first guess to check.
+     */
+    _cdField(key) {
+        return (v) => {
+            const now = Date.now(), was = this.cdata[key], raw = cdRaw(v);
+            const changed = !was || was.raw !== raw;
+            this.cdata[key] = { v, raw, at: changed ? now : was.at, seen: now, n: (was ? was.n : 0) + (changed ? 1 : 0) };
+            if (changed && this.cdata[key].n <= CD_LOG_CHANGES) this.log.info('car data ' + key + ' #' + this.cdata[key].n + ': ' + raw.slice(0, 400));
+        };
+    }
+
     _setupVehicleData() {
+        if (!this.cdata) this.cdata = {};
+        const cd = (k) => this._cdField(k);
         const extra = {
             // fuel and range (cauliflowermossgrape's live_data, MIT): litres (255 = none) and km (4095 = none)
             'de.bmw.infotainment.KombiIF': {
@@ -948,6 +984,8 @@ class HudApp {
                     this.fuelL = isNum(f) && f >= 0 && f < 255 ? f : null;
                     this.rangeKm = isNum(r) && r >= 0 && r < 4095 ? r : null;
                 },
+                statusBordcomputerAverage: cd('avg'),
+                statusBordcomputerTravelData: cd('trip'),
             },
             // tyre pressure and temperature per corner, in the car's own display units (_tyreBar / _tyreC).
             // The car never notifies these (BMW's own x_call only ever reads them), so they are polled.
@@ -965,11 +1003,20 @@ class HudApp {
                     this.carUnits.press = press; this.carUnits.temp = temp;
                     this.log.info('car units: pressure ' + (press || '?') + ', temperature ' + (temp || '?'));
                 },
+                // (0.58.0) under test: the car's own day / night (dayNightChangeOver 1 day, 2 night)
+                statusDayNightChangeOver: cd('daynight'),
             },
             // S / M next to the gear: the gearbox status carries no programme on some cars, the M drive display does
             'de.bmw.infotainment.misc.MDrive': {
                 dataDisplayGearbox: (v) => { this.program = PROGRAMS[v && v.displayProgramGearbox] || null; },
             },
+            // (0.58.0) under test (_cdField, the Lab's Car test): turn signals and lamps, the handbrake, the parking brake
+            // (either indicator field may be the one a car fills: another app watches both)
+            'de.bmw.body.Light': { StatusFunctionsIndicators: cd('ind'), StatusFunctionsIndicators2: cd('ind2'), LowBeam: cd('low'), LampExterior: cd('lamp1'), LampExterior2: cd('lamp2') },
+            // the accelerator pedal, raw x 0.025 % (sent on change)
+            'de.bmw.powertrain.AcceleratorPedal': { AngleAcceleratorPedal: cd('pedal') },
+            'de.bmw.infotainment.vehicle.CDS': { statusHandBrake: cd('hb') },
+            'de.bmw.infotainment.vehicle.Vehicle2': { statusStandstillFunctions: cd('still') },
             // the speed limit the front camera reads (Zeiger 0.50.0; found by the probe on a G20, Nov 17 2026):
             // presentClassLimitSpeed in 5 km/h steps (10 read at a 50 sign; to be checked at more signs), 0 / 254 / 255 none
             'de.bmw.dass.TrafficSignRecognition': {
@@ -1003,6 +1050,7 @@ class HudApp {
                 },
             },
             'de.bmw.infotainment.drivingexcitement.FES': {
+                statusDSCSwitchHMI: cd('dsc'),
                 statusSwitchDriveDynamicSport2: (v) => {
                     const raw = v && v.displayBoostPressure;
                     if (typeof raw !== 'number' || raw === BOOST_SCALE.invalid) return;
@@ -1336,13 +1384,17 @@ class HudApp {
             const g = m.glyphs[ch];
             return { code: ch.codePointAt(0), s: [g.x, g.y, g.w, g.h, Math.round(g.ox || 0), 0, Math.max(0, Math.round(g.advance))].join(',') };
         }).sort((a, b) => a.code - b.code).map((g) => g.code + ':' + g.s).join(' ');
-        const h = font.alpha.length / font.width, c = this._clientAt(ci);
-        const ref = c.font({ target: this.target, w: font.width, h, pixels: font.alpha, line: m.cellHeight, glyphs });
-        if (!ref) throw new Error('font "' + fontName + '": refused (' + font.width + 'x' + h + ')');
-        const f = { ref, c, ci, bytes: font.width * h * 2, size: m.cellHeight };
+        // (0.58.0) the atlas padded to a multiple of 8 px wide: another app's R8 atlases of widths not a multiple of 4
+        // came out sheared on a car (each row's start off by the GPU's row alignment); the glyph boxes stay where they are
+        const h = font.alpha.length / font.width, pw = Math.ceil(font.width / 8) * 8, c = this._clientAt(ci);
+        let px = font.alpha;
+        if (pw !== font.width) { px = Buffer.alloc(pw * h); for (let y = 0; y < h; y++) font.alpha.copy(px, y * pw, y * font.width, (y + 1) * font.width); }
+        const ref = c.font({ target: this.target, w: pw, h, pixels: px, line: m.cellHeight, glyphs });
+        if (!ref) throw new Error('font "' + fontName + '": refused (' + pw + 'x' + h + ')');
+        const f = { ref, c, ci, bytes: pw * h * 2, size: m.cellHeight };
         this.tfonts.set(key, f);
         this.log.info('text font "' + fontName + '"' + (ci ? ' on connection ' + (ci + 1) : '') + ': ' + Object.keys(m.glyphs).length + ' glyphs, ' +
-            font.width + 'x' + h + ' R8 atlas');
+            pw + 'x' + h + ' R8 atlas');
         return f;
     }
 
@@ -2123,6 +2175,7 @@ class HudApp {
 
     /** {{token}} -> display text. */
     _token(tok) {
+        if (tok.indexOf('cd:') === 0) return this._cdText(tok.slice(3));
         const us = this.setting('units') === 'us';
         const fix = (v, n) => (isNum(v) ? v.toFixed(n) : '--');
         // {{is:<token>:<value>}}: the value while the token shows it, else nothing (Vintage 2's P R N D S M, one letter each)
@@ -2317,6 +2370,61 @@ class HudApp {
             case 'wxRain': return t && isNum(t.rain) ? String(Math.round(t.rain)) : '--';
             default: return '--';
         }
+    }
+
+    /**
+     * (0.58.0) A field under test read (a first guess, see _cdField): { got: the car sent it, on: true / false / null
+     * for a lamp or brake, text: a reading for a value }. Keys: turnL, turnR, low, high, dipped, fog, hb, epb, dsc, avg, trip.
+     */
+    _cdRead(key) {
+        const src = { turnL: this.cdata && !this.cdata.ind && this.cdata.ind2 ? 'ind2' : 'ind', turnR: this.cdata && !this.cdata.ind && this.cdata.ind2 ? 'ind2' : 'ind', high: 'lamp2', dipped: 'lamp2', fog: 'lamp1', epb: 'still' }[key] || key;
+        const d = this.cdata && this.cdata[src];
+        // the demo drive (the bench, a car that sends nothing yet): made-up states, so the layout can be seen
+        if (!d && this.car && this.car.data().demo) {
+            const blink = Math.floor(Date.now() / 500) % 2 === 0, demo = { turnL: blink, turnR: false, low: true, dipped: true, high: false, fog: false,
+                hb: false, epb: false, daynight: false, dsc: 'on', avg: '7.4 l/100km', trip: '352 km', pedal: '18 %' };
+            return key in demo ? { got: true, on: typeof demo[key] === 'boolean' ? demo[key] : null, text: String(demo[key]) } : { got: false, on: null, text: '' };
+        }
+        if (!d) return { got: false, on: null, text: '' };
+        const v = d.v, m = (o, k) => (o && typeof o === 'object' ? o[k] : undefined), n = (x) => (isNum(x) ? x : CD_ENUM[x]);
+        const any = (x, yes, no) => (yes.indexOf(x) >= 0 ? true : no.indexOf(x) >= 0 ? false : null);
+        if (key === 'turnL' || key === 'turnR') {
+            // either indicator field: lit while one of them says so
+            const side = (o) => { const x = n(m(o && o.v, 'activeFunctionIndicateDirection')); return isNum(x) ? CD_BOTH.indexOf(x) >= 0 || (key === 'turnL' ? CD_LEFT : CD_RIGHT).indexOf(x) >= 0 : null; };
+            const a = side(this.cdata.ind), b = side(this.cdata.ind2);
+            return { got: true, on: a === true || b === true ? true : a === null && b === null ? null : false, text: '' };
+        }
+        if (key === 'daynight') { const x = n(m(v, 'dayNightChangeOver')); return { got: true, on: x === 2, text: x === 1 ? 'day' : x === 2 ? 'night' : 'raw ' + cdShort(d.raw) }; }
+        if (key === 'pedal') { const x = m(v, 'actualValueAngleAcceleratorPedal'); return { got: true, on: null, text: isNum(x) ? Math.round(x * 0.025) + ' %' : 'raw ' + cdShort(d.raw) }; }
+        if (key === 'low') { const x = n(m(v, 'statusLowBeam')); return { got: true, on: any(x, [1], [0]), text: String(x) }; }
+        if (key === 'high') { const x = n(m(v, 'controlFunctionMainBeam')); return { got: true, on: any(x, [2, 5, 6, 7], [1]), text: String(x) }; }
+        if (key === 'dipped') { const x = n(m(v, 'controlFunctionDippedBeamLeftHand')); return { got: true, on: any(x, [2, 3, 4, 5, 6], [1]), text: String(x) }; }
+        if (key === 'fog') { const x = n(m(v, 'controlFunctionRearFogLamp')); return { got: true, on: any(x, [2, 3, 8, 9], [1, 4]), text: String(x) }; }
+        if (key === 'hb') { const x = n(m(v, 'statusContactHandBrake')); return { got: true, on: any(x, [2], [1]), text: String(x) }; }
+        if (key === 'epb') { const x = n(m(v, 'statusParkingBrake')); return { got: true, on: any(x, [1, 4], [0, 2]), text: String(x) }; }
+        if (key === 'dsc') { const x = n(m(v, 'displayStatusDSC2')); return { got: true, on: isNum(x) ? x !== 0 : null, text: ({ 0: 'on', 1: 'OFF', 2: 'DTC', 4: 'MDM' })[x] || 'raw ' + cdShort(d.raw) }; }
+        if (key === 'avg') { const x = m(v, 'consumptionAverage1BC1'); return { got: true, on: null, text: isNum(x) && x < 65535 ? (x / 10).toFixed(1) + ' l/100km' : 'raw ' + cdShort(d.raw) }; }
+        if (key === 'trip') { const x = m(v, 'wayPassed'); return { got: true, on: null, text: isNum(x) && x < 65535 ? x + ' km' : 'raw ' + cdShort(d.raw) }; }
+        return { got: true, on: null, text: cdShort(d.raw) };
+    }
+
+    /**
+     * (0.58.0) The Car test layout's tokens: cd:on:<key> its word (CD_WORDS) while it is on, cd:off:<key> the word while
+     * the car sent it and it is not on, cd:val:<key> its reading ("-" before any), cd:count the fields seen so far,
+     * cd:missing the new fields the car has not sent.
+     */
+    _cdText(tok) {
+        const p = tok.split(':');
+        if (p[0] === 'count') return Object.keys(this.cdata || {}).length + ' of ' + CD_KEYS.length + ' new fields seen';
+        // the new fields the car has not sent yet, by name
+        if (p[0] === 'missing' && !Object.keys(this.cdata || {}).length && this.car && this.car.data().demo) return 'demo data: the new fields are made up';
+        if (p[0] === 'missing') { const ms = CD_KEYS.filter((k) => !(this.cdata || {})[k]).map((k) => CD_NAMES[k] || k); return ms.length ? 'no data yet: ' + ms.join('  ') : 'every new field came'; }
+        const r = this._cdRead(p[1] || '');
+        const word = CD_WORDS[p[1]] || p[1] || '';
+        if (p[0] === 'on') return r.on === true ? word : '';
+        if (p[0] === 'off') return r.got && r.on !== true ? word : '';
+        if (p[0] === 'val') return r.got ? r.text : '-';
+        return '';
     }
 
     _resolve(template) { return String(template).replace(/\{\{([a-zA-Z0-9:]+)\}\}/g, (_, t) => this._token(t)); }
