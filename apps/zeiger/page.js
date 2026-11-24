@@ -95,7 +95,7 @@ const CUSTOM = {
     // 0.50.4: Apex and Apex Sport in one theme, the style a switch (the same picks for both)
     apex: { key: 'apex', rows: [['Big', 'Big number', 'in the middle'], ['Left', 'Left block', 'two bars, the tyres, or empty'], ['Mid', 'Bottom middle', 'where the clock is'], ['Style', 'Style', 'clean, or sport with the red glow']], switch: 'Style', switchLabel: 'Style' },
     // 0.45.0, a beta: the photo themes' Customise starts here (the readouts' font, the M badge under the car)
-    ember: { key: 'ember', beta: true, rows: [['Font', 'Font', 'the readouts\' lettering'], ['Mid', 'Bottom middle', 'under the car'], ['Photo', 'Photo', 'Ember, Sunrise or Peaks']], switch: 'Photo', switchLabel: 'Photo' },
+    ember: { key: 'ember', beta: true, rows: [['Font', 'Font', 'the readouts\' lettering'], ['Mid', 'Bottom middle', 'under the car'], ['Photo', 'Photo', 'Ember, Sunrise, Peaks or Road']], switch: 'Photo', switchLabel: 'Photo' },
     // 0.51.0: Dark Moon, Mist and Underpass in one theme, the photo a switch; the font and the bottom middle as Ember's
     dark_moon: { key: 'darkMoon', rows: [['Font', 'Font', 'the speed and the selector letter'], ['Mid', 'Bottom middle', 'the clock or the M badge'], ['Photo', 'Photo', 'Dark Moon, Mist or Underpass']], switch: 'Photo', switchLabel: 'Photo' },
     // 0.49.0: the rev counter's face, pearl or black (lit as the side dials)

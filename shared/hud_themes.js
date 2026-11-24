@@ -183,6 +183,17 @@ const THEMES = {
         bg: [1, 1, 1, 255], panel: [12, 16, 24, 255], line: [244, 238, 244, 255], head: [176, 178, 190, 255],
         ink: [1, 1, 1, 255], accent: [255, 106, 85, 255], well: [12, 16, 24, 255],
     },
+    // Road (Ember's fourth photo, Zeiger 0.53.0): a road curving into a misty valley at dawn; a cool white, a blue grey,
+    // the road lines' amber
+    road: {
+        name: 'Road',
+        fg: [240, 242, 248, 255], dim: [172, 184, 200, 255], track: [52, 60, 74, 255], arc: [255, 92, 72, 255],
+        glow: 0, stripe: false,
+        bar: { low: [240, 242, 248], mid: [255, 190, 64], high: [255, 92, 72], midAt: 'shift' },
+        rev: { from: [172, 184, 200], to: [240, 242, 248] },
+        bg: [1, 1, 1, 255], panel: [10, 14, 22, 255], line: [240, 242, 248, 255], head: [172, 184, 200, 255],
+        ink: [1, 1, 1, 255], accent: [255, 190, 64, 255], well: [10, 14, 22, 255],
+    },
     // Ember (layout ember.json, Zeiger 0.42.0): an old BMW at night in a field, its cabin lit red; warm white and a warm grey
     ember: {
         name: 'Ember',

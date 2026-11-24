@@ -11,7 +11,8 @@
   "themes": {
    "ember": "ember",
    "sunrise": "dark_moon",
-   "peaks": "peaks"
+   "peaks": "peaks",
+   "road": "road"
   }
  },
  "_about": "Ember (Zeiger 0.42.0; Customise 0.45.0): a photo of an old BMW saloon at night in a field, its cabin lit red (cluster-design/ember/build.html). The car big in the lower middle; above it the speed with km/h and a hairline rev line, the selector letter, the gear and the drive mode on the left, range and the clock with the outside temperature on the right, warm white and a warm grey. Customise: the big readouts in one of four fonts (emberFont: barlow, clean, retro, motor), the M badge under the car (emberMid). The speed limit the front camera reads (Zeiger 0.50.0, {{speedLimit}}) in a small black and white round sign right of the speed, only while there is one. The rev line amber then the cabin red from the rev range (zoneSteps / zoneColors), faint ahead of the rpm. Barlow, Barlow Semi Condensed, Inter Tight, Jost and Saira Condensed (OFL). Widget reference: shared/hud.js header.",
@@ -83,6 +84,20 @@
     "emberPhoto=peaks",
     "!@night"
    ],
+   "class": "content",
+   "z": 0,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 720
+  },
+  {
+   "id": "bg_road",
+   "type": "picture",
+   "picture": "ember_road_bg",
+   "own": true,
+   "followsShift": true,
+   "toggle": "emberPhoto=road",
    "class": "content",
    "z": 0,
    "x": 0,
