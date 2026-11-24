@@ -52,7 +52,90 @@ const PIXEL_BYTES = (process.env.BENCH_PIXEL_MIB === undefined ? 16 : Math.max(0
 // the service's accounting: an image or asset costs its bytes twice (compositor.cpp: the pixels and a rectangle scratch)
 // an ETC2 asset counts its blocks once (l.cost), as cluster-render does
 function pixelBytes() { let n = 0; layers.forEach((l) => { if (l.cost) n += l.cost; else if (l.image) n += l.iw * l.ih * (l.bpp || 4) * 2; }); return n; }
-function layerCount() { let n = 0; layers.forEach((l) => { if (l.kind !== 'asset') n++; }); return n; }
+function layerCount() { let n = 0; layers.forEach((l) => { if (l.kind !== 'asset' && l.kind !== 'font') n++; }); return n; }
+
+/*
+ * Text layers (cluster-render 0.8.11, PROTOCOL.md "Text"): the bench lays the string out as the service does (the font
+ * scaled to size, each glyph's top-left on whole pixels, spacing between characters, aligned by whole pixels, a
+ * character the font lacks advancing by its space) and draws the glyphs from the font's R8 atlas into the layer's own
+ * RGBA pixels, which the page shows as an image. Nothing goes through the upload queue: on the car a change is the
+ * string alone.
+ */
+function parseFont(m, atlas) {
+    const glyphs = new Map();
+    for (const t of String(m.glyphs || '').trim().split(/\s+/)) {
+        const mm = /^(\d+):(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/.exec(t);
+        if (!mm) return 'glyph "' + t + '" is not code:x,y,w,h,left,top,advance';
+        const g = mm.slice(2).map(Number), code = Number(mm[1]);
+        if (glyphs.has(code)) return 'glyph ' + code + ' comes twice';
+        if (g[0] < 0 || g[1] < 0 || g[2] < 0 || g[3] < 0 || g[0] + g[2] > atlas.iw || g[1] + g[3] > atlas.ih) return 'glyph ' + code + ': its box is outside the atlas';
+        if (g[6] < 0 || g[6] > 2048) return 'glyph ' + code + ': advance out of range';
+        glyphs.set(code, { x: g[0], y: g[1], w: g[2], h: g[3], left: g[4], top: g[5], advance: g[6] });
+    }
+    if (!glyphs.size || glyphs.size > 1024) return 'a font has 1 to 1024 glyphs';
+    const kerning = new Map();
+    for (const t of String(m.kerning || '').trim().split(/\s+/).filter(Boolean)) {
+        const mm = /^(\d+),(\d+):(-?\d+)$/.exec(t);
+        if (!mm) return 'kerning "' + t + '" is not first,second:amount';
+        if (!glyphs.has(+mm[1]) || !glyphs.has(+mm[2])) return 'kerning ' + mm[1] + ',' + mm[2] + ': a glyph the font lacks';
+        kerning.set(mm[1] + ',' + mm[2], +mm[3]);
+    }
+    return { glyphs, kerning };
+}
+function drawTextLayer(l) {
+    const f = layers.get(l.fontKey), a = f ? layers.get(f.atlasKey) : null;
+    l.image.fill(0);
+    if (!f || !a) return;
+    const size = l.size > 0 ? l.size : l.h, s = size / f.line, col = l.color;
+    const chars = Array.from(l.text || '').map((c) => c.codePointAt(0)).slice(0, l.max);
+    const space = f.glyphs.get(32);
+    // the pen: each glyph's advance (or the space's for one the font lacks), kerning and spacing between characters
+    const placed = [];
+    let pen = 0, prev = -1;
+    chars.forEach((code, i) => {
+        const g = f.glyphs.get(code);
+        if (i) { const k = f.kerning.get(prev + ',' + code); if (k && g) pen += k * s; pen += l.spacing || 0; }
+        if (g) { placed.push({ g, x: pen }); pen += g.advance * s; } else if (space) pen += space.advance * s;
+        prev = code;
+    });
+    const lead = l.align === 'right' ? Math.round(l.w - pen) : l.align === 'center' ? Math.round((l.w - pen) / 2) : 0;
+    placed.forEach(({ g, x }) => {
+        const gx = Math.round(lead + x + g.left * s), gy = Math.round(g.top * s), gw = Math.round(g.w * s), gh = Math.round(g.h * s);
+        for (let y = 0; y < gh; y++) {
+            const dy = gy + y;
+            if (dy < 0 || dy >= l.ih) continue;
+            const sy = g.y + Math.min(g.h - 1, Math.floor(y / s));
+            for (let x2 = 0; x2 < gw; x2++) {
+                const dx = gx + x2;
+                if (dx < 0 || dx >= l.iw) continue;
+                const v = a.image[sy * a.iw + g.x + Math.min(g.w - 1, Math.floor(x2 / s))] / 255 * col[3];
+                if (!v) continue;
+                const o = (dy * l.iw + dx) * 4, was = l.image[o + 3] / 255, out = v + was * (1 - v);
+                for (let c = 0; c < 3; c++) l.image[o + c] = Math.round((col[c] * 255 * v + l.image[o + c] * was * (1 - v)) / (out || 1));
+                l.image[o + 3] = Math.round(out * 255);
+            }
+        }
+    });
+}
+// a text layer's pixels go to the page after the scene that has the layer (the page drops pixels of a layer it does
+// not know yet: a string set once at creation never showed)
+function sendTextPixels(l) { setTimeout(() => { if (layers.get(l.key) === l) sendPixels(l); }, 40); }
+function textStyle(l, m) {
+    if (m.align !== undefined) { if (['left', 'center', 'right'].indexOf(m.align) < 0) return 'align is left, center or right'; l.align = m.align; }
+    if (m.spacing !== undefined) { if (!(Math.abs(+m.spacing) <= 1024)) return 'spacing is -1024 to 1024'; l.spacing = +m.spacing; }
+    if (m.size !== undefined) { if (!(+m.size >= 0 && +m.size <= 2048)) return 'size is 0 to 2048'; l.size = +m.size; }
+    if (m.color !== undefined) {
+        const c = String(m.color).trim().split(/\s+/).map(Number);
+        if (c.length !== 4 || c.some((v) => !(v >= 0 && v <= 1))) return 'color is "r g b a", each 0 to 1';
+        l.color = c;
+    }
+    if (m.text !== undefined) {
+        const t = String(m.text);
+        if (Buffer.byteLength(t, 'utf8') > 1024) return 'text is at most 1024 bytes of UTF-8';
+        l.text = t;
+    }
+    return '';
+}
 // BENCH_UPLOAD_KBPS (Zeiger 0.52.0): the car's upload budget to the cluster (cluster-render's pacer: 2000-5500 KB/s).
 // Every image and asset write then waits its turn in one queue drained at that rate, an image layer stays 'waiting'
 // until its first whole write is through (cluster-render 0.6.3: hidden until then), and the time from a layout's
@@ -81,7 +164,8 @@ function drainUploads() {
     log('info', 'upload: ' + Math.round(upq.total / 1024) + ' KB through in ' + (Date.now() - upq.startedAt) + ' ms at ' + UPLOAD_KBPS + ' KB/s' + (top ? ' (most: ' + top + ')' : ''));
 }
 // BENCH_RENDERER=old: the hello of a cluster-render before 0.8.5 (no "curves": replacing an animation was costly)
-const HELLO_FLAGS = process.env.BENCH_RENDERER === 'old' ? {} : { curves: 1 };
+// text 1 (cluster-render 0.8.11): fonts and text layers; BENCH_NO_TEXT=1 leaves it out (a 0.8.10 or older)
+const HELLO_FLAGS = process.env.BENCH_RENDERER === 'old' ? {} : Object.assign({ curves: 1 }, process.env.BENCH_NO_TEXT ? {} : { text: 1 });
 const TOTAL_ASSETS = 32, ASSETS_PER_CLIENT = 16;   // CompositorLimits assets / assets_per_client
 const mib = (b) => (b / 1048576).toFixed(1) + ' MiB';
 const SOCK = path.join(os.tmpdir(), 'hud-bench-' + process.pid + '.sock');
@@ -121,6 +205,7 @@ function log(level, text) {
 /* ---------- the fake cluster-render ---------- */
 
 const layers = new Map();   // key "conn:ref" -> layer
+let textWrites = 0;          // text layer strings received (cluster-render 0.8.11)
 let nextConn = 1;
 
 /** The visibility warnings for one layer's rect on its target (the same check layouts.js runs per widget). */
@@ -130,7 +215,7 @@ function layerWarnings(l) {
 }
 function overCap() { return Array.from(layers.values()).filter((l) => l.state === 'waiting').length; }
 function sceneMeta() {
-    return Array.from(layers.values()).map((l) => ({
+    return Array.from(layers.values()).filter((l) => l.kind !== 'font').map((l) => ({
         key: l.key, conn: l.conn, ref: l.ref, app: l.app, kind: l.kind, target: l.target,
         class: l.class, z: l.z, x: l.x, y: l.y, w: l.w, h: l.h, visible: l.visible, opacity: l.opacity,
         sx: l.sx, sy: l.sy, px: l.px, py: l.py, rotate: l.rotate,
@@ -278,6 +363,20 @@ const renderServer = net.createServer((sock) => {
                     if (!(m.iw > 0 && m.ih > 0 && m.iw <= 1920 && m.ih <= 720)) return refuse('layer', m.ref, 'image iw/ih out of range');
                     nl.image = Buffer.alloc(m.iw * m.ih * 4);
                     if (UPLOAD_KBPS && nl.state === 'shown') { nl.state = 'waiting'; nl.reason = 'bench: first write on its way'; nl.firstWrite = true; }
+                } else if (m.kind === 'text') {
+                    if (!HELLO_FLAGS.text) return refuse('layer', m.ref, 'unknown layer kind text');
+                    const f = layers.get(conn + ':' + m.font);
+                    if (!f || f.kind !== 'font') return refuse('layer', m.ref, 'no such font ' + m.font);
+                    if (f.target !== m.target) return refuse('layer', m.ref, "the font's atlas is on another target");
+                    const max = m.max === undefined ? 64 : +m.max;
+                    if (!(Number.isInteger(max) && max >= 1 && max <= 256)) return refuse('layer', m.ref, 'max is 1 to 256');
+                    if (!(nl.w > 0 && nl.h > 0)) return refuse('layer', m.ref, 'a text layer needs a rect');
+                    Object.assign(nl, { fontKey: f.key, max, align: 'left', spacing: 0, size: 0, color: [1, 1, 1, 1], text: '', iw: nl.w, ih: nl.h, bpp: 4, cost: max * 76 * 2 });
+                    nl.image = Buffer.alloc(nl.w * nl.h * 4);
+                    const why = textStyle(nl, Object.assign({}, m, { text: undefined }));
+                    if (why) return refuse('layer', m.ref, why);
+                    if (m.text !== undefined && textStyle(nl, { text: m.text })) writeEv(sock, { ev: 'error', op: 'text', ref: m.ref, reason: 'text is at most 1024 bytes of UTF-8' });
+                    drawTextLayer(nl);
                 } else if (m.kind === 'effect') {
                     if (!m.fs) return refuse('layer', m.ref, 'effect without fs');
                     // the renderer fills u_mvp, u_mv, u_m, u_v, u_p itself as mat4s (PROTOCOL.md "Shaders"): declared as
@@ -288,7 +387,8 @@ const renderServer = net.createServer((sock) => {
                 } else {
                     log('warn', 'layer ' + m.ref + ': kind ' + m.kind + ' is not drawn by the bench');
                 }
-                layers.set(key, nl);   // its visibility warnings (hood, gear box, belt light, HUD window) ride along in sceneMeta()
+                layers.set(key, nl);
+                if (nl.kind === 'text') sendTextPixels(nl);   // its visibility warnings (hood, gear box, belt light, HUD window) ride along in sceneMeta()
                 if (nl.state === 'waiting') writeEv(sock, { ev: 'layer', ref: m.ref, state: 'waiting', reason: nl.reason });
                 else writeEv(sock, { ev: 'layer', ref: m.ref, state: 'shown' });
                 sceneChanged();
@@ -322,6 +422,31 @@ const renderServer = net.createServer((sock) => {
                 sceneChanged();
                 return;
             }
+            case 'font': {
+                if (!HELLO_FLAGS.text) return bad('op "font" not handled by the bench');
+                const a = layers.get(conn + ':' + m.asset);
+                if (!a || a.kind !== 'asset' || a.format !== 'r8') return refuse('font', m.ref, "a font's atlas is an r8 asset");
+                if (!(m.line >= 1 && m.line <= 2048)) return refuse('font', m.ref, 'line is 1 to 2048');
+                let mine = 0;
+                layers.forEach((o) => { if (o.kind === 'font' && o.conn === conn) mine++; });
+                if (mine >= 8) return refuse('font', m.ref, 'a client has at most 8 fonts');
+                const t = parseFont(m, a);
+                if (typeof t === 'string') return refuse('font', m.ref, t);
+                layers.set(key, { key, conn, ref: m.ref, app: st.app, kind: 'font', target: a.target, atlasKey: a.key, line: +m.line,
+                    glyphs: t.glyphs, kerning: t.kerning, class: '-', z: 0, x: 0, y: 0, w: 0, h: 0, visible: 0, opacity: 1, exclusive: 0, uniforms: {}, state: 'shown', reason: '' });
+                a.fontOf = key;
+                log('info', 'font ' + m.ref + ': ' + t.glyphs.size + ' glyphs from asset ' + m.asset + ', line ' + m.line);
+                return;
+            }
+            case 'text': {
+                if (!l || l.kind !== 'text') return refuse('text', m.ref, 'no such text layer');
+                const why = textStyle(l, m);
+                if (why) return refuse('text', m.ref, why);
+                drawTextLayer(l);
+                sendTextPixels(l);
+                textWrites++;
+                return;
+            }
             case 'bind': {
                 if (!l) return refuse('bind', m.ref, 'no such layer');
                 if (l.kind !== 'effect') return refuse('bind', m.ref, 'bind on a ' + l.kind + ' layer');
@@ -335,11 +460,19 @@ const renderServer = net.createServer((sock) => {
             case 'set': {
                 if (!l) return refuse('set', m.ref, 'no such layer');
                 ['class', 'z', 'x', 'y', 'w', 'h', 'visible', 'exclusive', 'opacity', 'sx', 'sy', 'px', 'py', 'rotate'].forEach((k) => { if (m[k] !== undefined) l[k] = m[k]; });
+                if (l.kind === 'text' && (l.w !== l.iw || l.h !== l.ih)) { l.iw = l.w; l.ih = l.h; l.image = Buffer.alloc(l.w * l.h * 4); drawTextLayer(l); sendTextPixels(l); }
                 sceneChanged();
                 return;
             }
             case 'drop': {
                 if (!l) return refuse('drop', m.ref, 'no such layer');
+                if (l.kind === 'font') {
+                    let used = false;
+                    layers.forEach((o) => { if (o.kind === 'text' && o.fontKey === key) used = true; });
+                    if (used) return refuse('drop', m.ref, 'font in use');
+                    const a = layers.get(l.atlasKey); if (a) delete a.fontOf;
+                }
+                if (l.kind === 'asset' && l.fontOf && layers.has(l.fontOf)) return refuse('drop', m.ref, 'asset in use: a font draws from it');
                 if (l.kind === 'asset') {
                     let used = false;
                     layers.forEach((o) => { if (o.binds && Object.keys(o.binds).some((s) => o.binds[s] === key)) used = true; });
@@ -449,6 +582,9 @@ const renderServer = net.createServer((sock) => {
         }
         l.sentWhole = true;
         sendPixels(l);
+        // a font's atlas came in after its text layers drew (the upload queue): they draw again (the car's cluster
+        // samples the atlas every frame)
+        if (l.fontOf) layers.forEach((t) => { if (t.kind === 'text' && t.fontKey === l.fontOf) { drawTextLayer(t); sendTextPixels(t); } });
     }
 });
 

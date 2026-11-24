@@ -423,6 +423,15 @@ function needleDeg(table, v) {
 const RPM_AHEAD_MS = 150;
 const FS_ANIM = 99, FS_REARM_MS = 600, FS_HOLD_MS = 3000, FS_STALE_MS = 1000, FS_RESHOW_MS = 500, FS_MOVING_KMH = 3, FS_LOG_MS = 60000;
 const TICK_MS = 50;              // 20 Hz: shift bar and gauges
+// (0.57.0) text layers (cluster-render 0.8.11, hello "text"): a "text" widget whose string changes (it has a {{token}}),
+// plain (no glow, no colour2, no fit fonts), on a connection whose cluster-render takes them, is a text layer: its
+// font goes up once a connection as an R8 atlas with its glyph table, and each change is the string alone (a few dozen
+// bytes) instead of its box's pixels (Apex's speed: about 130 KB a change). The cluster lays the string out: each glyph
+// on whole pixels at the font's own size, so it looks as the app's drawing does (an advance or offset rounded to a
+// pixel). cluster-render takes 8 fonts a client; a theme uses at most TEXT_FONTS of them on a connection (those of its
+// biggest readouts: the most pixels a change saves), so the old theme's and the new one's fit together while the old
+// is held. The rest of its readouts stay pixels. TEXT_LAYERS false: every text as pixels, as before.
+const TEXT_LAYERS = true, TEXT_FONTS = 4, TEXT_MAX_GLYPHS = 48;
 const TEXT_MS = 200;             // text re-draws at most 5 times a second (what BMW's own readouts do)
 const TARGET_SIZES = { hud: [800, 480], panel: [1920, 720] };
 const MODE_KEY = { comfort: 'inComfort', sport: 'inSport', eco: 'inEco' };
@@ -713,6 +722,7 @@ class HudApp {
         this.tyres = { p: {}, t: {} };                                  // TPMS pressure (bar) and temperature (C) per corner FL FR RL RR
         this.activeName = null;          // the layout shown now ('off' = nothing)
         this.pixelBytes = 0;             // what the layout's image layers and glyph atlases cost of cluster-render's pixel memory
+        this.tfonts = new Map();         // (0.57.0) "<conn>:<font>" -> { ref, c, ci }: text layer fonts, dropped when no layer uses them
         this.atlases = new Map();        // "<conn>:<font>" -> { ref, c, ci, cols, rows, cellW, cellH, chars, bytes }: R8 assets, kept across rebuilds
         this.targetState = null;         // { state, holder, reason } of our target
         this.rpmF = null; this.rpmShown = null; this.lastTickT = 0;
@@ -1058,7 +1068,7 @@ class HudApp {
 
     _wireClientEvents(c, ci) {
         const tag = ci ? ' [connection ' + (ci + 1) + ']' : '';
-        c.on('ready', () => { this.log.info('cluster-render ready' + tag + ' (backend=' + c.backend + ')'); if (ci === 0) this._rebuild(); else this._status(); });
+        c.on('ready', () => { this.log.info('cluster-render ready' + tag + ' (backend=' + c.backend + ')'); if (ci === 0) this._rebuild(); else { this._status(); this._textsReady(ci); } });
         c.on('disconnected', () => { this.log.warn('cluster-render disconnected' + tag + ', client will retry'); this._status(); });
         c.on('layer', (ref, state, reason) => {
             const key = ci + ':' + ref;
@@ -1265,6 +1275,7 @@ class HudApp {
         this._guard('screen stop', () => this.screen.stop());
         this.clients.forEach((c) => c.close());
         this.atlases.clear();
+        this.tfonts.clear();
     }
 
     /**
@@ -1297,6 +1308,59 @@ class HudApp {
         this.log.info('glyph atlas "' + fontName + '"' + (ci ? ' on connection ' + (ci + 1) : '') + ': ' + chars.length + ' glyphs in ' +
             cellW + 'x' + cellH + ' cells, ' + w + 'x' + h + ' R8 asset, ' + mib(a.bytes) + ' of pixel memory');
         return a;
+    }
+
+    /**
+     * (0.57.0) Whether a widget goes as a text layer (TEXT_LAYERS above): a "text" with a {{token}}, no glow, colour2 or
+     * fit fonts, on a connection whose cluster-render takes text layers, its font one of the plan's there (fonts:
+     * { conn: { font: true } }; null: any font).
+     */
+    _textable(w, conn, fonts) {
+        if (!TEXT_LAYERS || w.type !== 'text' || w.glow || w.color2 || w.fit || isNum(w.spacing) && w.spacing !== Math.round(w.spacing)) return false;
+        if (!/\{\{/.test(String(w.text || '')) || !w.font) return false;
+        const c = this.clients[conn];
+        if (!c || !c.ready || !c.texts) return false;
+        return !fonts || !!(fonts[conn] && fonts[conn][w.font]);
+    }
+
+    /**
+     * (0.57.0) A font for text layers on a connection: the font's own atlas (hud/fonts, its alpha) as an R8 asset and its
+     * glyph table; each glyph's box as in the atlas, its offset and advance rounded to whole pixels, its top the
+     * line's (the app draws a glyph's cell from the box's top). Made on first use, dropped when no layer uses it.
+     */
+    _tfont(fontName, ci) {
+        const key = ci + ':' + fontName;
+        if (this.tfonts.has(key)) return this.tfonts.get(key);
+        const font = textRaster.loadFont(fontName), m = font.metrics;
+        const glyphs = Object.keys(m.glyphs).filter((ch) => Array.from(ch).length === 1).map((ch) => {
+            const g = m.glyphs[ch];
+            return { code: ch.codePointAt(0), s: [g.x, g.y, g.w, g.h, Math.round(g.ox || 0), 0, Math.max(0, Math.round(g.advance))].join(',') };
+        }).sort((a, b) => a.code - b.code).map((g) => g.code + ':' + g.s).join(' ');
+        const h = font.alpha.length / font.width, c = this._clientAt(ci);
+        const ref = c.font({ target: this.target, w: font.width, h, pixels: font.alpha, line: m.cellHeight, glyphs });
+        if (!ref) throw new Error('font "' + fontName + '": refused (' + font.width + 'x' + h + ')');
+        const f = { ref, c, ci, bytes: font.width * h * 2, size: m.cellHeight };
+        this.tfonts.set(key, f);
+        this.log.info('text font "' + fontName + '"' + (ci ? ' on connection ' + (ci + 1) : '') + ': ' + Object.keys(m.glyphs).length + ' glyphs, ' +
+            font.width + 'x' + h + ' R8 atlas');
+        return f;
+    }
+
+    /** (0.57.0) A connection made for this layout said "text" only now: its readouts drawn as pixels go as text layers. */
+    _textsReady(ci) {
+        const c = this.clients[ci];
+        if (!c || !c.texts) return;
+        let waiting = false;
+        this.widgets.forEach((x) => { if (x.ci === ci && !x.tl && this._textable(x.w, ci, null)) waiting = true; });
+        if (waiting) { this.log.info('connection ' + (ci + 1) + ' takes text layers: the layout made again with them'); this._rebuildSoon(); }
+    }
+
+    /** (0.57.0) The text layer fonts no widget uses any more go (after the layers that drew from them). */
+    _pruneFonts() {
+        const used = {};
+        this.widgets.forEach((x) => { if (x.tfont) used[x.ci + ':' + x.w.font] = true; });
+        if (this.held) this.held.old.refs.forEach((r) => { if (r.tfont) used[r.tfont] = true; });
+        this.tfonts.forEach((f, k) => { if (!used[k]) { this.tfonts.delete(k); this._guard('font drop', () => f.c.drop(f.ref)); } });
     }
 
     _atlasBytes() {
@@ -1630,7 +1694,7 @@ class HudApp {
         this.widgets.forEach((x) => {
             if (!x.c || !x.ref) return;
             let L = out.find((q) => q.c === x.c && q.ref === x.ref);
-            if (!L) { L = { c: x.c, ref: x.ref, image: !!IMAGE_TYPES[x.w.type] && !x.asset, tex: !!x.asset, ids: [] }; out.push(L); }
+            if (!L) { L = { c: x.c, ref: x.ref, image: !!IMAGE_TYPES[x.w.type] && !x.asset && !x.tl, tex: !!x.asset, text: x.tl ? x : null, ids: [] }; out.push(L); }
             L.ids.push(x.w.id);
             if (x.w.pieceOf && L.ids.indexOf(x.w.pieceOf) < 0) L.ids.push(x.w.pieceOf);
         });
@@ -1660,13 +1724,13 @@ class HudApp {
         if (!I.layers) I.layers = this._introLayers();
         const t = now - I.at, fade = I.spec.fade || {}, num = (k) => Math.max(0, Math.min(1, Number(k[1]) || 0));
         I.layers.forEach((L) => {
-            if (!L.image && !L.tex) return;  // effect layers keep theirs: the black backdrop stays black (a compressed picture fades)
+            if (!L.image && !L.tex && !L.text) return;  // effect layers keep theirs: the black backdrop stays black (a compressed picture fades)
             let a = Array.isArray(fade['*']) ? this._introAt(fade['*'], t, num) : 1, own = 1;
             L.ids.forEach((id) => { if (Array.isArray(fade[id])) own = Math.min(own, this._introAt(fade[id], t, num)); });
             a = Math.round(a * own * 100) / 100;
             if (a !== L.alpha && (L.alpha === undefined || Math.abs(a - L.alpha) >= 0.03 || a === 0 || a === 1)) {
                 L.alpha = a;
-                this._guard('intro fade', () => (L.tex ? L.c.uniform(L.ref, 'u_alpha', [a]) : L.c.set(L.ref, { opacity: a })));
+                this._guard('intro fade', () => (L.text ? this._textAlpha(L.text, a) : L.tex ? L.c.uniform(L.ref, 'u_alpha', [a]) : L.c.set(L.ref, { opacity: a })));
             }
         });
         if (I.ready && !I.started) {        // the renderer's own clock runs a move: sent once the layers are shown
@@ -1682,6 +1746,13 @@ class HudApp {
         }
     }
 
+    /** (0.57.0) A text layer faded by the start animation: its colour's alpha times a (a text layer has no opacity). */
+    _textAlpha(x, a) {
+        x.alpha = a === 1 ? undefined : a;
+        x.last = null;                   // its next _update sends the colour with the alpha
+        this._update(x, Date.now(), true);
+    }
+
     /** The end (or the car moving off): every faded layer opaque again, every moved one at its place, the values live. */
     _introStop() {
         const I = this.intro;
@@ -1689,7 +1760,7 @@ class HudApp {
         if (this.testUntil > Date.now()) this.testUntil = 0;
         if (!I || !I.layers) return;
         I.layers.forEach((L) => this._guard('intro end', () => {
-            if (L.alpha !== undefined && L.alpha !== 1) { if (L.tex) L.c.uniform(L.ref, 'u_alpha', [1]); else L.c.set(L.ref, { opacity: 1 }); }
+            if (L.alpha !== undefined && L.alpha !== 1) { if (L.text) this._textAlpha(L.text, 1); else if (L.tex) L.c.uniform(L.ref, 'u_alpha', [1]); else L.c.set(L.ref, { opacity: 1 }); }
             // a held zero move rather than a stop: a stopped animation may leave the layer where it was on the way
             if (L.moved) L.c.animate(L.ref, { anim: INTRO_ANIM, property: 'translate', keys: '0:0,0,0', loop: false, interp: 'step' });
         }));
@@ -2274,7 +2345,7 @@ class HudApp {
         let px = 0;
         plan.forEach((e) => {
             if (e.kind === 'sheet') px += e.w * e.h * 8;
-            else if (IMAGE_TYPES[e.w.type]) px += this._ownPx(e.w);
+            else if (IMAGE_TYPES[e.w.type] && !e.text) px += this._ownPx(e.w);
         });
         if ((oldPx || 0) + px + this._atlasBytes() > PIXEL_BYTES * HOLD_PX_FRAC) return false;
         const per = {};
@@ -2287,6 +2358,11 @@ class HudApp {
         const as = {};
         (old.assets || []).forEach((a) => { as[a.ci] = (as[a.ci] || 0) + 1; });
         this.atlases.forEach((a) => { as[a.ci] = (as[a.ci] || 0) + 1; });
+        // (0.57.0) text layer fonts: each an asset, the ones there now and the plan's new ones
+        const fk = {};
+        this.tfonts.forEach((f, k) => { fk[k] = true; });
+        plan.forEach((e) => { if (e.text) fk[e.conn + ':' + e.w.font] = true; });
+        Object.keys(fk).forEach((k) => { const ci = k.split(':')[0]; as[ci] = (as[ci] || 0) + 1; });
         plan.forEach((e) => { if (e.kind !== 'sheet') { const k = this._ownAssets(e.w); if (k) { const ci = this._connOf(e.w); as[ci] = (as[ci] || 0) + k; } } });
         const allA = Object.keys(as).reduce((a, k) => a + as[k], 0);
         return allA <= ASSETS_ALL && Object.keys(as).every((k) => as[k] <= ASSETS_PER_CONN);
@@ -2385,6 +2461,7 @@ class HudApp {
         (old.assets || []).forEach((a) => a.c.drop(a.ref));
         old.assets = [];
         this.oldPending = null;
+        this._pruneFonts();
     }
 
     /**
@@ -2730,12 +2807,13 @@ class HudApp {
             this.log.info('holding "' + before + '" until "' + name + '" shows (' + old.refs.length + ' old layers, ' + mib(oldPx) + ' with the old)');
         } else this._dropOld(old, Array.from(this.keep.values()).concat(Array.from(this.keepOwn.values())));
         this.kept = 0; this.keptBytes = 0;
-        let effects = 0, own = 0, sheets = 0, bytes = 0, px = 0;
+        let effects = 0, own = 0, sheets = 0, bytes = 0, px = 0, texts = 0;
         plan.forEach((e) => {
             if (e.kind === 'sheet') { sheets++; bytes += e.w * e.h * 4; px += e.w * e.h * 8; this._guard('sheet ' + e.members[0].id, () => this._createSheet(e)); }
             else {
-                if (IMAGE_TYPES[e.w.type]) { own++; px += this._ownPx(e.w); } else effects++;
-                this._guard('widget ' + e.w.id, () => this._create(e.w, null));
+                if (e.text) texts++;
+                else if (IMAGE_TYPES[e.w.type]) { own++; px += this._ownPx(e.w); } else effects++;
+                this._guard('widget ' + e.w.id, () => this._create(e.w, null, !!e.text));
             }
         });
         this.keep.forEach((s) => s.c.drop(s.ref));      // one the new layout didn't take after all
@@ -2752,7 +2830,7 @@ class HudApp {
         this.pixelBytes = px;
         const n = this._layerRefs().length, counts = this._connCounts(plan);
         this.log.info('layout "' + layout.name + '": ' + shown.length + ' widgets, ' + this._layerCount(n) + ' (' + effects + ' effects, ' +
-            sheets + ' image sheets' + (own ? ', ' + own + ' own image layers' : '') + ')' +
+            sheets + ' image sheets' + (own ? ', ' + own + ' own image layers' : '') + (texts ? ', ' + texts + ' text layers' : '') + ')' +
             (counts.length > 1 ? ' on ' + counts.length + ' connections (' + counts.join(' + ') + ')' : '') + ', sheet limit ' +
             (maxPx === Infinity ? 'unlimited' : maxPx + ' px') + ', whole-sheet writes ' + bytes + ' bytes' +
             (this.kept ? ' (' + this.kept + ' sheet' + (this.kept > 1 ? 's' : '') + ', ' + this.keptBytes + ' bytes, kept from the layout before)' : '') +
@@ -2784,8 +2862,16 @@ class HudApp {
             const x = Math.min(s.x, w.x), y = Math.min(s.y, w.y);
             return { x, y, w: Math.max(s.x + s.w, w.x + w.w) - x, h: Math.max(s.y + s.h, w.y + w.h) - y };
         };
+        // the fonts of text layers on each connection: the TEXT_FONTS whose readouts cover the most pixels
+        const fonts = {}, area = {};
+        widgets.forEach((w) => { const ci = this._connOf(w); if (this._textable(w, ci, null)) { const k = ci + ':' + w.font; area[k] = (area[k] || 0) + w.w * w.h; } });
+        Object.keys(area).sort((a, b) => area[b] - area[a]).forEach((k) => {
+            const ci = k.split(':')[0], f = fonts[ci] = fonts[ci] || {};
+            if (Object.keys(f).length < TEXT_FONTS) f[k.slice(ci.length + 1)] = true;
+        });
         widgets.forEach((w) => {
             const klass = w.class || 'content', z = w.z || 0, conn = this._connOf(w);
+            if (this._textable(w, conn, fonts)) { plan.push({ kind: 'layer', w, klass, z, conn, text: true }); return; }
             if (!IMAGE_TYPES[w.type] || w.own === true || (OWN_TYPES[w.type] && !(w.own === false && PACKABLE[w.type]))) { plan.push({ kind: 'layer', w, klass, z, conn }); return; }
             let after = -1;
             plan.forEach((e, i) => {
@@ -2987,8 +3073,8 @@ class HudApp {
     }
 
     /** A widget: on its own layer (sheet null: an effect, or an image widget with "own": true), or a member of a sheet. */
-    _create(w, sheet) {
-        let ref, c, keptOwn = false, etc = null, assetRef = 0, usedAsset = 0, usedPatch = null, madePatch = null, decoded = false;
+    _create(w, sheet, asText) {
+        let ref, c, keptOwn = false, tfont = null, etc = null, assetRef = 0, usedAsset = 0, usedPatch = null, madePatch = null, decoded = false;
         if (sheet) { ref = sheet.ref; c = sheet.c; }
         else {
             c = this._clientAt(this._connOf(w));
@@ -3001,7 +3087,12 @@ class HudApp {
             const ak = etc ? this._connOf(w) + ':' + w.picture : null, shared = ak && this.assetFor ? this.assetFor.get(ak) : 0;
             // the layout before had this very layer (_keepableOwn): it stays, a picture's pixels with it
             const ok = this.keepOwn ? this._ownKey(w, this._connOf(w), !!this.cut) : null, was = ok ? this.keepOwn.get(ok) : null;
-            if (was && was.c === c) {
+            if (asText) {
+                // (0.57.0) a text layer: its font's glyphs at their own size, its string set by _update
+                tfont = this._tfont(w.font, this._connOf(w));
+                ref = c.text(Object.assign({ font: tfont.ref, max: TEXT_MAX_GLYPHS, align: w.align || 'left', spacing: w.spacing || 0,
+                    size: tfont.size, color: rgba(color(this.theme, w.color || 'fg')), text: '' }, base));
+            } else if (was && was.c === c) {
                 this.keepOwn.delete(ok); ref = was.ref; keptOwn = true;
                 if (was.state) this.layerStates.set(was.ci + ':' + ref, was.state);
             } else if (etc) {
@@ -3034,6 +3125,7 @@ class HudApp {
             this.placed.push({ c, ref, x: w.x, y: w.y, w: w.w, h: w.h });
         }
         const x = { w, ref, c, ci: sheet ? sheet.ci : this._connOf(w), sheet: sheet || null, last: null, lastPaint: 0, px: null };
+        if (tfont) { x.tfont = tfont; x.tl = true; }
         this.widgets.set(w.id, x);
         // x.asset: the asset this widget made (dropped with it); a piece using another's has x.texRef only
         if (assetRef) { x.asset = assetRef; c.pixels(assetRef, null, etc.etc); }
@@ -3835,6 +3927,15 @@ class HudApp {
             const key = s + '|' + role;
             if (!force && key === x.last) return;
             x.last = key; x.lastPaint = now;
+            if (x.tl) {
+                // (0.57.0) a text layer: the string, and its colour when the role changes (or the start animation fades it)
+                const col = rgba(color(this.theme, role));
+                if (isNum(x.alpha)) col[3] *= x.alpha;
+                const ck = col.map((v) => v.toFixed(3)).join(',');
+                if (force || ck !== x.colKey) { x.colKey = ck; x.c.textStyle(x.ref, { color: col }); }
+                x.c.setText(x.ref, s);
+                return;
+            }
             // "fit": smaller fonts to fall back on when the text is wider than the box (a readout slot showing a
             // longer value than its default) or has a character the font lacks (Retro's seven-segment digits have no
             // letters, + or °), on the same baseline
