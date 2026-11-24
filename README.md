@@ -62,4 +62,4 @@ Instagram: [@vucko.adv](https://instagram.com/vucko.adv)
 
 ## Credits
 
-Zeiger is a fork of [bimmer-lab/apps](https://github.com/bimmer-lab/apps) (Cluster Themes), MIT. It uses cauliflowermossgrape's MGU App Kit and Robert Nisipeanu's cluster-render. Details in [apps/zeiger/NOTICE](apps/zeiger/NOTICE).
+Zeiger uses cauliflowermossgrape's MGU App Kit and Robert Nisipeanu's cluster-render. Third-party code, fonts and licences: [apps/zeiger/NOTICE](apps/zeiger/NOTICE) and [LICENSE](LICENSE).

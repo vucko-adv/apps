@@ -1,9 +1,9 @@
 Zeiger - third-party notices
 ============================
 
-The app is a fork of bimmer-lab's Cluster Themes (https://github.com/bimmer-lab/apps): MIT,
-Copyright (c) 2026 bimmer-lab, with changes Copyright (c) 2026 vucko-adv (LICENSE in the repository).
-Besides its own code, the app ships with:
+Zeiger is Copyright (c) 2026 vucko-adv, MIT (LICENSE in the repository). Parts of its drawing engine, bench and
+tools come from https://github.com/bimmer-lab/apps, MIT, Copyright (c) 2026 bimmer-lab (the same LICENSE).
+The app also ships with:
 
 1. cauliflowermossgrape's MGU App Kit (kit/ in the package): MIT,
    Copyright (c) 2026 cauliflowermossgrape. https://github.com/cauliflowermossgrape/idrive7-apps

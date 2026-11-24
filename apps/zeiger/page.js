@@ -78,7 +78,7 @@ const GROUPS = [
     // 0.51.0 (the user: eight rows were cramped): two groups, the tests on the cluster and the tools that list lines here
     { name: 'Lab', lab: true, about: 'Tests on the cluster for the people who help develop Zeiger.', rows: [
         ['demo', 'Demo data', 'made-up values while the car sends none'],
-        ['gearLetter', 'Leave BMW\'s gear letter open', 'keeps BMW\'s black gear box away (bimmer-lab\'s car test)'],
+        ['gearLetter', 'Leave BMW\'s gear letter open', 'keeps BMW\'s black gear box away'],
         ['hideBoxes', 'Hide BMW\'s black boxes', 'test'],
         ['calib', 'Calibration', 'a grid or the map frame on the cluster, to measure what BMW hides'],
         ['weatherFx', 'Rain and snow', 'test: falling over the theme (Ember)'],
@@ -123,7 +123,6 @@ const THEME_GROUPS = [
 const CALIB = [['', 'Off'], ['grid', 'Grid'], ['mapcal', 'Map frame']];
 const CREDITS = [
     'Zeiger by vucko-adv. Every theme is drawn by vucko-adv.',
-    'Forked from bimmer-lab/apps (Cluster Themes), MIT.',
     'MGU App Kit by cauliflowermossgrape (MIT).',
     'cluster-render client by Robert Nisipeanu (MPL 2.0).',
     'Fonts: Barlow, Michroma, Inter Tight, Jost, Saira (SIL Open Font License). Details: NOTICE.',

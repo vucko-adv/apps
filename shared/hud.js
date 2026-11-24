@@ -1,6 +1,6 @@
 'use strict';
 /**
- * The drawing engine, shared by every bimmer-lab app that draws through cluster-render
+ * The drawing engine, shared by every app in this repository that draws through cluster-render
  * (robertnisipeanu/idrive-apps, native/cluster-render): it connects, builds the active layout's layers in
  * the active theme (one effect layer per shader widget, the image widgets packed into sheets, below), and
  * keeps live widgets updated from the kit's car.js.
@@ -348,11 +348,11 @@ const CONN_LAYERS = 64;          // cluster-render's limit a client connection (
 // new layer is shown (HOLD_MAX_MS at most); then the new ones go back to their own z. No black between themes. Else
 // (the photo themes are big), or after cluster-render refused a layer once this run, the curtain as before.
 // BMW's gear letter (P R N D) in its bottom strip (Zeiger 0.39.0, setting "gearLetter"): no layer's rect may reach over
-// it. bimmer-lab found on a car (Cluster Themes 0.17.6-0.17.8, their issue #5) that BMW draws its black gear box over a
+// it. A car test showed that BMW draws its black gear box over a
 // theme whenever something covers that letter, and that a layer's box counts even where its pixels are see-through;
 // Zeiger 0.29.0 had only made the pixels see-through, which changed nothing. So every widget over it is cut in pieces
 // that go round it (above, left, right; _gearCut), a sheet's box never reaches over it (_plan, _steadySheets), and the
-// curtain is three pieces too. Their window: x 1380-1460, y 660 down.
+// curtain is three pieces too. The window: x 1380-1460, y 660 down.
 const GEAR_LETTER = [1380, 660, 80, 60];
 const REBUILD_SOON_MS = 30;      // setting changes this close together make one rebuild (_rebuildSoon)
 const HOLD_Z = 200, HOLD_MAX_MS = 5000, HOLD_PX_FRAC = 0.96, HOLD_CONN_LAYERS = 64, HOLD_ALL_LAYERS = 90;

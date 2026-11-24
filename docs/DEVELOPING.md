@@ -9,7 +9,7 @@ shared/           the cluster-render drawing engine; app.json "shared" lists the
                   needs and the build copies them in
 kit/              cauliflowermossgrape's MGU App Kit (MIT, kit/LICENSE): runtime/ ships inside each app,
                   tools/ builds it. One change from upstream: kit/tools/build.py copies the app.json
-                  "shared" files (marked "bimmer-lab addition")
+                  "shared" files
 bench/            test bench (fake cluster-render + the kit's stub head unit), see bench/README.md
 tools/            fonts-src (the free fonts the theme builds use), bake_fonts.py (needs Pillow)
 scripts/          deploy.sh pushes layout files to the car over SSH
