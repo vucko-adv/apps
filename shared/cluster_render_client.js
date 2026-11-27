@@ -461,6 +461,12 @@ class ClusterRender extends EventEmitter {
         return true;
     }
 
+    /* (Zeiger 0.59.0) Holds this connection's messages until uncork(), so a tick's needle turns leave in one socket
+     * write: one wake of the service and one flush, not one for each needle and shadow (cruzen991/Cluster and
+     * samagotia/idrive7 batch the same way). */
+    cork() { if (this.sock && this.connected && !this.corked) { this.sock.cork(); this.corked = this.sock; } }
+    uncork() { const s = this.corked; this.corked = null; if (s) s.uncork(); }
+
     set(ref, opts) {
         const l = this.layers.get(ref);
         if (!l || l.kind === 'asset' || l.kind === 'font') return;

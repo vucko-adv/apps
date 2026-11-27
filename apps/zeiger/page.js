@@ -82,6 +82,9 @@ const GROUPS = [
         ['hideBoxes', 'Hide BMW\'s black boxes', 'test'],
         ['calib', 'Calibration', 'a grid, the map frame or the car test theme on the cluster'],
         ['weatherFx', 'Rain and snow', 'test: falling over the theme (Ember)'],
+        // (0.59.0) the needles' motion, to compare in the car (shared/hud.js _move)
+        ['needleMotion', 'Needle motion', 'glide, raw, or classic as in 0.58'],
+        ['rpmPoll', 'Read the revs every 20 ms', 'between the car\'s own updates'],
     ] },
     { name: 'Lab tools', lab: true, about: 'What the car and Zeiger say, listed here: a photo of the lines helps.', rows: [
         ['slotWatch', 'Watch BMW\'s slots', 'every slot now, and what changed when'],

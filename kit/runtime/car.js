@@ -157,9 +157,11 @@ class Car {
         // a parked car sends nothing new for minutes (fields are notified on change), so "no data for
         // a while" doesn't mean "no car": once a signal's provider is there, stay on live data
         this.subs = [];
+        this.subBy = {};             // iface -> its subscription (pollField)
+        this.watches = watches;
         this.t0 = Date.now();
         Object.keys(watches).forEach((iface) => ctx.signals.watch(iface, '1', watches[iface], this.log, pollMs[iface] ? { pollMs: pollMs[iface] } : undefined)
-            .then((s) => { this.subs.push(s); this.log.info('signal ' + iface.split('.').pop() + (s.error ? ' error: ' + s.error : ' subscribed')); }));
+            .then((s) => { this.subs.push(s); this.subBy[iface] = s; this.log.info('signal ' + iface.split('.').pop() + (s.error ? ' error: ' + s.error : ' subscribed')); }));
 
         // demo feed (20 Hz) - also keeps the sim warm so switching is seamless. On a busy or
         // slow CPU the timer fires late; replay every missed 50 ms step (up to 3 s) with its own
@@ -204,6 +206,36 @@ class Car {
 
     /** fn(data, tMs) per sample; fn.reset() (optional) when the source switches live<->demo. */
     onSample(fn, reset) { this.listeners.push({ fn, reset }); }
+
+    /**
+     * Read one of the watched fields with its getter every ms too, between the car's notifications (a car notifies
+     * the rpm only 10-20 times a second): one read waiting at a time, given up after timeoutMs, none in the demo or
+     * while on() says no. The value goes where a notification would. false: the field is not watched.
+     */
+    pollField(iface, field, ms, timeoutMs, on) {
+        const fn = this.watches && this.watches[iface] && this.watches[iface][field];
+        if (!fn) return false;
+        const st = (this.polls = this.polls || {})[field] = { ok: 0, fail: 0, at: Date.now(), busy: false };
+        setInterval(() => {
+            const s = this.subBy && this.subBy[iface];
+            if (st.busy || !s || !s.available || !s.proxy || this.demoActive || (on && !on())) return;
+            st.busy = true;
+            setImmediate(() => Promise.resolve().then(() => s.proxy.getValue(field, timeoutMs || 300))
+                .then((v) => { st.ok++; fn(v); }, () => { st.fail++; })
+                .then(() => { st.busy = false; }));
+        }, ms);
+        return true;
+    }
+
+    /** A polled field's reads a second since the last call ("50 a second, 0 failed"), or null. */
+    pollStats(field) {
+        const st = this.polls && this.polls[field];
+        if (!st) return null;
+        const now = Date.now(), s = Math.max(0.001, (now - st.at) / 1000);
+        const t = (st.ok / s).toFixed(1) + ' a second, ' + st.fail + ' failed';
+        st.ok = 0; st.fail = 0; st.at = now;
+        return t;
+    }
     /** The demo drive's rev limit (the app's redline). */
     setRedline(rpm) { this.sim.setRedline(rpm); }
 

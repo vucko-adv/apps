@@ -411,6 +411,16 @@ const GLIDE_ANIM = 97;            // a needle's "glide" turn (one per layer, rep
 // a turn every 33 ms again, as before 0.52.0
 const NEEDLE_PLAY = false;
 const NEEDLE_PLAY_MS = 100, NEEDLE_PLAY_AHEAD_MS = 140;
+// (0.59.0) the "spring" needles' and bands' motion (Lab, Needle motion; the user: still rough in the car). "glide"
+// (the default), as cruzen991/Cluster (MIT) found best in a car: each new reading starts a straight turn from where
+// the needle is now to it, over GLIDE_STRETCH x the time between readings (GLIDE_MIN_MS..GLIDE_MAX_MS), so it never
+// stands still between readings and never runs ahead of the car; a jump of GLIDE_JUMP of the dial or more (a gear
+// change) in GLIDE_MIN_MS. "raw": the newest reading as it is. "classic": 0.58's spring with the rpm drawn ahead, 30
+// a second. Glide and raw every NEEDLE_FAST_MS; a tick's messages on each connection go in one socket write (cork).
+const GLIDE_STRETCH = 1.15, GLIDE_MIN_MS = 50, GLIDE_MAX_MS = 400, GLIDE_JUMP = 0.1, NEEDLE_FAST_MS = 16;
+// (0.59.0) the rpm also read with its getter this often, between the car's notifications (Lab, Rpm read every 20 ms;
+// samagotia/idrive7 reads it every 10 ms), one read waiting at a time; how often it changes logged (MOTION_LOG_MS)
+const RPM_POLL_MS = 20, RPM_POLL_TIMEOUT_MS = 300, MOTION_LOG_MS = 600000, MOTION_FIRST_LOG_MS = 60000;
 /** A needle's angle for value v from its table (value -> degrees clockwise from 12 o'clock, straight lines between, held at the ends). */
 function needleDeg(table, v) {
     if (v <= table[0][0]) return table[0][1];
@@ -460,7 +470,7 @@ const DIAL_SPEED = { us: { max: 160, ticks: 8 }, metric: { max: 240, ticks: 8 } 
 // the HUD's place (the page's Position tab): settings that move / scale the layers already there, no rebuild
 const PLACE_KEYS = ['hudX', 'hudY', 'hudScale'];
 // settings that change nothing on the cluster (the home-screen widget's, Zeiger's probe): no rebuild
-const QUIET_KEYS = ['widgetShows', 'widgetPicks', 'widgetTap', 'probe', 'labOn', 'logView'];   // (labOn: the page's Lab group shown)
+const QUIET_KEYS = ['widgetShows', 'widgetPicks', 'widgetTap', 'probe', 'labOn', 'logView', 'needleMotion', 'rpmPoll'];   // (labOn: the page's Lab group shown)
 // "Leave BMW's bottom strip clear" (cluster, issues #5 / #1): BMW's own strip (range, clock, belt light, P) starts at
 // y 662. Since Zeiger 0.32.0 the theme stays as it is and is cut there (it used to be squeezed to 662 / 720 of its
 // height): every image layer's pixels in the strip see-through as they are sent (_punch), a fill over it given the
@@ -1086,6 +1096,8 @@ class HudApp {
             },
         };
         this.car = new Car(this.ctx, ['rpm', 'speed', 'temps', 'accel', 'gear', 'torque'], extra);
+        // (0.59.0) the rpm read between the car's notifications too (RPM_POLL_MS), unless the Lab says off
+        if (typeof this.car.pollField === 'function') this.car.pollField('de.bmw.infotainment.vehicle.CDS', 'statusEngineSpeed2', RPM_POLL_MS, RPM_POLL_TIMEOUT_MS, () => this.setting('rpmPoll') !== 'off');
         this._cruiseWatch();
         this.car.setRedline(this.setting('redline'));
         this.gBuf = [];                  // [t, lat, long] of the last G_AVG_MS
@@ -1217,7 +1229,7 @@ class HudApp {
         this.clients.forEach((c) => c.connect());
         this.tickTimer = setInterval(() => this._guard('tick', () => this._tick()), TICK_MS);
         // needles with a "spring" move at 30 Hz (the rest of the gauges at the tick's 20)
-        this.needleTimer = setInterval(() => this._guard('needles', () => this._needleTick()), NEEDLE_MS);
+        this.needleTimer = setInterval(() => this._guard('needles', () => this._needleTick()), NEEDLE_FAST_MS);
         // Auto theme: check for sunrise / sunset once a minute; the status line too
         this.themeTimer = setInterval(() => this._guard('theme check', () => {
             if (this._themeName() !== this.themeName || (this._nightDim() && !this.noDim) !== this.nightOn
@@ -3553,8 +3565,16 @@ class HudApp {
 
     _tick() {
         const now = Date.now();
-        try { this._tickInner(now); } finally { this._slow('cluster tick', Date.now() - now); }
+        this._cork();
+        try { this._tickInner(now); } finally { this._uncork(); this._slow('cluster tick', Date.now() - now); }
     }
+
+    /** (0.59.0) Every connection's messages held until _uncork(): one socket write for a tick (cluster_render_client cork). */
+    _cork() { this.clients.forEach((c) => { if (typeof c.cork === 'function') c.cork(); }); }
+    _uncork() { this.clients.forEach((c) => { if (typeof c.uncork === 'function') c.uncork(); }); }
+
+    /** (0.59.0) The needles' motion, the Lab's Needle motion: 'glide' (the default), 'raw' or 'classic' (0.58). */
+    _motion() { const m = this.setting('needleMotion'); return m === 'raw' || m === 'classic' ? m : 'glide'; }
 
     /** a piece of work that took ms: named in the log's stall lines (kit/runtime/mgu.js, 0.50.14) */
     _slow(name, ms) { if (this.ctx && typeof this.ctx.slow === 'function') this.ctx.slow(name, ms); }
@@ -3587,22 +3607,34 @@ class HudApp {
     /** A widget's update failed: logged as _guard() logs it. */
     _widgetError(x, e) { this.log.error('hud widget ' + x.w.id + ': ' + (e && e.stack || e)); }
 
-    /** The "spring" needles, 30 times a second (NEEDLE_MS), so they sweep instead of stepping at the tick's 20. */
+    /**
+     * The "spring" needles, so they sweep instead of stepping at the tick's 20: every NEEDLE_FAST_MS (0.59.0, glide
+     * and raw), 30 times a second (NEEDLE_MS) in classic; all of a tick's turns in one write.
+     */
     _needleTick() {
         if (!this.client.ready || !this.widgets.size) return;
-        const now = Date.now(), gap = this.needleT ? now - this.needleT : 0;
+        const now = Date.now();
+        if (this._motion() === 'classic' && now - (this.needleRunAt || 0) < NEEDLE_MS - 4) return;
+        this.needleRunAt = now;
+        const gap = this.needleT ? now - this.needleT : 0;
         this.needleT = now;
         if (gap > NEEDLE_LATE_MS) {
             this.needleLate = Math.max(this.needleLate || 0, gap);
             if (now - (this.needleLogAt || 0) >= NEEDLE_LOG_MS) {
                 this.needleLogAt = now;
-                this.log.info('needles: a tick came ' + this.needleLate + ' ms after the one before (every ' + NEEDLE_MS + ' ms asked); the app is busy');
+                this.log.info('needles: a tick came ' + this.needleLate + ' ms after the one before (every ' + (this._motion() === 'classic' ? NEEDLE_MS : NEEDLE_FAST_MS) + ' ms asked); the app is busy');
                 this.needleLate = 0;
             }
         }
         // a theme coming in (the old one held): its pictures are being sent, the needles wait for it
         if (this.held) return;
         const t0 = Date.now();
+        this._cork();
+        try { this._springs(now); } finally { this._uncork(); }
+        this._slow('needles', Date.now() - t0);
+    }
+
+    _springs(now) {
         this.widgets.forEach((x) => {
             if (!x.w.spring) return;
             // the socket to cluster-render full: nothing more queued behind it (the spring keeps the time, the next tick catches up)
@@ -3612,7 +3644,6 @@ class HudApp {
                 else if (x.w.type === 'segments') this._updateSegments(x, now, false);
             } catch (e) { this._widgetError(x, e); }
         });
-        this._slow('needles', Date.now() - t0);
     }
 
     /**
@@ -3692,7 +3723,8 @@ class HudApp {
         if (measure === 'speed') return d.speed;
         if (measure === 'oil' || measure === 'coolant') return d[measure];
         // rpm: as the car (or the start animation, the shift test) gives it; filtered twice it trailed a shift by half a second
-        if (measure === 'rpm') return this.intro || this.testAt !== null ? this.rpmIn : this._rpmAhead(d.rpm, Date.now());
+        // (0.59.0) drawn ahead only in the classic motion: a glide goes to the car's own reading
+        if (measure === 'rpm') return this.intro || this.testAt !== null ? this.rpmIn : this._motion() === 'classic' ? this._rpmAhead(d.rpm, Date.now()) : d.rpm;
         return this._raw(measure);
     }
 
@@ -3755,13 +3787,61 @@ class HudApp {
         return x.value;
     }
 
+    /**
+     * (0.59.0) x.value following raw by the Lab's Needle motion (GLIDE_* above): a "spring" widget glides (a straight
+     * turn from where it is to each new reading, over a little more than the time between readings) or takes the
+     * reading as it is; classic, and every widget without a spring, as _follow().
+     */
+    _move(x, raw, now) {
+        const mode = this._motion();
+        if (!x.w.spring || mode === 'classic') return this._follow(x, raw, now);
+        // (a new turn starts at the last frame, where x.value is: started now, this frame would repeat the last one)
+        const prev = isNum(x.t) && x.t < now ? x.t : now;
+        x.t = now; x.vel = 0;
+        if (!isNum(raw)) { x.value = null; x.g = null; return null; }
+        const g = x.g || (x.g = { from: raw, to: raw, t0: now, ms: 0, at: 0, every: 0 });
+        if (raw !== g.to) {
+            const gap = g.at ? now - g.at : 0;
+            if (gap > 0 && gap < GLIDE_MAX_MS) g.every = g.every ? g.every * 0.8 + gap * 0.2 : gap;
+            g.at = now;
+            this._motionCount(x, now);
+            const from = isNum(x.value) ? x.value : raw, span = this._span(x.w);
+            const jump = span > 0 && Math.abs(raw - from) >= span * GLIDE_JUMP;
+            g.from = from; g.to = raw; g.t0 = prev;
+            g.ms = mode === 'raw' ? 0 : jump ? GLIDE_MIN_MS : Math.round(Math.max(GLIDE_MIN_MS, Math.min(GLIDE_MAX_MS, g.every || 100)) * GLIDE_STRETCH);
+        }
+        const f = g.ms > 0 ? Math.min(1, (now - g.t0) / g.ms) : 1;
+        x.value = g.from + (g.to - g.from) * f;
+        return x.value;
+    }
+
+    /** A widget's range in its value's units: a needle's table, a bar's steps (0: not known). */
+    _span(w) {
+        const t = w.table, s = w.steps;
+        if (Array.isArray(t) && t.length > 1) return Math.abs(t[t.length - 1][0] - t[0][0]);
+        if (Array.isArray(s) && s.length > 1) return Math.abs(s[s.length - 1] - s[0]);
+        return isNum(w.max) && isNum(w.min) ? Math.abs(w.max - w.min) : 0;
+    }
+
+    /** (0.59.0) An rpm widget's new reading counted; once a minute, then every 10, the motion and its rates logged. */
+    _motionCount(x, now) {
+        if (x.w.measure !== 'rpm' || /_sh$/.test(String(x.w.id))) return;
+        const st = this.motionStat || (this.motionStat = { at: now, n: 0, sets: 0, logged: false });
+        st.n++;
+        if (now - st.at < (st.logged ? MOTION_LOG_MS : MOTION_FIRST_LOG_MS)) return;
+        const s = (now - st.at) / 1000, poll = typeof this.car.pollStats === 'function' ? this.car.pollStats('statusEngineSpeed2') : null;
+        this.log.info('needles: ' + this._motion() + ', the rpm changed ' + (st.n / s).toFixed(1) + ' times a second, rpm needle turns sent ' +
+            (st.sets / s).toFixed(1) + ' a second' + (poll ? ', rpm read ' + poll : '') + (this.setting('rpmPoll') === 'off' ? ' (reading off)' : ''));
+        st.at = now; st.n = 0; st.sets = 0; st.logged = true;
+    }
+
     _updateNeedle(x, now, force) {
         const w = x.w, table = w.table;
         if (!Array.isArray(table) || !table.length) return;
         // a clock hand: the time as it is (a filter would sweep it back round the dial from 59 to 0)
         const target = CLOCK_RAW[w.measure] === true ? null : this._needleValue(w.measure);
         if (CLOCK_RAW[w.measure] === true) x.value = this._needleValue(w.measure);
-        else this._follow(x, target, now);
+        else this._move(x, target, now);
         const deg = needleDeg(table, isNum(x.value) ? x.value : table[0][0]);
         if (x.shadow === undefined) x.shadow = /_sh$/.test(String(w.id));
         if (NEEDLE_PLAY && w.spring && x.c.curves && CLOCK_RAW[w.measure] !== true) { this._playNeedle(x, now, force, deg, target); return; }
@@ -3770,6 +3850,7 @@ class HudApp {
         const from = x.angle;
         x.angle = deg;
         if (w.measure === 'rpm' && !x.shadow && this.rpmSm) this.rpmSm.sent++;
+        if (w.measure === 'rpm' && !x.shadow && this.motionStat) this.motionStat.sets++;
         x.sentAt = now;
         x.c.set(x.ref, { rotate: deg });
         if (isNum(w.glide) && w.glide > 0 && isNum(from)) {
@@ -3906,7 +3987,7 @@ class HudApp {
         const w = x.w, segs = w.segs, steps = w.steps, p = x.pic, z = this._zoneInfo(x), zn = this._zones();
         // "spring" (Apex, Zeiger 0.50.4): the band follows the rpm as the car sends it on a spring, 30 times a second
         // (_needleTick), not the tach's 120 ms filter at the tick's 20
-        const sv = w.spring ? this._follow(x, this._needleValue('rpm'), now) : this.rpmF;
+        const sv = w.spring ? this._move(x, this._needleValue('rpm'), now) : this.rpmF;
         const test = this.testUntil > now, v = test ? Number.MAX_VALUE : sv;
         let n = 0;
         if (isNum(v)) while (n < segs.length && n < steps.length && v >= steps[n]) n++;
