@@ -2,8 +2,8 @@
   "id": "zeiger",
   "title": "Zeiger",
   "description": "Zeiger is in beta: custom themes for the BMW instrument cluster, from 80s LCD dashes to photo themes. A hobby project by an enthusiast, made to make every drive a little nicer and to give back to the community that keeps custom iDrive apps going. Not made by or connected with BMW. Improved all the time.",
-  "whatsNew": "Smoother needles: each needle now glides from where it is to every new reading instead of guessing ahead, 60 times a second, all needles sent together, and the revs are read more often. For testers: the Lab has Needle motion (glide, raw or the old one) and Read the revs every 20 ms, to compare in the car.",
-  "version": "0.59.0",
+  "whatsNew": "New theme Horizon: a road at sunset behind two silver rings, the speed and the speed limit on the left, the range and the gear on the right, fuel and coolant at the sides, the clock on top. While Waze shows the map on the cluster, it sits between the rings on black that fades into the photo. Customise picks one of five fonts.",
+  "version": "0.60.0",
   "vendor": "custom",
   "loggingId": "OAZG",
   "maxDiskUsage": 67108864,
@@ -231,6 +231,10 @@
           "Ember"
         ],
         [
+          "horizon",
+          "Horizon"
+        ],
+        [
           "concours",
           "Concours"
         ],
@@ -285,6 +289,10 @@
           "Ember"
         ],
         [
+          "horizon",
+          "Horizon"
+        ],
+        [
           "concours",
           "Concours"
         ]
@@ -321,6 +329,10 @@
           "Ember"
         ],
         [
+          "horizon",
+          "Horizon"
+        ],
+        [
           "concours",
           "Concours"
         ]
@@ -355,6 +367,10 @@
         [
           "ember",
           "Ember"
+        ],
+        [
+          "horizon",
+          "Horizon"
         ],
         [
           "concours",
@@ -879,6 +895,10 @@
           "Ember"
         ],
         [
+          "horizon",
+          "Horizon"
+        ],
+        [
           "sunrise",
           "Sunrise"
         ],
@@ -949,6 +969,34 @@
         [
           "mbadge",
           "M badge"
+        ]
+      ]
+    },
+    {
+      "key": "horizonFont",
+      "label": "Horizon: font",
+      "type": "choice",
+      "default": "classic",
+      "options": [
+        [
+          "classic",
+          "Classic"
+        ],
+        [
+          "outfit",
+          "Outfit"
+        ],
+        [
+          "exo",
+          "Exo"
+        ],
+        [
+          "redhat",
+          "Red Hat"
+        ],
+        [
+          "oxanium",
+          "Oxanium"
         ]
       ]
     },

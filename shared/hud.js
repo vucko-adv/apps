@@ -241,6 +241,12 @@
  * Text "warnFlash": false: no flash over the warning limit (a tile that turns red itself).
  * Text "tyreLow": "FL" (FR, RL, RR): the text in "tyreLowColor" (default "accent") while that tyre is under "warnTyre" bar.
  * "toggle": "key=a|b": shown while the setting is any of those values.
+ * Layout "hostMap": { x, y, w, h, src_x, src_y, src_w, src_h } (Zeiger 0.60.0, Horizon): while the phone's Waze map
+ * streams (waze-on-cluster's status file, state showing or frozen), the map is hosted there (cluster-render 0.8.2
+ * "host" with "into", under this app's lowest layer over the rect), and widgets with "mapLive": true show while
+ * "mapLive": false ones hide (own layers, switched with "visible", nothing rebuilt); without the map, the other way.
+ * arc: "trackColor" (role or [r, g, b, a], else "track"); "spring" with "measure" (speed, rpm, ...) and "min" / "max"
+ * moves it as the spring needles do (the Lab's Needle motion, every NEEDLE_FAST_MS; Zeiger 0.60.0, Horizon's sweeps).
  * Layout "nightSetting": "<setting>" (Zeiger 0.49.0, Concours): that setting at "day" or "night" holds "@night" there,
  * "auto" follows the sun (the Lighting row of the theme's Customise).
  * "toggle": "@night" (Zeiger 0.43.0): shown after sunset (where _sunPlace says), "!@night" by day: a photo theme's day and
@@ -1332,6 +1338,7 @@ class HudApp {
         clearTimeout(this.statusAskT);
         clearTimeout(this.mapVariantT); this.mapVariantT = null;
         if (this.waze) this._guard('waze stop', () => this.waze.stop());
+        if (this.mapFeed) { clearInterval(this.mapFeed.timer); if (this.hosting) this._guard('unhost', () => this.client.unhost('map')); }
         this._guard('screen stop', () => this.screen.stop());
         this.clients.forEach((c) => c.close());
         this.atlases.clear();
@@ -2945,6 +2952,9 @@ class HudApp {
         bytes -= this.keptBytes;
         if (this._offset().x || this._offset().y || this._scale() !== 1 || this._stripSy() !== 1) this._place();
         this._failsafe(Date.now(), true);
+        // (0.60.0) the layout's window onto the Waze map ("hostMap", Horizon)
+        this.hostSpec = layout.hostMap && isNum(layout.hostMap.w) ? layout.hostMap : null;
+        this._guard('map host', () => this._mapLiveCheck(true));
         const atlasBytes = this._atlasBytes();
         px += atlasBytes;
         this.pixelBytes = px;
@@ -3442,7 +3452,7 @@ class HudApp {
             c.uniform(ref, 'u_peak', [-1]);
             c.uniform(ref, 'u_peakC', rgb(color(t, w.peakColor || 'fg')));
             c.uniform(ref, 'u_color', rgb(color(t, w.color || 'arc')));
-            c.uniform(ref, 'u_track', rgba(t.track));
+            c.uniform(ref, 'u_track', rgba(color(t, w.trackColor || 'track')));
             c.uniform(ref, 'u_width', [w.width || 7]);
             c.uniform(ref, 'u_start', [(w.start === undefined ? 225 : w.start) * Math.PI / 180]);
             c.uniform(ref, 'u_sweep', [(w.sweep === undefined ? 270 : w.sweep) * Math.PI / 180]);
@@ -3642,6 +3652,7 @@ class HudApp {
             try {
                 if (x.w.type === 'needle') this._updateNeedle(x, now, false);
                 else if (x.w.type === 'segments') this._updateSegments(x, now, false);
+                else if (x.w.type === 'arc') this._updateArcMove(x, now, false);
             } catch (e) { this._widgetError(x, e); }
         });
     }
@@ -3813,6 +3824,46 @@ class HudApp {
         const f = g.ms > 0 ? Math.min(1, (now - g.t0) / g.ms) : 1;
         x.value = g.from + (g.to - g.from) * f;
         return x.value;
+    }
+
+    /**
+     * (0.60.0) A layout with "hostMap" (Horizon): Waze's map in the theme while it streams. Its status is waze-on-cluster's
+     * own file (waze.js, read once a second, nothing sent to it); while it streams the map is hosted at the layout's rect
+     * and the "mapLive" widgets swap (the picture with the window shows, the plain one hides). force: apply even unchanged
+     * (a new layout's layers).
+     */
+    _mapLiveCheck(force) {
+        if (this.hostSpec && !this.mapFeed) {
+            this.mapFeed = new Waze({}, this.log, () => this._guard('map feed', () => this._mapLiveCheck(false)));
+            this.mapFeed.start();
+        }
+        const live = !!(this.hostSpec && this.mapFeed && this.mapFeed.streaming);
+        if (!force && live === this.mapLive) return;
+        if (live !== !!this.mapLive && (live || this.hosting)) this.log.info('Waze map ' + (live ? 'streams: shown in the theme' : 'gone: the photo again'));
+        this.mapLive = live;
+        this.widgets.forEach((x) => {
+            if (typeof x.w.mapLive !== 'boolean' || !x.c || !x.ref) return;
+            x.c.set(x.ref, { visible: x.w.mapLive === live });
+        });
+        const c = this.client, s = this.hostSpec;
+        if (live) {
+            c.host(this.target, { target: 'map', x: s.x, y: s.y, w: s.w, h: s.h, src_x: s.src_x, src_y: s.src_y, src_w: s.src_w, src_h: s.src_h });
+            this.hosting = true;
+            if (!this.hostLogOn) {
+                this.hostLogOn = true;
+                c.on('hosting', (t, ev) => { if (t === 'map') this.log.info('map host ' + ev.state + (ev.reason ? ': ' + ev.reason : '')); });
+            }
+        } else if (this.hosting) { c.unhost('map'); this.hosting = false; }
+    }
+
+    /** (0.60.0) An arc with a "spring": its measure moved as the spring needles move (_move), its "min" .. "max". */
+    _updateArcMove(x, now, force) {
+        const w = x.w, v = this._move(x, this._needleValue(w.measure), now);
+        const mn = isNum(w.min) ? w.min : 0, mx = isNum(w.max) ? w.max : 1;
+        const q = isNum(v) && mx !== mn ? Math.round(Math.min(1, Math.max(0, (v - mn) / (mx - mn))) * 4000) / 4000 : 0;
+        if (!force && q === x.last) return;
+        x.last = q;
+        x.c.uniform(x.ref, 'u_value', [q]);
     }
 
     /** A widget's range in its value's units: a needle's table, a bar's steps (0: not known). */
@@ -4219,6 +4270,8 @@ class HudApp {
             x.last = key;
             x.c.uniform(x.ref, 'u_value', [q]);
             x.c.uniform(x.ref, 'u_flash', [this.flash ? 1 : 0]);
+        } else if (w.type === 'arc' && w.spring) {
+            this._updateArcMove(x, now, force);
         } else if (w.type === 'arc' || w.type === 'meter') {
             // a meter with a "slot" (Dyno) shows the bar of whatever sensor that readout slot shows (TILE_BAR)
             let sig = w.signal, mn = w.min, mx = w.max, ab = false;

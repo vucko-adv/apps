@@ -1,0 +1,833 @@
+{
+ "schemaVersion": 2,
+ "name": "Horizon",
+ "author": "vucko-adv",
+ "copyright": "Copyright (c) 2026 vucko-adv. Zeiger theme artwork.",
+ "packWaste": 1.5,
+ "theme": "horizon",
+ "noNightDim": true,
+ "hostMap": {
+  "x": 560,
+  "y": 96,
+  "w": 800,
+  "h": 540,
+  "src_x": 188,
+  "src_y": 0,
+  "src_w": 711,
+  "src_h": 480
+ },
+ "_about": "Horizon (Zeiger 0.60.0): a road at sunset (Daniel Day Media, Unsplash License) behind two silver rings: speed 0-280 with the speed in the middle and the camera's limit in its opening, revs 0-8 with the range in the middle and the gear in its opening; blue sweeps and pointers that glide (spring, the Lab's Needle motion); fuel and coolant arcs; the clock and outside temperature in a tab whose ends are arcs of the rings' radius. While Waze's map streams, \"hostMap\" hosts it between the rings and the picture with the black band and the window shows (\"mapLive\"). cluster-design/horizon/build.html. Jost, Barlow Condensed, Barlow Semi Condensed (OFL).",
+ "widgets": [
+  {
+   "id": "bg",
+   "type": "picture",
+   "picture": "horizon_bg",
+   "own": true,
+   "followsShift": true,
+   "mapLive": false,
+   "class": "content",
+   "z": 0,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 720
+  },
+  {
+   "id": "bg_wz",
+   "type": "picture",
+   "picture": "horizon_wz",
+   "own": true,
+   "followsShift": true,
+   "mapLive": true,
+   "class": "content",
+   "z": 0,
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 720
+  },
+  {
+   "id": "ring_l",
+   "type": "picture",
+   "picture": "horizon_ring_l",
+   "own": true,
+   "class": "content",
+   "z": 2,
+   "x": 150,
+   "y": 108,
+   "w": 612,
+   "h": 494
+  },
+  {
+   "id": "ring_r",
+   "type": "picture",
+   "picture": "horizon_ring_r",
+   "own": true,
+   "class": "content",
+   "z": 2,
+   "x": 1158,
+   "y": 108,
+   "w": 612,
+   "h": 494
+  },
+  {
+   "id": "tab",
+   "type": "picture",
+   "picture": "horizon_tab",
+   "own": true,
+   "class": "content",
+   "z": 2,
+   "x": 622,
+   "y": 0,
+   "w": 677,
+   "h": 90
+  },
+  {
+   "id": "sweep_speed",
+   "type": "arc",
+   "class": "content",
+   "z": 4,
+   "measure": "speed",
+   "min": 0,
+   "max": 280,
+   "spring": {
+    "f": 8,
+    "z": 1
+   },
+   "start": 230.4,
+   "sweep": 259.2,
+   "width": 6,
+   "color": [
+    61,
+    139,
+    255
+   ],
+   "trackColor": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "x": 300,
+   "y": 202,
+   "w": 360,
+   "h": 360
+  },
+  {
+   "id": "sweep_rpm",
+   "type": "arc",
+   "class": "content",
+   "z": 4,
+   "measure": "rpm",
+   "min": 0,
+   "max": 8000,
+   "spring": {
+    "f": 8,
+    "z": 1
+   },
+   "start": 230.4,
+   "sweep": 259.2,
+   "width": 6,
+   "color": [
+    61,
+    139,
+    255
+   ],
+   "trackColor": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "x": 1260,
+   "y": 202,
+   "w": 360,
+   "h": 360
+  },
+  {
+   "id": "fuel",
+   "type": "arc",
+   "class": "content",
+   "z": 4,
+   "signal": "fuel",
+   "min": 0,
+   "max": 1,
+   "start": 249.37,
+   "sweep": 41.25,
+   "width": 8,
+   "color": [
+    61,
+    139,
+    255
+   ],
+   "trackColor": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "x": 201,
+   "y": 103,
+   "w": 558,
+   "h": 558
+  },
+  {
+   "id": "coolant",
+   "type": "arc",
+   "class": "content",
+   "z": 4,
+   "signal": "coolant",
+   "min": 50,
+   "max": 130,
+   "start": 110.63,
+   "sweep": -41.25,
+   "width": 8,
+   "color": [
+    61,
+    139,
+    255
+   ],
+   "trackColor": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "x": 1161,
+   "y": 103,
+   "w": 558,
+   "h": 558
+  },
+  {
+   "id": "needle_speed",
+   "type": "needle",
+   "own": true,
+   "class": "content",
+   "z": 5,
+   "picture": "horizon_ptr",
+   "measure": "speed",
+   "spring": {
+    "f": 8,
+    "z": 1
+   },
+   "table": [
+    [
+     0,
+     -129.6
+    ],
+    [
+     280,
+     129.6
+    ]
+   ],
+   "x": 460,
+   "y": 110,
+   "w": 40,
+   "h": 272,
+   "pivot": [
+    20,
+    272
+   ]
+  },
+  {
+   "id": "needle_rpm",
+   "type": "needle",
+   "own": true,
+   "class": "content",
+   "z": 5,
+   "picture": "horizon_ptr",
+   "measure": "rpm",
+   "spring": {
+    "f": 8,
+    "z": 1
+   },
+   "table": [
+    [
+     0,
+     -129.6
+    ],
+    [
+     8000,
+     129.6
+    ]
+   ],
+   "x": 1420,
+   "y": 110,
+   "w": 40,
+   "h": 272,
+   "pivot": [
+    20,
+    272
+   ]
+  },
+  {
+   "id": "limit_ring",
+   "type": "segments",
+   "own": false,
+   "picture": "horizon_limit",
+   "measure": "speedLimit",
+   "segs": [
+    [
+     0,
+     0,
+     78,
+     78
+    ]
+   ],
+   "steps": [
+    1
+   ],
+   "class": "content",
+   "z": 5,
+   "x": 441,
+   "y": 499,
+   "w": 78,
+   "h": 78
+  },
+  {
+   "id": "limit",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{speedLimit}}",
+   "font": "hz_lim",
+   "color": [
+    17,
+    17,
+    17,
+    255
+   ],
+   "align": "center",
+   "x": 453,
+   "y": 528,
+   "w": 54,
+   "h": 23
+  },
+  {
+   "id": "speed",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{speed}}",
+   "font": "hz_speed",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "center",
+   "x": 280,
+   "y": 325,
+   "w": 400,
+   "h": 101,
+   "toggle": "horizonFont=classic"
+  },
+  {
+   "id": "range",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{range}}",
+   "font": "hz_range",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "center",
+   "x": 1280,
+   "y": 338,
+   "w": 320,
+   "h": 78,
+   "toggle": "horizonFont=classic"
+  },
+  {
+   "id": "gear",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{stage}}",
+   "font": "hz_gear",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "right",
+   "x": 1365,
+   "y": 519,
+   "w": 80,
+   "h": 39,
+   "toggle": "horizonFont=classic"
+  },
+  {
+   "id": "gearnum",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{gearInD}}",
+   "font": "hz_gnum",
+   "color": [
+    61,
+    139,
+    255,
+    255
+   ],
+   "align": "left",
+   "x": 1449,
+   "y": 530,
+   "w": 60,
+   "h": 28,
+   "toggle": "horizonFont=classic"
+  },
+  {
+   "id": "clock",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{time}}   |   {{ambientN}}°C",
+   "font": "hz_clock",
+   "color": [
+    223,
+    229,
+    238,
+    255
+   ],
+   "align": "center",
+   "x": 660,
+   "y": 12,
+   "w": 600,
+   "h": 41,
+   "toggle": "horizonFont=classic"
+  },
+  {
+   "id": "speed_outfit",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{speed}}",
+   "font": "hz_outfit_speed",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "center",
+   "x": 280,
+   "y": 325,
+   "w": 400,
+   "h": 102,
+   "toggle": "horizonFont=outfit"
+  },
+  {
+   "id": "range_outfit",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{range}}",
+   "font": "hz_outfit_range",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "center",
+   "x": 1280,
+   "y": 339,
+   "w": 320,
+   "h": 77,
+   "toggle": "horizonFont=outfit"
+  },
+  {
+   "id": "gear_outfit",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{stage}}",
+   "font": "hz_outfit_gear",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "right",
+   "x": 1367,
+   "y": 517,
+   "w": 80,
+   "h": 42,
+   "toggle": "horizonFont=outfit"
+  },
+  {
+   "id": "gearnum_outfit",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{gearInD}}",
+   "font": "hz_outfit_gnum",
+   "color": [
+    61,
+    139,
+    255,
+    255
+   ],
+   "align": "left",
+   "x": 1451,
+   "y": 529,
+   "w": 60,
+   "h": 30,
+   "toggle": "horizonFont=outfit"
+  },
+  {
+   "id": "clock_outfit",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{time}}   |   {{ambientN}}°C",
+   "font": "hz_outfit_clock",
+   "color": [
+    223,
+    229,
+    238,
+    255
+   ],
+   "align": "center",
+   "x": 660,
+   "y": 14,
+   "w": 600,
+   "h": 41,
+   "toggle": "horizonFont=outfit"
+  },
+  {
+   "id": "speed_exo",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{speed}}",
+   "font": "hz_exo_speed",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "center",
+   "x": 280,
+   "y": 325,
+   "w": 400,
+   "h": 102,
+   "toggle": "horizonFont=exo"
+  },
+  {
+   "id": "range_exo",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{range}}",
+   "font": "hz_exo_range",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "center",
+   "x": 1280,
+   "y": 339,
+   "w": 320,
+   "h": 78,
+   "toggle": "horizonFont=exo"
+  },
+  {
+   "id": "gear_exo",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{stage}}",
+   "font": "hz_exo_gear",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "right",
+   "x": 1365,
+   "y": 518,
+   "w": 80,
+   "h": 41,
+   "toggle": "horizonFont=exo"
+  },
+  {
+   "id": "gearnum_exo",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{gearInD}}",
+   "font": "hz_exo_gnum",
+   "color": [
+    61,
+    139,
+    255,
+    255
+   ],
+   "align": "left",
+   "x": 1449,
+   "y": 530,
+   "w": 60,
+   "h": 29,
+   "toggle": "horizonFont=exo"
+  },
+  {
+   "id": "clock_exo",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{time}}   |   {{ambientN}}°C",
+   "font": "hz_exo_clock",
+   "color": [
+    223,
+    229,
+    238,
+    255
+   ],
+   "align": "center",
+   "x": 660,
+   "y": 13,
+   "w": 600,
+   "h": 44,
+   "toggle": "horizonFont=exo"
+  },
+  {
+   "id": "speed_redhat",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{speed}}",
+   "font": "hz_redhat_speed",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "center",
+   "x": 280,
+   "y": 324,
+   "w": 400,
+   "h": 103,
+   "toggle": "horizonFont=redhat"
+  },
+  {
+   "id": "range_redhat",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{range}}",
+   "font": "hz_redhat_range",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "center",
+   "x": 1280,
+   "y": 338,
+   "w": 320,
+   "h": 78,
+   "toggle": "horizonFont=redhat"
+  },
+  {
+   "id": "gear_redhat",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{stage}}",
+   "font": "hz_redhat_gear",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "right",
+   "x": 1366,
+   "y": 518,
+   "w": 80,
+   "h": 41,
+   "toggle": "horizonFont=redhat"
+  },
+  {
+   "id": "gearnum_redhat",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{gearInD}}",
+   "font": "hz_redhat_gnum",
+   "color": [
+    61,
+    139,
+    255,
+    255
+   ],
+   "align": "left",
+   "x": 1450,
+   "y": 530,
+   "w": 60,
+   "h": 29,
+   "toggle": "horizonFont=redhat"
+  },
+  {
+   "id": "clock_redhat",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{time}}   |   {{ambientN}}°C",
+   "font": "hz_redhat_clock",
+   "color": [
+    223,
+    229,
+    238,
+    255
+   ],
+   "align": "center",
+   "x": 660,
+   "y": 15,
+   "w": 600,
+   "h": 43,
+   "toggle": "horizonFont=redhat"
+  },
+  {
+   "id": "speed_oxanium",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{speed}}",
+   "font": "hz_oxanium_speed",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "center",
+   "x": 280,
+   "y": 325,
+   "w": 400,
+   "h": 100,
+   "toggle": "horizonFont=oxanium"
+  },
+  {
+   "id": "range_oxanium",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{range}}",
+   "font": "hz_oxanium_range",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "center",
+   "x": 1280,
+   "y": 339,
+   "w": 320,
+   "h": 76,
+   "toggle": "horizonFont=oxanium"
+  },
+  {
+   "id": "gear_oxanium",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{stage}}",
+   "font": "hz_oxanium_gear",
+   "color": [
+    255,
+    255,
+    255,
+    255
+   ],
+   "align": "right",
+   "x": 1365,
+   "y": 518,
+   "w": 80,
+   "h": 40,
+   "toggle": "horizonFont=oxanium"
+  },
+  {
+   "id": "gearnum_oxanium",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{gearInD}}",
+   "font": "hz_oxanium_gnum",
+   "color": [
+    61,
+    139,
+    255,
+    255
+   ],
+   "align": "left",
+   "x": 1449,
+   "y": 530,
+   "w": 60,
+   "h": 28,
+   "toggle": "horizonFont=oxanium"
+  },
+  {
+   "id": "clock_oxanium",
+   "type": "text",
+   "class": "content",
+   "z": 6,
+   "conn": 1,
+   "text": "{{time}}   |   {{ambientN}}°C",
+   "font": "hz_oxanium_clock",
+   "color": [
+    223,
+    229,
+    238,
+    255
+   ],
+   "align": "center",
+   "x": 660,
+   "y": 14,
+   "w": 600,
+   "h": 44,
+   "toggle": "horizonFont=oxanium"
+  }
+ ]
+}

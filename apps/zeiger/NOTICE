@@ -44,12 +44,26 @@ The app also ships with:
    Jost, Copyright 2020 The Jost Project Authors (https://github.com/indestructible-type); Saira Condensed,
    Copyright 2016 The Saira Project Authors, Reserved Font Name "Saira".
 
+9. Horizon's fonts (fonts/hz_outfit_*, hz_exo_*, hz_redhat_*, hz_oxanium_*), pre-rendered glyphs under the SIL Open Font
+   License 1.1, reproduced below: Outfit, Copyright 2021 The Outfit Project Authors (https://github.com/Outfitio/Outfit-Fonts);
+   Exo 2, Copyright 2013 The Exo 2 Project Authors (https://github.com/googlefonts/Exo-2.0); Red Hat Display, Copyright 2024
+   The Red Hat Project Authors (https://github.com/RedHatOfficial/RedHatFont); Oxanium, Copyright 2019 The Oxanium Project
+   Authors (https://github.com/sevmeyer/oxanium).
+
+10. Horizon's photo (pictures/horizon_bg, horizon_wz, previews/horizon*): "The sun shines brightly on a deserted road" by
+   Daniel Day Media (https://unsplash.com/photos/M3-k05Y_yJY), under the Unsplash License (https://unsplash.com/license),
+   cropped, graded and drawn over by vucko-adv.
+
 ----------------------------------------------------------------------------------------------
 Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)
 Copyright 2011 The Michroma Project Authors (https://github.com/googlefonts/Michroma-font)
 Copyright 2022 The Inter Project Authors (https://github.com/rsms/inter-tight)
 Copyright 2020 The Jost Project Authors (https://github.com/indestructible-type)
 Copyright 2016 The Saira Project Authors, with reserved font name "Saira"
+Copyright 2021 The Outfit Project Authors (https://github.com/Outfitio/Outfit-Fonts)
+Copyright 2013 The Exo 2 Project Authors (https://github.com/googlefonts/Exo-2.0)
+Copyright 2024 The Red Hat Project Authors (https://github.com/RedHatOfficial/RedHatFont)
+Copyright 2019 The Oxanium Project Authors (https://github.com/sevmeyer/oxanium)
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:

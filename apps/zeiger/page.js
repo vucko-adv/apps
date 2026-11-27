@@ -101,6 +101,8 @@ const CUSTOM = {
     ember: { key: 'ember', beta: true, rows: [['Font', 'Font', 'the readouts\' lettering'], ['Mid', 'Bottom middle', 'under the car'], ['Photo', 'Photo', 'Ember, Sunrise, Peaks or Road']], switch: 'Photo', switchLabel: 'Photo' },
     // 0.51.0: Dark Moon, Mist and Underpass in one theme, the photo a switch; the font and the bottom middle as Ember's
     dark_moon: { key: 'darkMoon', rows: [['Font', 'Font', 'the speed and the selector letter'], ['Mid', 'Bottom middle', 'the clock or the M badge'], ['Photo', 'Photo', 'Dark Moon, Mist or Underpass']], switch: 'Photo', switchLabel: 'Photo' },
+    // 0.60.0: Horizon's big readouts and clock in one of five fonts (Barlow, the default, and four new ones)
+    horizon: { key: 'horizon', rows: [['Font', 'Font', 'the speed, range, gear and clock']] },
     // 0.49.0: the rev counter's face, pearl or black (lit as the side dials)
     concours: { key: 'concours', rows: [['Face', 'Middle dial', 'pearl, or dark green as the others'], ['Mids', 'Small speed numbers', '30, 90, 150 .. on the speedometer'], ['Left', 'Left dial', 'turbo, oil and fuel, or an analog clock']] },   // (0.50.13: no night look, no Lighting)
     // 0.50.4: Vintage Green and Vintage Cyan in one theme, the colour a switch
@@ -120,7 +122,7 @@ const THEME_GROUPS = [
     ['CLASSIC', ['concours']],
     ['VINTAGE', ['vintage', 'vfd']],
     ['SPORT', ['apex']],
-    ['PHOTO', ['dark_moon', 'ember']],
+    ['PHOTO', ['dark_moon', 'ember', 'horizon']],
 ];
 // the calibration layouts (hudLayout values), for the row in BMW's cluster
 // (0.58.0) Car test: a theme of every reading Zeiger has, the new ones lit when on (hud.js _cdField), to try in the car
@@ -129,7 +131,8 @@ const CREDITS = [
     'Zeiger by vucko-adv. Every theme is drawn by vucko-adv.',
     'MGU App Kit by cauliflowermossgrape (MIT).',
     'cluster-render client by Robert Nisipeanu (MPL 2.0).',
-    'Fonts: Barlow, Michroma, Inter Tight, Jost, Saira (SIL Open Font License). Details: NOTICE.',
+    'Fonts: Barlow, Michroma, Inter Tight, Jost, Saira, Outfit, Exo 2, Red Hat Display, Oxanium (SIL Open Font License).',
+    'Horizon\'s photo: Daniel Day Media on Unsplash (Unsplash License). Details: NOTICE.',
 ];
 
 // the author's card in About (0.31.0): the photo (hud/pictures/author_photo.json, a 128 px circle, baked by

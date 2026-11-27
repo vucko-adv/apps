@@ -117,7 +117,8 @@ class Layouts {
             // the sun down (0.43.0)
             if (w.toggle !== undefined && !(Array.isArray(w.toggle) ? w.toggle : [w.toggle]).every((t) => /^!?(@night|[a-zA-Z0-9_]+(=[a-zA-Z0-9_]+(\|[a-zA-Z0-9_]+)*)?)$/.test(String(t)))) bad(at + ' has a bad toggle "' + w.toggle + '"');
             if (w.hole !== undefined && !(Array.isArray(w.hole) && w.hole.length === 4 && w.hole.every((n) => typeof n === 'number'))) bad(at + ' "hole" must be [x, y, w, h]');
-            TYPES[w.type].forEach((k) => { if (w[k] === undefined) bad(at + ' (' + w.type + ') needs "' + k + '"'); });
+            // (Zeiger 0.60.0) an arc with a "spring" reads its "measure" instead of a signal
+            TYPES[w.type].forEach((k) => { if (w[k] === undefined && !(w.type === 'arc' && k === 'signal' && w.spring && w.measure)) bad(at + ' (' + w.type + ') needs "' + k + '"'); });
         });
     }
 

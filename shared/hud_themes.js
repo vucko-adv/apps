@@ -204,6 +204,16 @@ const THEMES = {
         bg: [1, 1, 1, 255], panel: [20, 10, 8, 255], line: [242, 228, 216, 255], head: [198, 172, 154, 255],
         ink: [1, 1, 1, 255], accent: [255, 62, 46, 255], well: [20, 10, 8, 255],
     },
+    // Horizon (layout horizon.json, Zeiger 0.60.0): a road at sunset behind two silver rings; white, a cool grey, the sweeps blue
+    horizon: {
+        name: 'Horizon',
+        fg: [255, 255, 255, 255], dim: [223, 229, 238, 255], track: [0, 0, 0, 0], arc: [61, 139, 255, 255],
+        glow: 0, stripe: false,
+        bar: { low: [255, 255, 255], mid: [255, 176, 80], high: [210, 59, 59], midAt: 'shift' },
+        rev: { from: [223, 229, 238], to: [255, 255, 255] },
+        bg: [1, 1, 1, 255], panel: [8, 10, 14, 255], line: [223, 229, 238, 255], head: [223, 229, 238, 255],
+        ink: [1, 1, 1, 255], accent: [61, 139, 255, 255], well: [8, 10, 14, 255],
+    },
     // Concours (layout concours.json, Zeiger 0.49.0): three classic round gauges in gold bezels, a pearl rev counter, black
     // side dials lit green; its readouts carry their own colours (one set per face), these roles serve the rest
     concours: {

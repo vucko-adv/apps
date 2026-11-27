@@ -1,6 +1,8 @@
 {
  "schemaVersion": 2,
  "name": "Car test",
+ "author": "vucko-adv",
+ "copyright": "Copyright (c) 2026 vucko-adv. Zeiger theme artwork.",
  "theme": "gt3",
  "_about": "Lab test (Zeiger 0.58.0): a theme of every reading Zeiger has, to try in the car. Left: the new lamp and brake fields (hud.js _cdField, _cdRead), green while on, grey while off; red at the bottom: the new fields the car has not sent. Right and middle: the values. Lab, Calibration: Car test. Every change of a new field is in the log too (\"car data ...\").",
  "widgets": [
