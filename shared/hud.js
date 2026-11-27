@@ -268,7 +268,7 @@
  * measures "accOn" / "accRdy" (1 + the distance, ACC holding / ready), "accBars", "ccOn" / "ccRdy" (a plain cruise
  * control), tokens {{cruiseOn}} {{cruiseRdy}} (the set speed) {{cruiseLabelOn}} {{cruiseLabelRdy}} (ACC, CRUISE .. READY)
  * {{spd:<i>}} (speed scale label i of SPEED_SCALE: 0..200 mph, 0..320 km/h) {{range}} {{u:distLc}} (mi, km) {{u:dist}} (MI, KM) {{ambient}} (outside, signed: +75) {{u:speedLc}} (mph, km/h) {{ampmLc}} (am, pm) {{torque}} {{u:torque}} (lb-ft, Nm) {{torquePct}} {{powerPct}} (% of config.engine's peak) {{boostHi}} {{boostMid}}
- * (gauge labels for 1.4 / 0.7 bar in the display unit) {{stage}} (P R N, D / S / M by the shifter programme) {{gearInD}} (gear number while in D) {{mode}} (COMFORT, SPORT, SPORT PLUS, SPORT INDIVIDUAL, ECO PRO, ...)
+ * (gauge labels for 1.4 / 0.7 bar in the display unit) {{stage}} (P R N, D / S / M by the shifter programme) {{gearInD}} (gear number while in D) {{stageOrGear}} (P R N, D / S, the gear number in manual) {{mode}} (COMFORT, SPORT, SPORT PLUS, SPORT INDIVIDUAL, ECO PRO, ...)
  * {{temp:<deg C>}} (that temperature in the display unit, °F rounded to 10, for gauge labels) {{setup:engine|chassis|steering|gearbox}} (what that part is set to in the drive mode now)
  * {{time}} {{ampm}} {{u:temp}} (°F / °C) {{gLat}} {{gLong}} (g, 2 decimals) {{brakeG}} (braking g, 0.00 while not slowing; {{accelG}} the same while speeding up;
  * also a needle's / segments' "measure") {{isnt:<token>:<value>[:<other>...]}} (the value unless the token shows it or
@@ -2291,6 +2291,13 @@ class HudApp {
             case 'stage': {          // the selector letter alone: P R N, or D / S / M by the shifter programme
                 const d = this.car.data();
                 return d.stage === 'D' || (!d.stage && isNum(d.gear) && d.gear > 0) ? this._program(d) : (d.stage || '-');
+            }
+            case 'stageOrGear': {    // one glyph (Zeiger 0.61.0, Horizon): P R N, D or S, and the gear's number in manual (M)
+                const d = this.car.data();
+                if (d.stage === 'P' || d.stage === 'R' || d.stage === 'N') return d.stage;
+                if (d.stage !== 'D' && !(!d.stage && isNum(d.gear) && d.gear > 0)) return d.stage || '-';
+                const p = this._program(d);
+                return p === 'M' ? (isNum(d.gear) && d.gear > 0 ? String(d.gear) : 'M') : p;
             }
             case 'gearInD': {        // the gear number while driving, else nothing (the M "2D")
                 const d = this.car.data();

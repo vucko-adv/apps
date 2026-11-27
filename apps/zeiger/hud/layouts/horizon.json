@@ -53,10 +53,10 @@
    "own": true,
    "class": "content",
    "z": 2,
-   "x": 150,
-   "y": 108,
-   "w": 612,
-   "h": 494
+   "x": 96,
+   "y": 77,
+   "w": 702,
+   "h": 593
   },
   {
    "id": "ring_r",
@@ -65,10 +65,10 @@
    "own": true,
    "class": "content",
    "z": 2,
-   "x": 1158,
-   "y": 108,
-   "w": 612,
-   "h": 494
+   "x": 1122,
+   "y": 77,
+   "w": 702,
+   "h": 593
   },
   {
    "id": "tab",
@@ -77,9 +77,9 @@
    "own": true,
    "class": "content",
    "z": 2,
-   "x": 622,
+   "x": 604,
    "y": 0,
-   "w": 677,
+   "w": 712,
    "h": 90
   },
   {
@@ -108,10 +108,10 @@
     0,
     0
    ],
-   "x": 300,
-   "y": 202,
-   "w": 360,
-   "h": 360
+   "x": 268,
+   "y": 183,
+   "w": 424,
+   "h": 424
   },
   {
    "id": "sweep_rpm",
@@ -139,10 +139,10 @@
     0,
     0
    ],
-   "x": 1260,
-   "y": 202,
-   "w": 360,
-   "h": 360
+   "x": 1228,
+   "y": 183,
+   "w": 424,
+   "h": 424
   },
   {
    "id": "fuel",
@@ -166,10 +166,10 @@
     0,
     0
    ],
-   "x": 201,
-   "y": 103,
-   "w": 558,
-   "h": 558
+   "x": 155,
+   "y": 70,
+   "w": 650,
+   "h": 650
   },
   {
    "id": "coolant",
@@ -193,10 +193,10 @@
     0,
     0
    ],
-   "x": 1161,
-   "y": 103,
-   "w": 558,
-   "h": 558
+   "x": 1115,
+   "y": 70,
+   "w": 650,
+   "h": 650
   },
   {
    "id": "needle_speed",
@@ -221,12 +221,12 @@
     ]
    ],
    "x": 460,
-   "y": 110,
+   "y": 77,
    "w": 40,
-   "h": 272,
+   "h": 318,
    "pivot": [
     20,
-    272
+    318
    ]
   },
   {
@@ -252,12 +252,12 @@
     ]
    ],
    "x": 1420,
-   "y": 110,
+   "y": 77,
    "w": 40,
-   "h": 272,
+   "h": 318,
    "pivot": [
     20,
-    272
+    318
    ]
   },
   {
@@ -270,8 +270,8 @@
     [
      0,
      0,
-     78,
-     78
+     86,
+     86
     ]
    ],
    "steps": [
@@ -279,10 +279,10 @@
    ],
    "class": "content",
    "z": 5,
-   "x": 441,
-   "y": 499,
-   "w": 78,
-   "h": 78
+   "x": 437,
+   "y": 537,
+   "w": 86,
+   "h": 86
   },
   {
    "id": "limit",
@@ -299,10 +299,10 @@
     255
    ],
    "align": "center",
-   "x": 453,
-   "y": 528,
-   "w": 54,
-   "h": 23
+   "x": 449,
+   "y": 569,
+   "w": 62,
+   "h": 24
   },
   {
    "id": "speed",
@@ -320,9 +320,9 @@
    ],
    "align": "center",
    "x": 280,
-   "y": 325,
+   "y": 328,
    "w": 400,
-   "h": 101,
+   "h": 118,
    "toggle": "horizonFont=classic"
   },
   {
@@ -341,9 +341,9 @@
    ],
    "align": "center",
    "x": 1280,
-   "y": 338,
+   "y": 343,
    "w": 320,
-   "h": 78,
+   "h": 91,
    "toggle": "horizonFont=classic"
   },
   {
@@ -352,7 +352,7 @@
    "class": "content",
    "z": 6,
    "conn": 1,
-   "text": "{{stage}}",
+   "text": "{{stageOrGear}}",
    "font": "hz_gear",
    "color": [
     255,
@@ -360,32 +360,11 @@
     255,
     255
    ],
-   "align": "right",
-   "x": 1365,
-   "y": 519,
-   "w": 80,
-   "h": 39,
-   "toggle": "horizonFont=classic"
-  },
-  {
-   "id": "gearnum",
-   "type": "text",
-   "class": "content",
-   "z": 6,
-   "conn": 1,
-   "text": "{{gearInD}}",
-   "font": "hz_gnum",
-   "color": [
-    61,
-    139,
-    255,
-    255
-   ],
-   "align": "left",
-   "x": 1449,
-   "y": 530,
-   "w": 60,
-   "h": 28,
+   "align": "center",
+   "x": 1380,
+   "y": 559,
+   "w": 120,
+   "h": 46,
    "toggle": "horizonFont=classic"
   },
   {
@@ -404,9 +383,9 @@
    ],
    "align": "center",
    "x": 660,
-   "y": 12,
+   "y": 11,
    "w": 600,
-   "h": 41,
+   "h": 43,
    "toggle": "horizonFont=classic"
   },
   {
@@ -425,9 +404,9 @@
    ],
    "align": "center",
    "x": 280,
-   "y": 325,
+   "y": 327,
    "w": 400,
-   "h": 102,
+   "h": 120,
    "toggle": "horizonFont=outfit"
   },
   {
@@ -446,9 +425,9 @@
    ],
    "align": "center",
    "x": 1280,
-   "y": 339,
+   "y": 343,
    "w": 320,
-   "h": 77,
+   "h": 92,
    "toggle": "horizonFont=outfit"
   },
   {
@@ -457,7 +436,7 @@
    "class": "content",
    "z": 6,
    "conn": 1,
-   "text": "{{stage}}",
+   "text": "{{stageOrGear}}",
    "font": "hz_outfit_gear",
    "color": [
     255,
@@ -465,32 +444,11 @@
     255,
     255
    ],
-   "align": "right",
-   "x": 1367,
-   "y": 517,
-   "w": 80,
-   "h": 42,
-   "toggle": "horizonFont=outfit"
-  },
-  {
-   "id": "gearnum_outfit",
-   "type": "text",
-   "class": "content",
-   "z": 6,
-   "conn": 1,
-   "text": "{{gearInD}}",
-   "font": "hz_outfit_gnum",
-   "color": [
-    61,
-    139,
-    255,
-    255
-   ],
-   "align": "left",
-   "x": 1451,
-   "y": 529,
-   "w": 60,
-   "h": 30,
+   "align": "center",
+   "x": 1380,
+   "y": 559,
+   "w": 120,
+   "h": 47,
    "toggle": "horizonFont=outfit"
   },
   {
@@ -509,9 +467,9 @@
    ],
    "align": "center",
    "x": 660,
-   "y": 14,
+   "y": 13,
    "w": 600,
-   "h": 41,
+   "h": 43,
    "toggle": "horizonFont=outfit"
   },
   {
@@ -530,9 +488,9 @@
    ],
    "align": "center",
    "x": 280,
-   "y": 325,
+   "y": 328,
    "w": 400,
-   "h": 102,
+   "h": 119,
    "toggle": "horizonFont=exo"
   },
   {
@@ -551,9 +509,9 @@
    ],
    "align": "center",
    "x": 1280,
-   "y": 339,
+   "y": 344,
    "w": 320,
-   "h": 78,
+   "h": 91,
    "toggle": "horizonFont=exo"
   },
   {
@@ -562,7 +520,7 @@
    "class": "content",
    "z": 6,
    "conn": 1,
-   "text": "{{stage}}",
+   "text": "{{stageOrGear}}",
    "font": "hz_exo_gear",
    "color": [
     255,
@@ -570,32 +528,11 @@
     255,
     255
    ],
-   "align": "right",
-   "x": 1365,
-   "y": 518,
-   "w": 80,
-   "h": 41,
-   "toggle": "horizonFont=exo"
-  },
-  {
-   "id": "gearnum_exo",
-   "type": "text",
-   "class": "content",
-   "z": 6,
-   "conn": 1,
-   "text": "{{gearInD}}",
-   "font": "hz_exo_gnum",
-   "color": [
-    61,
-    139,
-    255,
-    255
-   ],
-   "align": "left",
-   "x": 1449,
-   "y": 530,
-   "w": 60,
-   "h": 29,
+   "align": "center",
+   "x": 1380,
+   "y": 559,
+   "w": 120,
+   "h": 47,
    "toggle": "horizonFont=exo"
   },
   {
@@ -616,7 +553,7 @@
    "x": 660,
    "y": 13,
    "w": 600,
-   "h": 44,
+   "h": 45,
    "toggle": "horizonFont=exo"
   },
   {
@@ -635,9 +572,9 @@
    ],
    "align": "center",
    "x": 280,
-   "y": 324,
+   "y": 326,
    "w": 400,
-   "h": 103,
+   "h": 121,
    "toggle": "horizonFont=redhat"
   },
   {
@@ -656,9 +593,9 @@
    ],
    "align": "center",
    "x": 1280,
-   "y": 338,
+   "y": 343,
    "w": 320,
-   "h": 78,
+   "h": 92,
    "toggle": "horizonFont=redhat"
   },
   {
@@ -667,7 +604,7 @@
    "class": "content",
    "z": 6,
    "conn": 1,
-   "text": "{{stage}}",
+   "text": "{{stageOrGear}}",
    "font": "hz_redhat_gear",
    "color": [
     255,
@@ -675,32 +612,11 @@
     255,
     255
    ],
-   "align": "right",
-   "x": 1366,
-   "y": 518,
-   "w": 80,
-   "h": 41,
-   "toggle": "horizonFont=redhat"
-  },
-  {
-   "id": "gearnum_redhat",
-   "type": "text",
-   "class": "content",
-   "z": 6,
-   "conn": 1,
-   "text": "{{gearInD}}",
-   "font": "hz_redhat_gnum",
-   "color": [
-    61,
-    139,
-    255,
-    255
-   ],
-   "align": "left",
-   "x": 1450,
-   "y": 530,
-   "w": 60,
-   "h": 29,
+   "align": "center",
+   "x": 1380,
+   "y": 558,
+   "w": 120,
+   "h": 48,
    "toggle": "horizonFont=redhat"
   },
   {
@@ -719,7 +635,7 @@
    ],
    "align": "center",
    "x": 660,
-   "y": 15,
+   "y": 16,
    "w": 600,
    "h": 43,
    "toggle": "horizonFont=redhat"
@@ -740,9 +656,9 @@
    ],
    "align": "center",
    "x": 280,
-   "y": 325,
+   "y": 327,
    "w": 400,
-   "h": 100,
+   "h": 118,
    "toggle": "horizonFont=oxanium"
   },
   {
@@ -761,9 +677,9 @@
    ],
    "align": "center",
    "x": 1280,
-   "y": 339,
+   "y": 343,
    "w": 320,
-   "h": 76,
+   "h": 90,
    "toggle": "horizonFont=oxanium"
   },
   {
@@ -772,7 +688,7 @@
    "class": "content",
    "z": 6,
    "conn": 1,
-   "text": "{{stage}}",
+   "text": "{{stageOrGear}}",
    "font": "hz_oxanium_gear",
    "color": [
     255,
@@ -780,32 +696,11 @@
     255,
     255
    ],
-   "align": "right",
-   "x": 1365,
-   "y": 518,
-   "w": 80,
-   "h": 40,
-   "toggle": "horizonFont=oxanium"
-  },
-  {
-   "id": "gearnum_oxanium",
-   "type": "text",
-   "class": "content",
-   "z": 6,
-   "conn": 1,
-   "text": "{{gearInD}}",
-   "font": "hz_oxanium_gnum",
-   "color": [
-    61,
-    139,
-    255,
-    255
-   ],
-   "align": "left",
-   "x": 1449,
-   "y": 530,
-   "w": 60,
-   "h": 28,
+   "align": "center",
+   "x": 1380,
+   "y": 559,
+   "w": 120,
+   "h": 46,
    "toggle": "horizonFont=oxanium"
   },
   {
@@ -826,7 +721,7 @@
    "x": 660,
    "y": 14,
    "w": 600,
-   "h": 44,
+   "h": 45,
    "toggle": "horizonFont=oxanium"
   }
  ]
